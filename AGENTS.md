@@ -24,6 +24,7 @@ python3 -m http.server 8002
 
 - `BLOCKS`: `id`, `order`, `priority` (`must` — обязательно для первой работы, `basic` — базово, `plus` — плюс), `title: L`, `summary: L`. Девять блоков из «Карты навыков AI-инженера (2026)»; новый блок добавляй только по просьбе пользователя.
 - `TOPICS`: `id`, `block`, `title: L`, `what: L` (что это), `why: L` (зачем AI-инженеру), `fromSql?: L` (как это выглядит для SQL/PL-SQL-разработчика: аналогии, отличия, где опыт с БД — преимущество), `concepts` (id терминов глоссария), `example?: { lang, code }` (`lang` из `CODE_LANGS`; код общий для всех языков, комментарии в нём лучше на английском), `resources: [{ title, url, kind, lang }]` (минимум один; `kind` из `RESOURCE_KINDS`, `lang` — язык самого ресурса), `practice: L` (мини-задание), `prereq` (на какие темы опирается, без циклов), `related`, `checked` (дата сверки с актуальным состоянием).
+- `topic.lesson?` — встроенный урок, чтобы тему можно было изучить, не уходя со страницы: `{ minutes, sections: [{ id, title: L, blocks }], cheatsheet?: { head: [L], rows }, quiz: [{ q: L, options, answer, explain: L }], exercises: [{ task: L, hint?: L, solution: { lang, code, output? } }] }`. Типы блоков: `p` и `tip`/`warn` (`text: L`), `list` (`items: [L]`), `code` (`lang`, `code`, `output?`, `caption?: L`), `compare` (PL/SQL слева, Python справа: `sql`, `python`, `note?: L`), `table` (`head: [L]`, `rows`). В тексте `обратные кавычки` дают inline-код. Ячейка таблицы и вариант ответа — либо строка (это код, общий для всех языков), либо `L`. `answer` — номер верного варианта с нуля. Образец — урок темы `python-basics`.
 - `GLOSSARY`: `id`, `term: L`, `definition: L`, `topics`.
 - `CHANGELOG`: `date`, `title: L`, `text: L`, `topics`, `source` (https). Записи — от новых к старым.
 
@@ -39,6 +40,7 @@ python3 -m http.server 8002
 - Значимые новости индустрии записывай в `CHANGELOG` с датой, источником и связанными темами.
 - При каждом изменении `ai-engineer.html` обновляй дату и время в футере по Мадриду (CET/CEST): бери их из `TZ=Europe/Madrid date "+%Y-%m-%d %H:%M"`, не выдумывай.
 - При каждом коммите, который меняет HTML, увеличивай версию MVP в футере.
+- Урок пишется для читателя с опытом PL/SQL и без опыта Python: объясняй через сравнение с PL/SQL/SQL, давай вывод (`output`) у примеров и проверяй, что весь Python-код урока и решений действительно запускается и печатает указанный вывод.
 - После каждого изменения выполняй `node validate.js`, затем `git add`, `git commit` и `git push` в `main`. Не добавляй посторонние файлы.
 
 ## Устройство скрипта

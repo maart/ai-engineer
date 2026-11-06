@@ -42,6 +42,7 @@ function brokenCases() {
   const clone = (value) => JSON.parse(JSON.stringify(value));
   const base = () => clone({ UI: page.UI, BLOCKS: page.BLOCKS, TOPICS: page.TOPICS, GLOSSARY: page.GLOSSARY, CHANGELOG: page.CHANGELOG });
   const topic = (data) => data.TOPICS[0];
+  const lessonOf = (data) => data.TOPICS.find((item) => item.lesson).lesson;
   return [
     ["нет перевода", (d) => { delete topic(d).what.es; }, /what: нужен текст/],
     ["пустой перевод", (d) => { topic(d).title.en = "  "; }, /title: нужен текст/],
@@ -62,6 +63,13 @@ function brokenCases() {
       term.topics = term.topics.filter((id) => id !== d.TOPICS.find((t) => t.concepts.length).id);
     }, /нет обратной ссылки/],
     ["термин без темы", (d) => { d.GLOSSARY[0].topics = ["nope"]; }, /GLOSSARY\..*нет темы/],
+    ["урок: нет перевода", (d) => { lessonOf(d).sections[0].blocks.find((b) => b.text).text.es = ""; }, /lesson\.sections\[0\]\.blocks\[\d+\]\.text: нужен текст/],
+    ["урок: неизвестный блок", (d) => { lessonOf(d).sections[0].blocks[0].type = "video"; }, /type должен быть одним из/],
+    ["урок: повтор id части", (d) => { lessonOf(d).sections[1].id = lessonOf(d).sections[0].id; }, /lesson\.sections\[1\]: повторяющийся id/],
+    ["урок: ответ вне вариантов", (d) => { lessonOf(d).quiz[0].answer = 9; }, /answer должен быть номером варианта/],
+    ["урок: пустой вариант-код", (d) => { lessonOf(d).quiz[0].options[0] = " "; }, /options\[0\]: нужен непустой код/],
+    ["урок: строка шпаргалки не той ширины", (d) => { lessonOf(d).cheatsheet.rows[0].pop(); }, /cheatsheet\.rows\[0\]: в строке должно быть/],
+    ["урок: решение без кода", (d) => { lessonOf(d).exercises[0].solution.code = ""; }, /solution\.code: нужен непустой код/],
     ["лента без порядка", (d) => {
       const entry = (date) => ({ date, title: page.UI.appTitle, text: page.UI.appTitle, topics: [], source: "https://example.com" });
       d.CHANGELOG = [entry("2026-01-01"), entry("2026-02-01")];
@@ -97,6 +105,7 @@ if (page) {
     version: 1,
     topicStatus: { [firstTopic]: "applied", other: "bogus", todoTopic: "todo" },
     topicNotes: { [firstTopic]: "note", empty: "  ", bad: 5 },
+    quizAnswers: { [firstTopic]: { 0: 2, 1: -1, x: 1, 2: "1" }, junk: [1], empty: {} },
     inbox: [
       { id: "a", text: "link", created: "2026-11-06T10:00:00.000Z" },
       { id: "a", text: "duplicate", created: "2026-11-06T10:00:00.000Z" },
@@ -109,6 +118,7 @@ if (page) {
   if (parsed) {
     check("статусы нормализуются", json(parsed.topicStatus) === json({ [firstTopic]: "applied" }));
     check("заметки нормализуются", json(parsed.topicNotes) === json({ [firstTopic]: "note" }));
+    check("ответы теста нормализуются", json(parsed.quizAnswers) === json({ [firstTopic]: { 0: 2 } }));
     check("входящие нормализуются", parsed.inbox.length === 1 && parsed.inbox[0].text === "link");
   }
   page.state.topicStatus = { [firstTopic]: "understood" };
@@ -129,6 +139,7 @@ if (page) {
   check("поиск по русскому названию", page.search("эмбеддинги", "ru").some((r) => r.id === "embeddings"));
   check("поиск по английскому термину из русского интерфейса", page.search("embeddings", "ru").some((r) => r.id === "embeddings"));
   check("поиск без учёта ударений", page.search("similitud coseno", "es").some((r) => r.id === "cosine-similarity"));
+  check("поиск по тексту урока", page.search("f-строка", "ru").some((r) => r.id === "python-basics"));
   check("пустой поиск", page.search("   ", "ru").length === 0);
   check("адрес термина", page.parseRoute(`#term-${page.GLOSSARY[0].id}`).view === "glossary");
   check("адрес ленты", page.parseRoute("#changelog").view === "changelog");

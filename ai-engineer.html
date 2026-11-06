@@ -287,6 +287,55 @@ select {
 .changelog time { color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
 .changelog h3 { margin: 2px 0 4px; font-size: 1.05rem; }
 .changelog p { margin: 0 0 4px; }
+.lesson-badge { cursor: pointer; background: none; color: var(--accent); font: inherit; font-size: 0.8rem; font-weight: 600; }
+.lesson-toc { margin: 8px 0 0; padding-left: 22px; }
+.lesson-toc li { margin: 2px 0; }
+.lesson-toc .btn.link { color: var(--accent); font-size: 0.95rem; text-align: left; }
+.lesson-part { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); scroll-margin-top: 80px; }
+.lesson-part h4 { margin: 0 0 8px; font-size: 1.12rem; }
+.lesson-part > p, .lesson-part > .code, .lesson-part > .compare, .lesson-part > .table-wrap, .lesson-part > ul { margin: 0 0 12px; }
+.lesson-list { padding-left: 20px; }
+.lesson-list li { margin: 3px 0; }
+code.inline { padding: 1px 5px; border-radius: 4px; background: var(--surface-2); font: 0.88em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.caption { margin: 0 0 4px; color: var(--muted); font-size: 0.9rem; }
+.code pre + pre.output { margin-top: -1px; border-top-style: dashed; color: var(--muted); }
+pre.output::before { content: "▸ "; color: var(--plus); }
+.callout { padding: 10px 14px; border-radius: 8px; }
+.callout.tip { background: color-mix(in srgb, var(--plus) 12%, transparent); }
+.callout.warn { background: color-mix(in srgb, var(--basic) 14%, transparent); }
+.compare { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 12px; }
+.compare-label { margin-bottom: 4px; color: var(--muted); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.compare-note { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 0.92rem; }
+.table-wrap { overflow-x: auto; }
+.table-wrap table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.table-wrap th, .table-wrap td { padding: 6px 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+.table-wrap th { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.quiz { margin: 8px 0 0; padding-left: 22px; }
+.quiz-item { margin: 0 0 18px; }
+.quiz-q { margin: 0 0 6px; font-weight: 600; }
+.quiz-options { display: flex; flex-direction: column; gap: 6px; }
+.quiz-option {
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.quiz-option:hover { border-color: var(--accent); }
+.quiz-option.is-answer { border-color: var(--plus); background: color-mix(in srgb, var(--plus) 14%, transparent); }
+.quiz-option.is-wrong { border-color: var(--must); background: color-mix(in srgb, var(--must) 12%, transparent); }
+.quiz-explain { margin: 6px 0 0; font-size: 0.93rem; }
+.quiz-item.right .quiz-explain b { color: var(--plus); }
+.quiz-item.wrong .quiz-explain b { color: var(--must); }
+.exercises { margin: 8px 0 0; padding-left: 22px; }
+.exercises li { margin-bottom: 16px; }
+.exercises p { margin: 0 0 6px; }
+details { margin: 4px 0; }
+summary { cursor: pointer; color: var(--accent); }
+details > p, details > .code { margin: 6px 0 0; }
 .app-footer { max-width: 1200px; margin: 0 auto; padding: 8px 16px 24px; color: var(--muted); font-size: 0.85rem; }
 @media (max-width: 760px) {
   .app-header { position: static; }
@@ -308,6 +357,7 @@ select {
   .nav-tree { margin-top: 8px; }
   .card { padding: 16px; }
   .block-progress { grid-template-columns: minmax(0, 1fr) 56px; }
+  .compare { grid-template-columns: minmax(0, 1fr); }
   .block-progress .bar { display: none; }
   h2.page-title { font-size: 1.35rem; }
 }
@@ -331,8 +381,8 @@ select {
   <main class="content" id="app"></main>
 </div>
 <footer class="app-footer">
-  <span data-i18n="footerVersion"></span> MVP 1.0 ·
-  <span data-i18n="footerUpdated"></span> 2026-11-06 23:46 (Madrid)
+  <span data-i18n="footerVersion"></span> MVP 1.1 ·
+  <span data-i18n="footerUpdated"></span> 2026-11-07 00:09 (Madrid)
 </footer>
 <script>
 // ════════════════════════════════════════════════════════════════════
@@ -395,6 +445,23 @@ const UI = {
   kind_video: { ru: "видео", en: "video", es: "vídeo" },
   kind_repo: { ru: "репозиторий", en: "repository", es: "repositorio" },
   kind_tool: { ru: "инструмент", en: "tool", es: "herramienta" },
+  lessonBadge: { ru: "Есть урок ↓", en: "Lesson inside ↓", es: "Con lección ↓" },
+  lessonTitle: { ru: "Урок", en: "Lesson", es: "Lección" },
+  lessonMinutes: { ru: "Примерно", en: "About", es: "Unos" },
+  minutesShort: { ru: "мин", en: "min", es: "min" },
+  lessonParts: { ru: "частей:", en: "parts:", es: "partes:" },
+  lessonTip: { ru: "Совет.", en: "Tip.", es: "Consejo." },
+  lessonWarn: { ru: "Внимание.", en: "Watch out.", es: "Ojo." },
+  lessonCheatsheet: { ru: "Шпаргалка", en: "Cheat sheet", es: "Chuleta" },
+  lessonQuiz: { ru: "Проверь себя", en: "Check yourself", es: "Ponte a prueba" },
+  quizScore: { ru: "Верно:", en: "Correct:", es: "Aciertos:" },
+  quizLeft: { ru: "осталось вопросов:", en: "questions left:", es: "preguntas pendientes:" },
+  quizRight: { ru: "Верно.", en: "Correct.", es: "Correcto." },
+  quizWrong: { ru: "Не совсем.", en: "Not quite.", es: "No exactamente." },
+  quizReset: { ru: "Пройти тест заново", en: "Retake the quiz", es: "Repetir el test" },
+  lessonExercises: { ru: "Задачи", en: "Exercises", es: "Ejercicios" },
+  exerciseHint: { ru: "Подсказка", en: "Hint", es: "Pista" },
+  exerciseSolution: { ru: "Решение", en: "Solution", es: "Solución" },
   glossaryTitle: { ru: "Глоссарий", en: "Glossary", es: "Glosario" },
   glossaryLead: {
     ru: "Термины на трёх языках: пригодится на собеседованиях в любой стране.",
@@ -595,6 +662,668 @@ const TOPICS = [
     prereq: [],
     related: [],
     checked: "2026-11-06",
+    lesson: {
+      minutes: 120,
+      sections: [
+        {
+          id: "py-setup",
+          title: { ru: "Установка, venv и первый скрипт", en: "Install, venv and a first script", es: "Instalación, venv y primer script" },
+          blocks: [
+            { type: "p", text: {
+              ru: "Python — интерпретируемый язык: вы пишете программу в файл `.py` и сразу запускаете её командой `python3 файл.py`. Отдельной компиляции, как у `CREATE OR REPLACE PROCEDURE`, нет, поэтому многие ошибки проявляются только при выполнении.",
+              en: "Python is an interpreted language: you write a program in a `.py` file and run it straight away with `python3 file.py`. There is no separate compile step like `CREATE OR REPLACE PROCEDURE`, so many errors only show up at run time.",
+              es: "Python es un lenguaje interpretado: escribes el programa en un fichero `.py` y lo ejecutas directamente con `python3 fichero.py`. No hay una compilación aparte como en `CREATE OR REPLACE PROCEDURE`, así que muchos errores solo aparecen al ejecutar.",
+            } },
+            { type: "list", items: [
+              { ru: "Установите Python 3.12 или новее: на macOS через `brew install python` или установщиком с python.org. Проверка: `python3 --version`.", en: "Install Python 3.12 or newer: on macOS with `brew install python` or the python.org installer. Check with `python3 --version`.", es: "Instala Python 3.12 o posterior: en macOS con `brew install python` o con el instalador de python.org. Compruébalo con `python3 --version`." },
+              { ru: "Редактор: VS Code с расширением Python. Он подсвечивает ошибки и запускает файл кнопкой.", en: "Editor: VS Code with the Python extension. It highlights errors and runs a file with one click.", es: "Editor: VS Code con la extensión de Python. Marca los errores y ejecuta el fichero con un clic." },
+            ] },
+            { type: "code", lang: "bash", caption: { ru: "Новый проект с виртуальным окружением", en: "A new project with a virtual environment", es: "Un proyecto nuevo con entorno virtual" },
+              code: `python3 --version            # Python 3.13.x
+mkdir hello-ai && cd hello-ai
+python3 -m venv .venv        # create a virtual environment
+source .venv/bin/activate    # Windows: .venv\\Scripts\\activate
+pip install requests         # install a library into .venv
+pip freeze > requirements.txt` },
+            { type: "p", text: {
+              ru: "Виртуальное окружение (venv) — папка с отдельным набором библиотек для одного проекта. Похоже на отдельную схему под каждое приложение: обновление библиотеки в одном проекте не ломает другой. Папку `.venv` в git не добавляют, а список зависимостей хранят в `requirements.txt`.",
+              en: "A virtual environment (venv) is a folder with a separate set of libraries for one project. Think of a separate schema per application: upgrading a library in one project does not break another. The `.venv` folder is not committed to git; the dependency list lives in `requirements.txt`.",
+              es: "Un entorno virtual (venv) es una carpeta con un conjunto propio de librerías para un proyecto. Es como tener un esquema separado por aplicación: actualizar una librería en un proyecto no rompe otro. La carpeta `.venv` no se sube a git; la lista de dependencias se guarda en `requirements.txt`.",
+            } },
+            { type: "code", lang: "python", caption: { ru: "Файл hello.py и запуск: `python hello.py`", en: "The hello.py file, run with `python hello.py`", es: "El fichero hello.py, se ejecuta con `python hello.py`" },
+              code: `name = "Mihail"
+print("Hello,", name)
+print(2 + 3)`,
+              output: `Hello, Mihail
+5` },
+            { type: "p", text: {
+              ru: "Команда `python3` без аргументов открывает интерактивную консоль (REPL) с приглашением `>>>`: вводите выражение и сразу видите результат, как в рабочем листе SQL Developer. Выход — `exit()`.",
+              en: "Running `python3` with no arguments opens the interactive console (REPL) with a `>>>` prompt: type an expression and see the result at once, like an SQL Developer worksheet. Leave with `exit()`.",
+              es: "El comando `python3` sin argumentos abre la consola interactiva (REPL) con el indicador `>>>`: escribes una expresión y ves el resultado al momento, como en una hoja de trabajo de SQL Developer. Se sale con `exit()`.",
+            } },
+            { type: "warn", text: {
+              ru: "Отступы — часть синтаксиса. Тело `if`, цикла или функции задаётся отступом в 4 пробела, а не `BEGIN … END`. Не смешивайте табы и пробелы.",
+              en: "Indentation is part of the syntax. The body of an `if`, a loop or a function is set by a 4-space indent, not by `BEGIN … END`. Do not mix tabs and spaces.",
+              es: "La sangría forma parte de la sintaxis. El cuerpo de un `if`, un bucle o una función se marca con 4 espacios, no con `BEGIN … END`. No mezcles tabuladores y espacios.",
+            } },
+            { type: "tip", text: {
+              ru: "В новых AI-проектах часто встречается uv: быстрая замена pip и venv (`uv venv`, `uv add requests`). Освойте сначала pip, затем переход займёт минуты.",
+              en: "New AI projects often use uv, a fast replacement for pip and venv (`uv venv`, `uv add requests`). Learn pip first; switching later takes minutes.",
+              es: "En los proyectos de IA nuevos se usa a menudo uv, un sustituto rápido de pip y venv (`uv venv`, `uv add requests`). Aprende primero pip; cambiar después lleva minutos.",
+            } },
+          ],
+        },
+        {
+          id: "py-variables",
+          title: { ru: "Переменные и базовые типы", en: "Variables and basic types", es: "Variables y tipos básicos" },
+          blocks: [
+            { type: "p", text: {
+              ru: "Переменная появляется в момент присваивания, без `DECLARE`. Тип принадлежит значению, а не переменной: Python узнаёт его при выполнении (динамическая типизация, dynamic typing).",
+              en: "A variable comes into existence when you assign to it, with no `DECLARE`. The type belongs to the value, not the variable: Python learns it at run time (dynamic typing).",
+              es: "Una variable aparece en el momento de asignarle un valor, sin `DECLARE`. El tipo pertenece al valor, no a la variable: Python lo conoce al ejecutar (tipado dinámico, dynamic typing).",
+            } },
+            { type: "compare",
+              sql: `DECLARE
+  v_name   VARCHAR2(50) := 'Ana';
+  v_salary NUMBER(8,2)  := 4200;
+  v_active BOOLEAN      := TRUE;
+  v_bonus  NUMBER;      -- NULL
+BEGIN
+  DBMS_OUTPUT.PUT_LINE(v_name || ': ' || v_salary);
+END;`,
+              python: `name = "Ana"
+salary = 4200.0
+active = True
+bonus = None
+
+print(f"{name}: {salary}")`,
+              note: {
+                ru: "`f\"...\"` — f-строка (f-string): выражения в фигурных скобках подставляются в текст. Это замена конкатенации через `||`.",
+                en: "`f\"...\"` is an f-string: expressions inside curly braces are inserted into the text. It replaces concatenation with `||`.",
+                es: "`f\"...\"` es una f-string: las expresiones entre llaves se insertan en el texto. Sustituye a la concatenación con `||`.",
+              } },
+            { type: "table",
+              head: [
+                { ru: "Тип", en: "Type", es: "Tipo" },
+                { ru: "Пример", en: "Example", es: "Ejemplo" },
+                { ru: "Аналог в Oracle", en: "Oracle counterpart", es: "Equivalente en Oracle" },
+              ],
+              rows: [
+                ["int", "42", { ru: "`NUMBER(38)`, `PLS_INTEGER`; длина не ограничена", en: "`NUMBER(38)`, `PLS_INTEGER`; no size limit", es: "`NUMBER(38)`, `PLS_INTEGER`; sin límite de tamaño" }],
+                ["float", "3.14", { ru: "`BINARY_DOUBLE`: приближённое число", en: "`BINARY_DOUBLE`: an approximate number", es: "`BINARY_DOUBLE`: número aproximado" }],
+                ["decimal.Decimal", "Decimal(\"19.99\")", { ru: "`NUMBER(p,s)`: точное число для денег", en: "`NUMBER(p,s)`: an exact number for money", es: "`NUMBER(p,s)`: número exacto para dinero" }],
+                ["str", "\"text\"", { ru: "`VARCHAR2`, `CLOB`", en: "`VARCHAR2`, `CLOB`", es: "`VARCHAR2`, `CLOB`" }],
+                ["bool", "True, False", { ru: "`BOOLEAN`", en: "`BOOLEAN`", es: "`BOOLEAN`" }],
+                ["None", "None", { ru: "`NULL`", en: "`NULL`", es: "`NULL`" }],
+              ] },
+            { type: "code", lang: "python", caption: { ru: "Арифметика", en: "Arithmetic", es: "Aritmética" },
+              code: `print(7 / 2)       # 3.5   division always returns float
+print(7 // 2)      # 3     integer division, like TRUNC(7 / 2)
+print(7 % 2)       # 1     remainder, like MOD(7, 2)
+print(2 ** 10)     # 1024  power, like POWER(2, 10)
+print(0.1 + 0.2)   # 0.30000000000000004` },
+            { type: "warn", text: {
+              ru: "Python не делает неявных преобразований: `\"1\" + 1` вызывает ошибку `TypeError`. Преобразуйте явно: `int(\"1\")`, `str(1)`, `float(\"4.5\")`. Для денег не используйте float: берите `Decimal`.",
+              en: "Python does no implicit conversion: `\"1\" + 1` raises a `TypeError`. Convert explicitly: `int(\"1\")`, `str(1)`, `float(\"4.5\")`. Do not use float for money; use `Decimal`.",
+              es: "Python no hace conversiones implícitas: `\"1\" + 1` lanza un `TypeError`. Convierte de forma explícita: `int(\"1\")`, `str(1)`, `float(\"4.5\")`. No uses float para dinero; usa `Decimal`.",
+            } },
+            { type: "code", lang: "python", caption: { ru: "Строки", en: "Strings", es: "Cadenas" },
+              code: `s = "  Ana García  "
+print(s.strip())           # 'Ana García'   TRIM
+print(s.strip().upper())   # 'ANA GARCÍA'   UPPER
+print("a,b,c".split(","))  # ['a', 'b', 'c']
+print("Python"[0:3])       # 'Pyt'          SUBSTR('Python', 1, 3)
+print("Python"[-1])        # 'n'            last character
+print(len("Python"))       # 6              LENGTH` },
+            { type: "p", text: {
+              ru: "Индексы начинаются с 0, а срез `[a:b]` включает начало и не включает конец. В `SUBSTR` позиции считаются с 1, поэтому на первых порах здесь легко ошибиться на единицу.",
+              en: "Indexes start at 0, and a slice `[a:b]` includes the start and excludes the end. `SUBSTR` counts positions from 1, so off-by-one mistakes are easy at first.",
+              es: "Los índices empiezan en 0, y un corte `[a:b]` incluye el inicio y excluye el final. `SUBSTR` cuenta desde 1, así que al principio es fácil equivocarse en uno.",
+            } },
+            { type: "p", text: {
+              ru: "`None` похож на `NULL`, но логика у него обычная, а не трёхзначная. Проверяют его через `x is None`, и `None == None` даёт `True`. Сравнение `None > 1` вызывает ошибку, а не возвращает NULL.",
+              en: "`None` resembles `NULL`, but follows ordinary logic, not three-valued logic. Test it with `x is None`, and `None == None` is `True`. Comparing `None > 1` raises an error instead of returning NULL.",
+              es: "`None` se parece a `NULL`, pero sigue una lógica normal, no trivalente. Se comprueba con `x is None`, y `None == None` da `True`. Comparar `None > 1` lanza un error en lugar de devolver NULL.",
+            } },
+          ],
+        },
+        {
+          id: "py-collections",
+          title: { ru: "Списки, словари, кортежи, множества", en: "Lists, dicts, tuples and sets", es: "Listas, diccionarios, tuplas y conjuntos" },
+          blocks: [
+            { type: "p", text: {
+              ru: "Четыре встроенные коллекции покрывают почти все задачи. Их литералы стоит узнавать с первого взгляда:",
+              en: "Four built-in collections cover almost every task. Learn to recognise their literals at a glance:",
+              es: "Cuatro colecciones integradas cubren casi todas las tareas. Conviene reconocer sus literales a primera vista:",
+            } },
+            { type: "table",
+              head: [
+                { ru: "Коллекция", en: "Collection", es: "Colección" },
+                { ru: "Литерал", en: "Literal", es: "Literal" },
+                { ru: "Свойства", en: "Properties", es: "Propiedades" },
+                { ru: "Аналог", en: "Counterpart", es: "Equivalente" },
+              ],
+              rows: [
+                ["list", "[1, 2, 2]", { ru: "порядок, изменяемый, повторы допустимы", en: "ordered, mutable, duplicates allowed", es: "ordenada, mutable, admite repetidos" }, { ru: "nested table, VARRAY", en: "nested table, VARRAY", es: "nested table, VARRAY" }],
+                ["dict", "{\"id\": 1}", { ru: "ключ → значение, ключи уникальны", en: "key → value, unique keys", es: "clave → valor, claves únicas" }, { ru: "строка таблицы; `INDEX BY VARCHAR2`", en: "a table row; `INDEX BY VARCHAR2`", es: "una fila de tabla; `INDEX BY VARCHAR2`" }],
+                ["tuple", "(1, \"Ana\")", { ru: "порядок, неизменяемый", en: "ordered, immutable", es: "ordenada, inmutable" }, { ru: "запись (RECORD) только для чтения", en: "a read-only RECORD", es: "un RECORD de solo lectura" }],
+                ["set", "{1, 2}", { ru: "только уникальные значения, без порядка", en: "unique values only, no order", es: "solo valores únicos, sin orden" }, { ru: "`SELECT DISTINCT`", en: "`SELECT DISTINCT`", es: "`SELECT DISTINCT`" }],
+              ] },
+            { type: "code", lang: "python", caption: { ru: "Список", en: "List", es: "Lista" },
+              code: `depts = ["IT", "HR"]
+depts.append("Sales")       # add to the end
+print(depts[0], depts[-1])  # IT Sales
+print(len(depts))           # 3
+print("HR" in depts)        # True, like 'HR' IN (...)` },
+            { type: "code", lang: "python", caption: { ru: "Словарь", en: "Dictionary", es: "Diccionario" },
+              code: `emp = {"name": "Ana", "dept": "IT", "salary": 4200}
+print(emp["name"])          # Ana
+print(emp.get("bonus", 0))  # 0, default for a missing key (like NVL)
+emp["salary"] = 4500        # update a value
+for key, value in emp.items():
+    print(key, "=", value)` },
+            { type: "compare",
+              sql: `SELECT name, dept, salary
+  FROM employees;
+-- NAME  DEPT  SALARY
+-- Ana   IT    4200
+-- Luis  HR    3100`,
+              python: `employees = [
+    {"name": "Ana", "dept": "IT", "salary": 4200},
+    {"name": "Luis", "dept": "HR", "salary": 3100},
+]
+print(employees[1]["name"])  # Luis`,
+              note: {
+                ru: "Список словарей — самая частая структура в AI-коде: так выглядят JSON-ответы API, сообщения чата для LLM и строки из CSV.",
+                en: "A list of dicts is the most common structure in AI code: it is the shape of JSON API responses, chat messages for an LLM and CSV rows.",
+                es: "Una lista de diccionarios es la estructura más habitual en el código de IA: así son las respuestas JSON de las API, los mensajes de chat para un LLM y las filas de un CSV.",
+              } },
+            { type: "code", lang: "python", caption: { ru: "Множество и кортеж", en: "Set and tuple", es: "Conjunto y tupla" },
+              code: `print(set(["IT", "HR", "IT"]))  # {'IT', 'HR'}, like DISTINCT; order may vary
+point = (40.4, -3.7)
+lat, lon = point                # unpacking: two variables at once
+print(lat)                      # 40.4` },
+            { type: "warn", text: {
+              ru: "Присваивание не копирует коллекцию. После `b = a` обе переменные указывают на один и тот же список, и `b.append(3)` изменит `a`. Копию делают явно: `b = a.copy()` или `b = list(a)`.",
+              en: "Assignment does not copy a collection. After `b = a` both names point to the same list, and `b.append(3)` changes `a`. Copy explicitly: `b = a.copy()` or `b = list(a)`.",
+              es: "Asignar no copia la colección. Tras `b = a` las dos variables apuntan a la misma lista, y `b.append(3)` modifica `a`. La copia se hace de forma explícita: `b = a.copy()` o `b = list(a)`.",
+            } },
+          ],
+        },
+        {
+          id: "py-control-flow",
+          title: { ru: "Условия и циклы", en: "Conditions and loops", es: "Condiciones y bucles" },
+          blocks: [
+            { type: "compare",
+              sql: `IF v_salary >= 5000 THEN
+  v_band := 'high';
+ELSIF v_salary >= 3000 THEN
+  v_band := 'mid';
+ELSE
+  v_band := 'low';
+END IF;`,
+              python: `if salary >= 5000:
+    band = "high"
+elif salary >= 3000:
+    band = "mid"
+else:
+    band = "low"`,
+              note: {
+                ru: "Двоеточие и отступ заменяют `THEN … END IF`. Логические операторы пишутся словами: `and`, `or`, `not`. Равенство — `==`, неравенство — `!=`.",
+                en: "A colon and an indent replace `THEN … END IF`. Logical operators are words: `and`, `or`, `not`. Equality is `==`, inequality is `!=`.",
+                es: "Los dos puntos y la sangría sustituyen a `THEN … END IF`. Los operadores lógicos son palabras: `and`, `or`, `not`. La igualdad es `==` y la desigualdad, `!=`.",
+              } },
+            { type: "compare",
+              sql: `FOR r IN (SELECT name, salary
+            FROM employees) LOOP
+  IF r.salary > 4000 THEN
+    DBMS_OUTPUT.PUT_LINE(r.name);
+  END IF;
+END LOOP;`,
+              python: `for e in employees:
+    if e["salary"] > 4000:
+        print(e["name"])`,
+              note: {
+                ru: "`for` в Python всегда перебирает элементы коллекции, как курсорный цикл перебирает строки. Счётчика, как в C или Java, нет.",
+                en: "A Python `for` always iterates over the items of a collection, the way a cursor loop iterates over rows. There is no C- or Java-style counter.",
+                es: "En Python, `for` siempre recorre los elementos de una colección, como un bucle de cursor recorre filas. No hay contador al estilo de C o Java.",
+              } },
+            { type: "code", lang: "python",
+              code: `for i in range(1, 4):      # like FOR i IN 1..3, the end is excluded!
+    print(i)               # 1, 2, 3
+
+for n, name in enumerate(["Ana", "Luis"], start=1):
+    print(n, name)         # 1 Ana, then 2 Luis
+
+total = 0
+while total < 10:          # like WHILE ... LOOP
+    total += 3
+print(total)               # 12` },
+            { type: "list", items: [
+              { ru: "`break` — выйти из цикла (как `EXIT`), `continue` — перейти к следующей итерации (как `CONTINUE`).", en: "`break` leaves the loop (like `EXIT`); `continue` jumps to the next iteration (like `CONTINUE`).", es: "`break` sale del bucle (como `EXIT`); `continue` pasa a la siguiente iteración (como `CONTINUE`)." },
+              { ru: "`zip(names, salaries)` перебирает два списка параллельно, по парам.", en: "`zip(names, salaries)` walks two lists side by side, in pairs.", es: "`zip(names, salaries)` recorre dos listas en paralelo, por parejas." },
+              { ru: "Короткое условие в одну строку: `band = \"high\" if salary >= 5000 else \"low\"` — как `CASE WHEN … THEN … ELSE … END`.", en: "A one-line condition: `band = \"high\" if salary >= 5000 else \"low\"`, like `CASE WHEN … THEN … ELSE … END`.", es: "Condición en una línea: `band = \"high\" if salary >= 5000 else \"low\"`, como `CASE WHEN … THEN … ELSE … END`." },
+            ] },
+            { type: "tip", text: {
+              ru: "В условии «пустые» значения считаются ложью: `0`, `\"\"`, `[]`, `{}`, `None`. Поэтому `if items:` читается как «если список не пуст».",
+              en: "In a condition, \"empty\" values count as false: `0`, `\"\"`, `[]`, `{}`, `None`. So `if items:` reads as \"if the list is not empty\".",
+              es: "En una condición, los valores «vacíos» cuentan como falsos: `0`, `\"\"`, `[]`, `{}`, `None`. Por eso `if items:` se lee como «si la lista no está vacía».",
+            } },
+          ],
+        },
+        {
+          id: "py-functions",
+          title: { ru: "Функции", en: "Functions", es: "Funciones" },
+          blocks: [
+            { type: "compare",
+              sql: `CREATE OR REPLACE FUNCTION net_salary(
+  p_gross    NUMBER,
+  p_tax_rate NUMBER DEFAULT 0.2
+) RETURN NUMBER IS
+BEGIN
+  RETURN p_gross * (1 - p_tax_rate);
+END;
+/
+SELECT net_salary(4000) FROM dual;`,
+              python: `def net_salary(gross: float, tax_rate: float = 0.2) -> float:
+    """Return the salary after tax."""
+    return gross * (1 - tax_rate)
+
+print(net_salary(4000))                # 3200.0
+print(net_salary(4000, tax_rate=0.3))  # 2800.0`,
+              note: {
+                ru: "Аннотации типов (`: float`, `-> float`) Python при запуске не проверяет: это подсказка для редактора и инструментов вроде mypy. Строка в тройных кавычках — docstring, описание функции.",
+                en: "Python does not check type hints (`: float`, `-> float`) at run time: they are hints for the editor and tools such as mypy. The triple-quoted string is a docstring that documents the function.",
+                es: "Python no comprueba las anotaciones de tipo (`: float`, `-> float`) al ejecutar: son pistas para el editor y para herramientas como mypy. La cadena entre comillas triples es el docstring, la documentación de la función.",
+              } },
+            { type: "list", items: [
+              { ru: "Процедур и функций по отдельности нет: функция без `return` возвращает `None`.", en: "There is no separate procedure type: a function without `return` returns `None`.", es: "No hay procedimientos aparte: una función sin `return` devuelve `None`." },
+              { ru: "Аргументы передают по имени: `net_salary(gross=4000, tax_rate=0.3)`, как `p_tax_rate => 0.3` в PL/SQL.", en: "Arguments can be passed by name: `net_salary(gross=4000, tax_rate=0.3)`, like `p_tax_rate => 0.3` in PL/SQL.", es: "Los argumentos se pasan por nombre: `net_salary(gross=4000, tax_rate=0.3)`, como `p_tax_rate => 0.3` en PL/SQL." },
+              { ru: "Можно вернуть несколько значений: `return low, high` вернёт кортеж, а `lo, hi = bounds(data)` разложит его по переменным.", en: "You can return several values: `return low, high` returns a tuple, and `lo, hi = bounds(data)` unpacks it into variables.", es: "Se pueden devolver varios valores: `return low, high` devuelve una tupla y `lo, hi = bounds(data)` la reparte en variables." },
+            ] },
+            { type: "code", lang: "python", caption: { ru: "Функция как значение", en: "A function as a value", es: "Una función como valor" },
+              code: `employees = [
+    {"name": "Ana", "salary": 4200},
+    {"name": "Luis", "salary": 3100},
+]
+
+def by_salary(e):
+    return e["salary"]
+
+print(max(employees, key=by_salary)["name"])              # Ana
+print(min(employees, key=lambda e: e["salary"])["name"])  # Luis` },
+            { type: "p", text: {
+              ru: "Функцию можно передать в другую функцию как обычное значение. `lambda` — короткая безымянная функция из одного выражения. Так задают ключ сортировки, обработчики событий и инструменты (tools) для LLM-агентов.",
+              en: "A function can be passed to another function like any other value. `lambda` is a short anonymous one-expression function. This is how you set sort keys, event handlers and tools for LLM agents.",
+              es: "Una función se puede pasar a otra como cualquier valor. `lambda` es una función anónima corta de una sola expresión. Así se definen claves de ordenación, manejadores de eventos y herramientas (tools) para agentes LLM.",
+            } },
+            { type: "warn", text: {
+              ru: "Не делайте изменяемое значение по умолчанию, как в `def add(item, items=[])`. Список создаётся один раз и копит значения между вызовами. Пишите `items=None`, а внутри `if items is None: items = []`.",
+              en: "Do not use a mutable default such as `def add(item, items=[])`. The list is created once and keeps values between calls. Write `items=None` and inside `if items is None: items = []`.",
+              es: "No uses un valor por defecto mutable como en `def add(item, items=[])`. La lista se crea una sola vez y acumula valores entre llamadas. Escribe `items=None` y dentro `if items is None: items = []`.",
+            } },
+          ],
+        },
+        {
+          id: "py-comprehensions",
+          title: { ru: "Comprehensions и группировка: SQL на Python", en: "Comprehensions and grouping: SQL in Python", es: "Comprehensions y agrupación: SQL en Python" },
+          blocks: [
+            { type: "p", text: {
+              ru: "Большая часть повседневного кода — «отфильтровать, преобразовать, сгруппировать». В SQL это делает запрос, в Python — генераторы списков (list comprehensions) и встроенные функции.",
+              en: "Most everyday code is \"filter, transform, group\". In SQL a query does it; in Python, list comprehensions and built-in functions do.",
+              es: "La mayor parte del código diario es «filtrar, transformar, agrupar». En SQL lo hace una consulta; en Python, las list comprehensions y las funciones integradas.",
+            } },
+            { type: "compare",
+              sql: `SELECT name
+  FROM employees
+ WHERE salary > 4000;`,
+              python: `names = [e["name"] for e in employees
+         if e["salary"] > 4000]`,
+              note: {
+                ru: "Читается так: «`e[\"name\"]` для каждого `e` из `employees`, если условие». Квадратные скобки дают список, фигурные с парой `ключ: значение` — словарь, фигурные с одним значением — множество.",
+                en: "Read it as \"`e[\"name\"]` for each `e` in `employees`, if the condition holds\". Square brackets give a list; curly braces with `key: value` give a dict; curly braces with one value give a set.",
+                es: "Se lee así: «`e[\"name\"]` para cada `e` de `employees`, si se cumple la condición». Los corchetes dan una lista; las llaves con `clave: valor`, un diccionario; las llaves con un solo valor, un conjunto.",
+              } },
+            { type: "table",
+              head: [{ ru: "SQL", en: "SQL", es: "SQL" }, { ru: "Python", en: "Python", es: "Python" }],
+              rows: [
+                ["WHERE salary > 4000", "[r for r in rows if r[\"salary\"] > 4000]"],
+                ["SELECT UPPER(name)", "[r[\"name\"].upper() for r in rows]"],
+                ["ORDER BY salary DESC", "sorted(rows, key=lambda r: r[\"salary\"], reverse=True)"],
+                ["FETCH FIRST 3 ROWS ONLY", "rows[:3]"],
+                ["COUNT(*), SUM, MIN, MAX", "len(rows), sum(...), min(...), max(...)"],
+                ["SELECT DISTINCT dept", "{r[\"dept\"] for r in rows}"],
+                ["GROUP BY dept", "defaultdict(list), Counter"],
+              ] },
+            { type: "code", lang: "python", caption: { ru: "GROUP BY и AVG вручную", en: "GROUP BY and AVG by hand", es: "GROUP BY y AVG a mano" },
+              code: `from collections import defaultdict
+
+employees = [
+    {"name": "Ana", "dept": "IT", "salary": 4200},
+    {"name": "Luis", "dept": "HR", "salary": 3100},
+    {"name": "Marta", "dept": "IT", "salary": 5000},
+]
+
+# SELECT dept, AVG(salary) FROM employees GROUP BY dept
+by_dept = defaultdict(list)          # a missing key starts as []
+for e in employees:
+    by_dept[e["dept"]].append(e["salary"])
+
+avg = {dept: sum(s) / len(s) for dept, s in by_dept.items()}
+print(avg)`,
+              output: "{'IT': 4600.0, 'HR': 3100.0}" },
+            { type: "code", lang: "python", caption: { ru: "COUNT(*) по группам", en: "COUNT(*) per group", es: "COUNT(*) por grupo" },
+              code: `from collections import Counter
+
+print(Counter(e["dept"] for e in employees))`,
+              output: "Counter({'IT': 2, 'HR': 1})" },
+            { type: "tip", text: {
+              ru: "Для больших таблиц в памяти есть pandas: `df.groupby(\"dept\")[\"salary\"].mean()`. Но если данные лежат в базе, группируйте в SQL: так быстрее, и здесь ваш опыт — преимущество.",
+              en: "For large in-memory tables there is pandas: `df.groupby(\"dept\")[\"salary\"].mean()`. But if the data lives in a database, group in SQL: it is faster, and that is where your experience is an advantage.",
+              es: "Para tablas grandes en memoria está pandas: `df.groupby(\"dept\")[\"salary\"].mean()`. Pero si los datos están en la base de datos, agrupa en SQL: es más rápido y ahí tu experiencia es una ventaja.",
+            } },
+          ],
+        },
+        {
+          id: "py-files-errors",
+          title: { ru: "Модули, файлы и исключения", en: "Modules, files and exceptions", es: "Módulos, ficheros y excepciones" },
+          blocks: [
+            { type: "p", text: {
+              ru: "Модуль — любой файл `.py`, пакет — папка с модулями. `import` подключает модуль, и его функции вызываются через точку, как процедуры пакета PL/SQL. В стандартной библиотеке уже есть `json`, `csv`, `pathlib`, `datetime`, `collections`, `re`; сторонние библиотеки ставят через pip.",
+              en: "A module is any `.py` file; a package is a folder of modules. `import` loads a module, and you call its functions with a dot, like procedures in a PL/SQL package. The standard library already has `json`, `csv`, `pathlib`, `datetime`, `collections` and `re`; third-party libraries come from pip.",
+              es: "Un módulo es cualquier fichero `.py`; un paquete es una carpeta de módulos. `import` carga un módulo, y sus funciones se llaman con un punto, como los procedimientos de un paquete PL/SQL. La biblioteca estándar ya trae `json`, `csv`, `pathlib`, `datetime`, `collections` y `re`; las librerías externas se instalan con pip.",
+            } },
+            { type: "compare",
+              sql: `DECLARE
+  f    UTL_FILE.FILE_TYPE;
+  line VARCHAR2(4000);
+BEGIN
+  f := UTL_FILE.FOPEN('DATA_DIR', 'notes.txt', 'r');
+  LOOP
+    UTL_FILE.GET_LINE(f, line);
+    DBMS_OUTPUT.PUT_LINE(line);
+  END LOOP;
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    UTL_FILE.FCLOSE(f);
+END;`,
+              python: `with open("notes.txt", encoding="utf-8") as f:
+    for line in f:
+        print(line.rstrip())
+# the file is closed here automatically`,
+              note: {
+                ru: "`with` закрывает файл в любом случае, даже при ошибке: помнить про `FCLOSE` не нужно. Режимы: `\"r\"` — чтение, `\"w\"` — перезапись, `\"a\"` — дописывание в конец.",
+                en: "`with` closes the file no matter what, even on an error, so there is no `FCLOSE` to remember. Modes: `\"r\"` reads, `\"w\"` overwrites, `\"a\"` appends.",
+                es: "`with` cierra el fichero pase lo que pase, incluso si hay un error, así que no hay que acordarse de `FCLOSE`. Modos: `\"r\"` lee, `\"w\"` sobrescribe y `\"a\"` añade al final.",
+              } },
+            { type: "code", lang: "python", caption: { ru: "CSV и JSON", en: "CSV and JSON", es: "CSV y JSON" },
+              code: `import csv
+import json
+
+with open("employees.csv", encoding="utf-8", newline="") as f:
+    rows = list(csv.DictReader(f))   # each row is a dict of strings!
+
+print(rows[0])   # {'name': 'Ana', 'dept': 'IT', 'salary': '4200'}
+
+with open("employees.json", "w", encoding="utf-8") as f:
+    json.dump(rows, f, ensure_ascii=False, indent=2)
+
+reply = json.loads('{"model": "claude", "tokens": 120}')
+print(reply["tokens"] + 1)   # 121` },
+            { type: "compare",
+              sql: `BEGIN
+  SELECT salary INTO v_salary
+    FROM employees
+   WHERE id = 99;
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    v_salary := 0;
+END;`,
+              python: `salaries = {1: 4200, 2: 3100}
+try:
+    salary = salaries[99]
+except KeyError:
+    salary = 0
+finally:
+    print("lookup done")`,
+              note: {
+                ru: "`raise ValueError(\"сумма отрицательная\")` — аналог `RAISE_APPLICATION_ERROR`. Блок `finally` выполняется всегда, была ошибка или нет. Частые исключения: `KeyError` (нет ключа), `IndexError` (нет индекса), `ValueError` (неверное значение), `TypeError` (неверный тип).",
+                en: "`raise ValueError(\"negative amount\")` is the counterpart of `RAISE_APPLICATION_ERROR`. A `finally` block always runs, error or not. Common exceptions: `KeyError` (missing key), `IndexError` (missing index), `ValueError` (bad value), `TypeError` (wrong type).",
+                es: "`raise ValueError(\"importe negativo\")` equivale a `RAISE_APPLICATION_ERROR`. El bloque `finally` se ejecuta siempre, haya error o no. Excepciones frecuentes: `KeyError` (falta la clave), `IndexError` (falta el índice), `ValueError` (valor incorrecto), `TypeError` (tipo incorrecto).",
+              } },
+            { type: "code", lang: "text", caption: { ru: "Traceback читают снизу вверх: последняя строка — тип и текст ошибки, над ней — ваша строка кода", en: "Read a traceback bottom-up: the last line is the error type and message, the one above is your line of code", es: "Un traceback se lee de abajo arriba: la última línea es el tipo y el mensaje del error; la de encima, tu línea de código" },
+              code: `Traceback (most recent call last):
+  File "report.py", line 7, in <module>
+    total += row["salary"]
+TypeError: unsupported operand type(s) for +=: 'int' and 'str'` },
+            { type: "warn", text: {
+              ru: "`except Exception: pass` — то же, что `WHEN OTHERS THEN NULL`: ошибка исчезает молча. Ловите конкретные исключения, а остальные хотя бы записывайте в лог.",
+              en: "`except Exception: pass` is the same as `WHEN OTHERS THEN NULL`: the error silently disappears. Catch specific exceptions and at least log the rest.",
+              es: "`except Exception: pass` es lo mismo que `WHEN OTHERS THEN NULL`: el error desaparece en silencio. Captura excepciones concretas y registra al menos las demás.",
+            } },
+            { type: "code", lang: "python", caption: { ru: "Точка входа скрипта", en: "A script's entry point", es: "Punto de entrada de un script" },
+              code: `def main():
+    print("report")
+
+if __name__ == "__main__":   # true only when the file is run directly,
+    main()                   # not when another file imports it` },
+          ],
+        },
+      ],
+      cheatsheet: {
+        head: [{ ru: "PL/SQL", en: "PL/SQL", es: "PL/SQL" }, { ru: "Python", en: "Python", es: "Python" }],
+        rows: [
+          ["v_x NUMBER := 1;", "x = 1"],
+          ["-- comment", "# comment"],
+          ["DBMS_OUTPUT.PUT_LINE(x)", "print(x)"],
+          ["a || b", "f\"{a}{b}\""],
+          ["x IS NULL", "x is None"],
+          ["NVL(x, 0)", "x if x is not None else 0"],
+          ["SUBSTR(s, 1, 3)", "s[0:3]"],
+          ["LENGTH(s), UPPER(s), TRIM(s)", "len(s), s.upper(), s.strip()"],
+          ["MOD(a, b)", "a % b"],
+          ["IF … THEN … ELSIF … ELSE … END IF;", "if …: / elif …: / else:"],
+          ["CASE WHEN c THEN a ELSE b END", "a if c else b"],
+          ["FOR i IN 1..10 LOOP", "for i in range(1, 11):"],
+          ["FOR r IN (SELECT …) LOOP", "for r in rows:"],
+          ["EXIT; / CONTINUE;", "break / continue"],
+          ["FUNCTION f(p NUMBER DEFAULT 0) RETURN NUMBER", "def f(p=0):"],
+          ["f(p_rate => 0.3)", "f(rate=0.3)"],
+          ["TABLE OF … INDEX BY VARCHAR2", "dict"],
+          ["SELECT DISTINCT", "set(...)"],
+          ["EXCEPTION WHEN NO_DATA_FOUND THEN", "except KeyError:"],
+          ["RAISE_APPLICATION_ERROR(-20001, 'msg')", "raise ValueError(\"msg\")"],
+          ["UTL_FILE.FOPEN … FCLOSE", "with open(...) as f:"],
+        ],
+      },
+      quiz: [
+        {
+          q: { ru: "Как в Python задаётся тело `if`, цикла или функции?", en: "How does Python mark the body of an `if`, a loop or a function?", es: "¿Cómo marca Python el cuerpo de un `if`, un bucle o una función?" },
+          options: [
+            { ru: "Словами `BEGIN` и `END`", en: "With the words `BEGIN` and `END`", es: "Con las palabras `BEGIN` y `END`" },
+            { ru: "Фигурными скобками", en: "With curly braces", es: "Con llaves" },
+            { ru: "Двоеточием и отступом", en: "With a colon and an indent", es: "Con dos puntos y sangría" },
+            { ru: "Точкой с запятой в конце", en: "With a semicolon at the end", es: "Con punto y coma al final" },
+          ],
+          answer: 2,
+          explain: { ru: "Строка с `if`, `for` или `def` заканчивается двоеточием, а тело сдвигается на 4 пробела. Отступ здесь — синтаксис, а не стиль.", en: "The `if`, `for` or `def` line ends with a colon, and the body is indented by 4 spaces. Indentation is syntax here, not style.", es: "La línea con `if`, `for` o `def` termina en dos puntos y el cuerpo se sangra 4 espacios. Aquí la sangría es sintaxis, no estilo." },
+        },
+        {
+          q: { ru: "Что выведет `print(7 // 2, 7 % 2)`?", en: "What does `print(7 // 2, 7 % 2)` print?", es: "¿Qué imprime `print(7 // 2, 7 % 2)`?" },
+          options: ["3.5 1", "3 1", "4 1", "3 0"],
+          answer: 1,
+          explain: { ru: "`//` — целочисленное деление (3), `%` — остаток, как `MOD` (1). Обычное `/` дало бы 3.5.", en: "`//` is integer division (3) and `%` is the remainder, like `MOD` (1). Plain `/` would give 3.5.", es: "`//` es la división entera (3) y `%` es el resto, como `MOD` (1). La `/` normal daría 3.5." },
+        },
+        {
+          q: { ru: "Что произойдёт при вычислении `\"1\" + 1`?", en: "What happens when you evaluate `\"1\" + 1`?", es: "¿Qué pasa al evaluar `\"1\" + 1`?" },
+          options: [
+            "2",
+            "\"11\"",
+            "TypeError",
+            "None",
+          ],
+          answer: 2,
+          explain: { ru: "Python не преобразует типы неявно, в отличие от Oracle. Нужно явно: `int(\"1\") + 1` или `\"1\" + str(1)`.", en: "Unlike Oracle, Python never converts types implicitly. Be explicit: `int(\"1\") + 1` or `\"1\" + str(1)`.", es: "A diferencia de Oracle, Python no convierte tipos de forma implícita. Hay que ser explícito: `int(\"1\") + 1` o `\"1\" + str(1)`." },
+        },
+        {
+          q: { ru: "Чему равно `\"Python\"[0:3]`?", en: "What is `\"Python\"[0:3]`?", es: "¿Cuánto vale `\"Python\"[0:3]`?" },
+          options: ["'Pyt'", "'Pyth'", "'yth'", "'P'"],
+          answer: 0,
+          explain: { ru: "Индексы с нуля, конец среза не включается: символы 0, 1 и 2. Это `SUBSTR('Python', 1, 3)`.", en: "Indexes start at zero and the slice end is excluded: characters 0, 1 and 2. This is `SUBSTR('Python', 1, 3)`.", es: "Los índices empiezan en cero y el final del corte no se incluye: caracteres 0, 1 y 2. Es `SUBSTR('Python', 1, 3)`." },
+        },
+        {
+          q: { ru: "После `a = [1, 2]`, `b = a`, `b.append(3)` чему равно `a`?", en: "After `a = [1, 2]`, `b = a`, `b.append(3)`, what is `a`?", es: "Tras `a = [1, 2]`, `b = a`, `b.append(3)`, ¿cuánto vale `a`?" },
+          options: ["[1, 2]", "[1, 2, 3]", "[1, 2, [3]]", "None"],
+          answer: 1,
+          explain: { ru: "`b = a` не копирует список: обе переменные указывают на один объект. Для копии нужен `a.copy()`.", en: "`b = a` does not copy the list: both names point to the same object. Use `a.copy()` for a copy.", es: "`b = a` no copia la lista: los dos nombres apuntan al mismo objeto. Para copiarla, `a.copy()`." },
+        },
+        {
+          q: { ru: "Что вернёт `list(range(1, 4))`?", en: "What does `list(range(1, 4))` return?", es: "¿Qué devuelve `list(range(1, 4))`?" },
+          options: ["[1, 2, 3, 4]", "[1, 2, 3]", "[0, 1, 2, 3]", "[2, 3, 4]"],
+          answer: 1,
+          explain: { ru: "Конец диапазона не включается. Аналог `FOR i IN 1..3` — это `range(1, 4)`.", en: "The end of a range is excluded. `FOR i IN 1..3` is `range(1, 4)`.", es: "El final del rango no se incluye. `FOR i IN 1..3` equivale a `range(1, 4)`." },
+        },
+        {
+          q: { ru: "Что вернёт функция, в которой нет `return`?", en: "What does a function without `return` return?", es: "¿Qué devuelve una función sin `return`?" },
+          options: [
+            "0",
+            "\"\"",
+            "None",
+            { ru: "Такая функция не скомпилируется", en: "Such a function does not compile", es: "Esa función no compila" },
+          ],
+          answer: 2,
+          explain: { ru: "Отдельных процедур в Python нет: функция без `return` просто возвращает `None`.", en: "Python has no separate procedures: a function without `return` simply returns `None`.", es: "Python no tiene procedimientos aparte: una función sin `return` devuelve `None`." },
+        },
+        {
+          q: { ru: "Какое выражение — аналог `SELECT DISTINCT dept FROM employees`?", en: "Which expression matches `SELECT DISTINCT dept FROM employees`?", es: "¿Qué expresión equivale a `SELECT DISTINCT dept FROM employees`?" },
+          options: [
+            "[e[\"dept\"] for e in employees]",
+            "{e[\"dept\"] for e in employees}",
+            "sorted(employees)",
+            "len(employees)",
+          ],
+          answer: 1,
+          explain: { ru: "Фигурные скобки с одним значением дают множество (set), а в нём нет повторов. Квадратные скобки сохранили бы дубли.", en: "Curly braces with a single value build a set, which holds no duplicates. Square brackets would keep the duplicates.", es: "Las llaves con un solo valor crean un conjunto (set), que no tiene repetidos. Los corchetes conservarían los duplicados." },
+        },
+        {
+          q: { ru: "Что гарантирует `with open(...) as f:`?", en: "What does `with open(...) as f:` guarantee?", es: "¿Qué garantiza `with open(...) as f:`?" },
+          options: [
+            { ru: "Файл прочитается целиком в память", en: "The whole file is read into memory", es: "El fichero se lee entero en memoria" },
+            { ru: "Файл закроется, даже если внутри случится ошибка", en: "The file is closed even if an error happens inside", es: "El fichero se cierra aunque ocurra un error dentro" },
+            { ru: "Файл будет создан, если его нет", en: "The file is created if it does not exist", es: "El fichero se crea si no existe" },
+            { ru: "Файл будет заблокирован для других программ", en: "The file is locked for other programs", es: "El fichero queda bloqueado para otros programas" },
+          ],
+          answer: 1,
+          explain: { ru: "`with` — менеджер контекста: при выходе из блока файл закрывается в любом случае. Это замена ручного `FCLOSE` в обработчике ошибок.", en: "`with` is a context manager: when the block ends the file is closed no matter what. It replaces a manual `FCLOSE` in an error handler.", es: "`with` es un gestor de contexto: al salir del bloque el fichero se cierra pase lo que pase. Sustituye al `FCLOSE` manual en el manejador de errores." },
+        },
+        {
+          q: { ru: "Какое исключение вызовет `{\"a\": 1}[\"b\"]`?", en: "Which exception does `{\"a\": 1}[\"b\"]` raise?", es: "¿Qué excepción lanza `{\"a\": 1}[\"b\"]`?" },
+          options: ["KeyError", "IndexError", "ValueError", "TypeError"],
+          answer: 0,
+          explain: { ru: "Нет такого ключа в словаре — `KeyError`. Чтобы получить значение по умолчанию без ошибки, используйте `d.get(\"b\", 0)`.", en: "The key is missing from the dict, so it is a `KeyError`. To get a default without an error, use `d.get(\"b\", 0)`.", es: "La clave no está en el diccionario: `KeyError`. Para obtener un valor por defecto sin error, usa `d.get(\"b\", 0)`." },
+        },
+      ],
+      exercises: [
+        {
+          task: {
+            ru: "Из строки `raw = \"  Ana.GARCIA@Example.com  \"` получите логин в нижнем регистре (`ana.garcia`) и домен (`example.com`) и напечатайте их через f-строку.",
+            en: "From `raw = \"  Ana.GARCIA@Example.com  \"` get the lower-case login (`ana.garcia`) and the domain (`example.com`), and print them with an f-string.",
+            es: "A partir de `raw = \"  Ana.GARCIA@Example.com  \"` obtén el login en minúsculas (`ana.garcia`) y el dominio (`example.com`) e imprímelos con una f-string.",
+          },
+          hint: { ru: "Цепочка методов: `strip()`, `lower()`, `split(\"@\")`. Результат `split` можно сразу разложить на две переменные.", en: "Chain the methods `strip()`, `lower()` and `split(\"@\")`. The result of `split` can be unpacked into two variables at once.", es: "Encadena los métodos `strip()`, `lower()` y `split(\"@\")`. El resultado de `split` se puede repartir en dos variables a la vez." },
+          solution: { lang: "python",
+            code: `raw = "  Ana.GARCIA@Example.com  "
+login, domain = raw.strip().lower().split("@")
+print(f"login={login} domain={domain}")`,
+            output: "login=ana.garcia domain=example.com" },
+        },
+        {
+          task: {
+            ru: "Напишите функцию `salary_band(salary)`, которая возвращает `\"low\"` (меньше 3000), `\"mid\"` (меньше 5000) или `\"high\"`. Посчитайте, сколько сотрудников из списка ниже попадает в каждую группу. Список: Ana 4200, Luis 3100, Marta 5000, Iker 2500.",
+            en: "Write a function `salary_band(salary)` that returns `\"low\"` (below 3000), `\"mid\"` (below 5000) or `\"high\"`. Count how many employees from the list below fall into each band. List: Ana 4200, Luis 3100, Marta 5000, Iker 2500.",
+            es: "Escribe una función `salary_band(salary)` que devuelva `\"low\"` (menos de 3000), `\"mid\"` (menos de 5000) o `\"high\"`. Cuenta cuántos empleados de la lista caen en cada franja. Lista: Ana 4200, Luis 3100, Marta 5000, Iker 2500.",
+          },
+          hint: { ru: "`if / elif / else` внутри функции, а для подсчёта — `Counter` из `collections` с генератором внутри.", en: "Use `if / elif / else` inside the function, and `Counter` from `collections` with a generator inside for the count.", es: "Usa `if / elif / else` dentro de la función y, para contar, `Counter` de `collections` con un generador dentro." },
+          solution: { lang: "python",
+            code: `from collections import Counter
+
+def salary_band(salary: float) -> str:
+    if salary < 3000:
+        return "low"
+    elif salary < 5000:
+        return "mid"
+    return "high"
+
+employees = [
+    {"name": "Ana", "salary": 4200},
+    {"name": "Luis", "salary": 3100},
+    {"name": "Marta", "salary": 5000},
+    {"name": "Iker", "salary": 2500},
+]
+print(Counter(salary_band(e["salary"]) for e in employees))`,
+            output: "Counter({'mid': 2, 'high': 1, 'low': 1})" },
+        },
+        {
+          task: {
+            ru: "Переведите запрос на Python: `SELECT name FROM employees WHERE dept = 'IT' ORDER BY salary DESC FETCH FIRST 2 ROWS ONLY`. Данные: Ana IT 4200, Luis HR 3100, Marta IT 5000, Pablo IT 3900.",
+            en: "Translate this query into Python: `SELECT name FROM employees WHERE dept = 'IT' ORDER BY salary DESC FETCH FIRST 2 ROWS ONLY`. Data: Ana IT 4200, Luis HR 3100, Marta IT 5000, Pablo IT 3900.",
+            es: "Traduce la consulta a Python: `SELECT name FROM employees WHERE dept = 'IT' ORDER BY salary DESC FETCH FIRST 2 ROWS ONLY`. Datos: Ana IT 4200, Luis HR 3100, Marta IT 5000, Pablo IT 3900.",
+          },
+          hint: { ru: "Три шага, как в плане запроса: фильтр через comprehension, `sorted(..., key=..., reverse=True)`, срез `[:2]`.", en: "Three steps, like a query plan: filter with a comprehension, `sorted(..., key=..., reverse=True)`, then the `[:2]` slice.", es: "Tres pasos, como en un plan de ejecución: filtra con una comprehension, `sorted(..., key=..., reverse=True)` y el corte `[:2]`." },
+          solution: { lang: "python",
+            code: `employees = [
+    {"name": "Ana", "dept": "IT", "salary": 4200},
+    {"name": "Luis", "dept": "HR", "salary": 3100},
+    {"name": "Marta", "dept": "IT", "salary": 5000},
+    {"name": "Pablo", "dept": "IT", "salary": 3900},
+]
+
+it = [e for e in employees if e["dept"] == "IT"]                  # WHERE
+top = sorted(it, key=lambda e: e["salary"], reverse=True)[:2]     # ORDER BY + FETCH
+print([e["name"] for e in top])                                   # SELECT name`,
+            output: "['Marta', 'Ana']" },
+        },
+        {
+          task: {
+            ru: "Итоговая задача. Создайте файл `employees.csv` со столбцами `name,dept,salary` и строками `Ana,IT,4200`, `Luis,HR,3100`, `Marta,IT,5000`, `Iker,Sales,n/a`, `Lucía,Sales,2800`: в одной зарплата битая. Скрипт читает файл, пропускает битые строки с предупреждением, считает среднюю зарплату по отделам и сохраняет результат в `report.json`.",
+            en: "Final exercise. Create `employees.csv` with the columns `name,dept,salary` and the rows `Ana,IT,4200`, `Luis,HR,3100`, `Marta,IT,5000`, `Iker,Sales,n/a`, `Lucía,Sales,2800`: one salary is broken. The script reads the file, skips broken rows with a warning, computes the average salary per department and saves the result to `report.json`.",
+            es: "Ejercicio final. Crea `employees.csv` con las columnas `name,dept,salary` y las filas `Ana,IT,4200`, `Luis,HR,3100`, `Marta,IT,5000`, `Iker,Sales,n/a`, `Lucía,Sales,2800`: un salario es erróneo. El script lee el fichero, salta las filas erróneas con un aviso, calcula el salario medio por departamento y guarda el resultado en `report.json`.",
+          },
+          hint: {
+            ru: "`csv.DictReader` отдаёт строки-словари со значениями-строками, поэтому зарплату переведите через `float()` внутри `try / except ValueError`. Группировка — `defaultdict(list)`, сохранение — `json.dump`. Оформите всё в функцию `main()`.",
+            en: "`csv.DictReader` yields dict rows with string values, so convert the salary with `float()` inside `try / except ValueError`. Group with `defaultdict(list)` and save with `json.dump`. Put everything in a `main()` function.",
+            es: "`csv.DictReader` devuelve filas como diccionarios con valores de texto, así que convierte el salario con `float()` dentro de `try / except ValueError`. Agrupa con `defaultdict(list)` y guarda con `json.dump`. Mételo todo en una función `main()`.",
+          },
+          solution: { lang: "python",
+            code: `import csv
+import json
+from collections import defaultdict
+
+def average_by_dept(path: str) -> dict[str, float]:
+    by_dept = defaultdict(list)
+    with open(path, encoding="utf-8", newline="") as f:
+        for line_no, row in enumerate(csv.DictReader(f), start=2):
+            try:
+                salary = float(row["salary"])
+            except ValueError:
+                print(f"line {line_no}: bad salary {row['salary']!r}, skipped")
+                continue
+            by_dept[row["dept"]].append(salary)
+    return {dept: round(sum(s) / len(s), 2) for dept, s in by_dept.items()}
+
+def main():
+    report = average_by_dept("employees.csv")
+    with open("report.json", "w", encoding="utf-8") as f:
+        json.dump(report, f, ensure_ascii=False, indent=2)
+    print(report)
+
+if __name__ == "__main__":
+    main()`,
+            output: `line 5: bad salary 'n/a', skipped
+{'IT': 4600.0, 'HR': 3100.0, 'Sales': 2800.0}` },
+        },
+      ],
+    },
   },
   {
     id: "python-types-tests", block: "foundation",
@@ -2867,6 +3596,87 @@ function isValidDate(value) {
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
+const LESSON_BLOCKS = ["p", "list", "tip", "warn", "code", "compare", "table"];
+
+// Урок темы: части с блоками, шпаргалка, тест и задачи. Строка в ячейке таблицы
+// или в варианте ответа — код, одинаковый для всех языков; объект — текст { ru, en, es }.
+function validateLesson(where, lesson, add, needText) {
+  const needCode = (at, value) => {
+    if (typeof value !== "string" || value.trim() === "") add(at, "нужен непустой код");
+  };
+  const needCodeOrText = (at, value) => (typeof value === "string" ? needCode(at, value) : needText(at, value));
+  const checkTable = (at, head, rows) => {
+    if (!Array.isArray(head) || head.length === 0) { add(at, "нужен head"); return; }
+    head.forEach((cell, i) => needText(`${at}.head[${i}]`, cell));
+    if (!Array.isArray(rows) || rows.length === 0) { add(at, "нужны rows"); return; }
+    rows.forEach((row, ri) => {
+      if (!Array.isArray(row) || row.length !== head.length) add(`${at}.rows[${ri}]`, `в строке должно быть ${head.length} ячеек`);
+      else row.forEach((cell, ci) => needCodeOrText(`${at}.rows[${ri}][${ci}]`, cell));
+    });
+  };
+  if (!Number.isInteger(lesson.minutes) || lesson.minutes <= 0) add(where, "minutes должен быть целым числом больше нуля");
+  if (!Array.isArray(lesson.sections) || lesson.sections.length === 0) {
+    add(where, "нужна хотя бы одна часть в sections");
+  } else {
+    const ids = new Set();
+    lesson.sections.forEach((part, pi) => {
+      const at = `${where}.sections[${pi}]`;
+      if (typeof part.id !== "string" || !ID_RE.test(part.id)) add(at, `id «${part.id}» должен быть в kebab-case`);
+      else if (ids.has(part.id)) add(at, `повторяющийся id «${part.id}»`);
+      else ids.add(part.id);
+      needText(`${at}.title`, part.title);
+      if (!Array.isArray(part.blocks) || part.blocks.length === 0) { add(at, "нужны blocks"); return; }
+      part.blocks.forEach((block, bi) => {
+        const b = `${at}.blocks[${bi}]`;
+        if (!LESSON_BLOCKS.includes(block.type)) { add(b, `type должен быть одним из ${LESSON_BLOCKS.join(", ")}`); return; }
+        if (["p", "tip", "warn"].includes(block.type)) needText(`${b}.text`, block.text);
+        if (block.type === "list") {
+          if (!Array.isArray(block.items) || block.items.length === 0) add(b, "нужны items");
+          else block.items.forEach((item, i) => needText(`${b}.items[${i}]`, item));
+        }
+        if (block.type === "code") {
+          if (!CODE_LANGS.includes(block.lang)) add(b, `lang должен быть одним из ${CODE_LANGS.join(", ")}`);
+          needCode(`${b}.code`, block.code);
+          if (block.output !== undefined) needCode(`${b}.output`, block.output);
+          if (block.caption !== undefined) needText(`${b}.caption`, block.caption);
+        }
+        if (block.type === "compare") {
+          needCode(`${b}.sql`, block.sql);
+          needCode(`${b}.python`, block.python);
+          if (block.note !== undefined) needText(`${b}.note`, block.note);
+        }
+        if (block.type === "table") checkTable(b, block.head, block.rows);
+      });
+    });
+  }
+  if (lesson.cheatsheet !== undefined) checkTable(`${where}.cheatsheet`, lesson.cheatsheet.head, lesson.cheatsheet.rows);
+  if (!Array.isArray(lesson.quiz) || lesson.quiz.length === 0) {
+    add(where, "нужен хотя бы один вопрос в quiz");
+  } else {
+    lesson.quiz.forEach((q, qi) => {
+      const at = `${where}.quiz[${qi}]`;
+      needText(`${at}.q`, q.q);
+      needText(`${at}.explain`, q.explain);
+      if (!Array.isArray(q.options) || q.options.length < 2) { add(at, "нужно минимум два варианта ответа"); return; }
+      q.options.forEach((option, oi) => needCodeOrText(`${at}.options[${oi}]`, option));
+      if (!Number.isInteger(q.answer) || q.answer < 0 || q.answer >= q.options.length) add(at, "answer должен быть номером варианта (с нуля)");
+    });
+  }
+  if (!Array.isArray(lesson.exercises) || lesson.exercises.length === 0) {
+    add(where, "нужна хотя бы одна задача в exercises");
+  } else {
+    lesson.exercises.forEach((exercise, ei) => {
+      const at = `${where}.exercises[${ei}]`;
+      needText(`${at}.task`, exercise.task);
+      if (exercise.hint !== undefined) needText(`${at}.hint`, exercise.hint);
+      const solution = exercise.solution || {};
+      if (!CODE_LANGS.includes(solution.lang)) add(`${at}.solution`, `lang должен быть одним из ${CODE_LANGS.join(", ")}`);
+      needCode(`${at}.solution.code`, solution.code);
+      if (solution.output !== undefined) needCode(`${at}.solution.output`, solution.output);
+    });
+  }
+}
+
 // Проверяет данные справочника. Принимает набор данных, чтобы валидатор
 // мог прогонять и заведомо сломанные примеры; по умолчанию — данные страницы.
 function validateData(data = { UI, BLOCKS, TOPICS, GLOSSARY, CHANGELOG }) {
@@ -2927,6 +3737,7 @@ function validateData(data = { UI, BLOCKS, TOPICS, GLOSSARY, CHANGELOG }) {
       if (!CODE_LANGS.includes(topic.example.lang)) add(`${where}.example`, `lang должен быть одним из ${CODE_LANGS.join(", ")}`);
       if (typeof topic.example.code !== "string" || topic.example.code.trim() === "") add(`${where}.example`, "пустой code");
     }
+    if (topic.lesson !== undefined) validateLesson(`${where}.lesson`, topic.lesson, add, needText);
     if (!Array.isArray(topic.resources) || topic.resources.length === 0) {
       add(where, "нужен хотя бы один ресурс");
     } else {
@@ -3029,6 +3840,16 @@ function normalizeForSearch(text) {
   return String(text).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ё/g, "е");
 }
 
+// Текст урока для поиска: заголовки частей и текстовые блоки на нужном языке.
+function lessonText(lesson, lang) {
+  return lesson.sections.flatMap((part) => [loc(part.title, lang), ...part.blocks.flatMap((block) => {
+    if (block.text) return [loc(block.text, lang)];
+    if (block.items) return block.items.map((item) => loc(item, lang));
+    if (block.note) return [loc(block.note, lang)];
+    return [];
+  })]);
+}
+
 // Поиск по текущему языку и английским терминам. Возвращает темы и термины,
 // подходящие под все слова запроса; названия весят больше текста.
 function search(query, lang) {
@@ -3043,7 +3864,8 @@ function search(query, lang) {
   const results = [];
   for (const topic of TOPICS) {
     const title = `${loc(topic.title, lang)} ${topic.title.en}`;
-    const body = ["what", "why", "fromSql", "practice"].map((field) => (topic[field] ? loc(topic[field], lang) : "")).join(" ");
+    const body = ["what", "why", "fromSql", "practice"].map((field) => (topic[field] ? loc(topic[field], lang) : ""))
+      .concat(topic.lesson ? lessonText(topic.lesson, lang) : []).join(" ");
     const value = score(title, body);
     if (value) results.push({ kind: "topic", id: topic.id, score: value + 1 });
   }
@@ -3119,6 +3941,7 @@ const state = {
   navOpen: false,
   topicStatus: {},
   topicNotes: {},
+  quizAnswers: {},
   inbox: [],
   filter: { status: "any", priority: "any", stale: false },
 };
@@ -3170,6 +3993,21 @@ function normalizeTopicNotes(value) {
   return result;
 }
 
+// Ответы на тесты: { topicId: { номерВопроса: номерВарианта } }, только целые числа.
+function normalizeQuizAnswers(value) {
+  const result = {};
+  if (!isPlainObject(value)) return result;
+  for (const [id, answers] of Object.entries(value)) {
+    if (!isPlainObject(answers)) continue;
+    const clean = {};
+    for (const [qi, oi] of Object.entries(answers)) {
+      if (/^\d+$/.test(qi) && Number.isInteger(oi) && oi >= 0) clean[qi] = oi;
+    }
+    if (Object.keys(clean).length) result[id] = clean;
+  }
+  return result;
+}
+
 function normalizeInbox(value) {
   if (!Array.isArray(value)) return [];
   const seen = new Set();
@@ -3196,6 +4034,7 @@ function buildBackup(now = new Date()) {
     exported: now.toISOString(),
     topicStatus: state.topicStatus,
     topicNotes: state.topicNotes,
+    quizAnswers: state.quizAnswers,
     inbox: state.inbox,
   };
 }
@@ -3212,6 +4051,7 @@ function parseBackup(text) {
   return {
     topicStatus: normalizeTopicStatus(data.topicStatus),
     topicNotes: normalizeTopicNotes(data.topicNotes),
+    quizAnswers: normalizeQuizAnswers(data.quizAnswers),
     inbox: normalizeInbox(data.inbox),
   };
 }
@@ -3444,14 +4284,15 @@ function renderTopic(id) {
   const topic = topicById(id);
   const block = blockById(topic.block);
   document.title = `${loc(topic.title, lang)} · ${t("appTitle", lang)}`;
-  return h("article", { class: "card" },
+  const overview = h("article", { class: "card" },
     h("p", { class: "crumbs" },
       h("a", { href: "#" }, t("appTitle", lang)), " / ",
       h("a", { href: `#block-${block.id}` }, `${block.order}. ${loc(block.title, lang)}`),
     ),
     h("h2", { class: "page-title" }, loc(topic.title, lang)),
     h("div", { class: "meta" }, priorityBadge(block.priority, lang), `${t("checkedOn", lang)} ${topic.checked}`,
-      isStale(topic.checked) ? h("span", { class: "badge stale", title: t("staleHint", lang) }, t("stale", lang)) : null),
+      isStale(topic.checked) ? h("span", { class: "badge stale", title: t("staleHint", lang) }, t("stale", lang)) : null,
+      topic.lesson ? h("button", { class: "badge lesson-badge", type: "button", dataset: { jump: "lesson-" + topic.lesson.sections[0].id } }, t("lessonBadge", lang)) : null),
     h("div", { class: "status-row" }, h("div", { class: "segmented", id: "topic-status", role: "group", "aria-label": t("statusLabel", lang) })),
     section("sectionWhat", lang, h("p", {}, loc(topic.what, lang))),
     section("sectionWhy", lang, h("p", {}, loc(topic.why, lang))),
@@ -3468,8 +4309,99 @@ function renderTopic(id) {
     section("sectionPractice", lang, h("p", {}, loc(topic.practice, lang))),
     topic.prereq.length ? section("sectionPrereq", lang, h("ul", { class: "topic-links" }, topic.prereq.map((ref) => h("li", {}, topicLink(ref, lang))))) : null,
     topic.related.length ? section("sectionRelated", lang, h("ul", { class: "topic-links" }, topic.related.map((ref) => h("li", {}, topicLink(ref, lang))))) : null,
-    section("sectionNotes", lang, h("textarea", { id: "topic-notes", placeholder: t("notesPlaceholder", lang), "aria-label": t("sectionNotes", lang) })),
   );
+  const notes = h("div", { class: "card" },
+    h("h3", { class: "card-title" }, t("sectionNotes", lang)),
+    h("textarea", { id: "topic-notes", placeholder: t("notesPlaceholder", lang), "aria-label": t("sectionNotes", lang) }));
+  return [overview, ...(topic.lesson ? renderLesson(topic, lang) : []), notes];
+}
+
+// ─── Урок внутри темы ───
+// Текст урока поддерживает `код` в обратных кавычках.
+function richText(text) {
+  return text.split(/(`[^`]+`)/).filter(Boolean).map((part) => (part.startsWith("`") && part.endsWith("`") && part.length > 2
+    ? h("code", { class: "inline" }, part.slice(1, -1))
+    : part));
+}
+
+function codeBlock(lang, code, output) {
+  return h("div", { class: "code" },
+    h("pre", {}, h("code", { class: `lang-${lang}` }, code)),
+    output ? h("pre", { class: "output", "aria-label": "output" }, output) : null,
+  );
+}
+
+function renderLessonBlock(block, lang) {
+  switch (block.type) {
+    case "p": return h("p", {}, richText(loc(block.text, lang)));
+    case "list": return h("ul", { class: "lesson-list" }, block.items.map((item) => h("li", {}, richText(loc(item, lang)))));
+    case "tip": return h("p", { class: "callout tip" }, h("b", {}, `${t("lessonTip", lang)} `), richText(loc(block.text, lang)));
+    case "warn": return h("p", { class: "callout warn" }, h("b", {}, `${t("lessonWarn", lang)} `), richText(loc(block.text, lang)));
+    case "code": return [block.caption ? h("p", { class: "caption" }, richText(loc(block.caption, lang))) : null, codeBlock(block.lang, block.code, block.output)];
+    case "compare": return h("div", { class: "compare" },
+      h("div", {}, h("div", { class: "compare-label" }, "PL/SQL"), codeBlock("sql", block.sql)),
+      h("div", {}, h("div", { class: "compare-label" }, "Python"), codeBlock("python", block.python)),
+      block.note ? h("p", { class: "compare-note" }, richText(loc(block.note, lang))) : null,
+    );
+    case "table": return h("div", { class: "table-wrap" }, h("table", {},
+      h("thead", {}, h("tr", {}, block.head.map((cell) => h("th", {}, loc(cell, lang))))),
+      h("tbody", {}, block.rows.map((row) => h("tr", {}, row.map((cell) => h("td", {},
+        typeof cell === "string" ? h("code", { class: "inline" }, cell) : richText(loc(cell, lang))))))),
+    ));
+    default: return null;
+  }
+}
+
+function renderLesson(topic, lang) {
+  const { lesson } = topic;
+  const answers = state.quizAnswers[topic.id] || {};
+  const answered = lesson.quiz.filter((_, i) => answers[i] !== undefined).length;
+  const correct = lesson.quiz.filter((q, i) => answers[i] === q.answer).length;
+  const cards = [
+    h("div", { class: "card lesson" },
+      h("h3", { class: "card-title" }, t("lessonTitle", lang)),
+      h("p", { class: "hint" }, `${t("lessonMinutes", lang)} ${lesson.minutes} ${t("minutesShort", lang)} · ${t("lessonParts", lang)} ${lesson.sections.length}`),
+      h("ol", { class: "lesson-toc" }, lesson.sections.map((part) => h("li", {},
+        h("button", { class: "btn link", type: "button", dataset: { jump: `lesson-${part.id}` } }, loc(part.title, lang))))),
+      lesson.sections.map((part, index) => h("section", { class: "lesson-part", id: `lesson-${part.id}` },
+        h("h4", {}, `${index + 1}. ${loc(part.title, lang)}`),
+        part.blocks.map((block) => renderLessonBlock(block, lang)),
+      )),
+    ),
+  ];
+  if (lesson.cheatsheet) {
+    cards.push(h("div", { class: "card" },
+      h("h3", { class: "card-title", id: "lesson-cheatsheet" }, t("lessonCheatsheet", lang)),
+      renderLessonBlock({ type: "table", head: lesson.cheatsheet.head, rows: lesson.cheatsheet.rows }, lang)));
+  }
+  cards.push(h("div", { class: "card", id: "lesson-quiz" },
+    h("h3", { class: "card-title" }, t("lessonQuiz", lang)),
+    h("p", { class: "hint", id: "quiz-score" }, `${t("quizScore", lang)} ${correct}/${lesson.quiz.length}` + (answered < lesson.quiz.length ? ` · ${t("quizLeft", lang)} ${lesson.quiz.length - answered}` : "")),
+    h("ol", { class: "quiz" }, lesson.quiz.map((q, qi) => {
+      const chosen = answers[qi];
+      const done = chosen !== undefined;
+      return h("li", { class: `quiz-item${done ? (chosen === q.answer ? " right" : " wrong") : ""}` },
+        h("p", { class: "quiz-q" }, richText(loc(q.q, lang))),
+        h("div", { class: "quiz-options", role: "group" }, q.options.map((option, oi) => h("button", {
+          type: "button",
+          class: `quiz-option${done && oi === q.answer ? " is-answer" : ""}${done && oi === chosen && chosen !== q.answer ? " is-wrong" : ""}`,
+          "aria-pressed": String(oi === chosen),
+          dataset: { quiz: `${qi}:${oi}` },
+        }, typeof option === "string" ? h("code", { class: "inline" }, option) : richText(loc(option, lang))))),
+        done ? h("p", { class: "quiz-explain" }, h("b", {}, chosen === q.answer ? t("quizRight", lang) : t("quizWrong", lang)), " ", richText(loc(q.explain, lang))) : null,
+      );
+    })),
+    answered ? h("button", { class: "btn link", type: "button", id: "quiz-reset" }, t("quizReset", lang)) : null,
+  ));
+  cards.push(h("div", { class: "card" },
+    h("h3", { class: "card-title" }, t("lessonExercises", lang)),
+    h("ol", { class: "exercises" }, lesson.exercises.map((exercise) => h("li", {},
+      h("p", {}, richText(loc(exercise.task, lang))),
+      exercise.hint ? h("details", {}, h("summary", {}, t("exerciseHint", lang)), h("p", {}, richText(loc(exercise.hint, lang)))) : null,
+      h("details", {}, h("summary", {}, t("exerciseSolution", lang)), codeBlock(exercise.solution.lang, exercise.solution.code, exercise.solution.output)),
+    ))),
+  ));
+  return cards;
 }
 
 // Элементы управления карточки темы подключаются после вставки в документ.
@@ -3483,6 +4415,12 @@ function bindTopicControls(id) {
     renderNav(parseRoute(location.hash));
     renderProgressLink();
   });
+  for (const button of document.querySelectorAll("[data-jump]")) {
+    if (button.dataset.bound) continue;
+    button.dataset.bound = "1";
+    button.addEventListener("click", () => document.getElementById(button.dataset.jump).scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
+  bindQuiz(id);
   const notes = document.getElementById("topic-notes");
   if (notes.dataset.bound) return;
   notes.dataset.bound = "1";
@@ -3491,6 +4429,35 @@ function bindTopicControls(id) {
     if (notes.value.trim()) state.topicNotes[id] = notes.value;
     else delete state.topicNotes[id];
     persist("topicNotes");
+  });
+}
+
+function bindQuiz(id) {
+  const quiz = document.getElementById("lesson-quiz");
+  if (!quiz || quiz.dataset.bound) return;
+  quiz.dataset.bound = "1";
+  const rerender = () => {
+    const fresh = renderLesson(topicById(id), state.lang).find((card) => card.id === "lesson-quiz");
+    quiz.replaceWith(fresh);
+    bindQuiz(id);
+  };
+  quiz.addEventListener("click", (event) => {
+    const option = event.target.closest("[data-quiz]");
+    if (option) {
+      const [qi, oi] = option.dataset.quiz.split(":").map(Number);
+      const answers = state.quizAnswers[id] || {};
+      if (answers[qi] !== undefined) return;
+      state.quizAnswers[id] = { ...answers, [qi]: oi };
+      persist("quizAnswers");
+      rerender();
+      document.querySelector(`#lesson-quiz [data-quiz="${qi}:${oi}"]`)?.focus();
+      return;
+    }
+    if (event.target.closest("#quiz-reset")) {
+      delete state.quizAnswers[id];
+      persist("quizAnswers");
+      rerender();
+    }
   });
 }
 
@@ -3593,6 +4560,7 @@ function bindProgressControls() {
     Object.assign(state, data);
     persist("topicStatus");
     persist("topicNotes");
+    persist("quizAnswers");
     persist("inbox");
     renderAll();
     const after = document.getElementById("backup-notice");
@@ -3667,6 +4635,7 @@ if (typeof document !== "undefined") {
   state.theme = normalizeTheme(readStored("theme", "auto"));
   state.topicStatus = normalizeTopicStatus(readStored("topicStatus", {}));
   state.topicNotes = normalizeTopicNotes(readStored("topicNotes", {}));
+  state.quizAnswers = normalizeQuizAnswers(readStored("quizAnswers", {}));
   state.inbox = normalizeInbox(readStored("inbox", []));
 
   const searchBox = document.getElementById("search");
