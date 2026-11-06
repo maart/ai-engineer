@@ -82,8 +82,8 @@ main { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
 </header>
 <main id="app"></main>
 <footer class="app-footer">
-  <span data-i18n="footerVersion"></span> MVP 0.1 ·
-  <span data-i18n="footerUpdated"></span> 2026-11-06 23:30 (Madrid)
+  <span data-i18n="footerVersion"></span> MVP 0.2 ·
+  <span data-i18n="footerUpdated"></span> 2026-11-06 23:55 (Madrid)
 </footer>
 <script>
 // ════════════════════════════════════════════════════════════════════
@@ -119,9 +119,234 @@ const UI = {
 };
 
 // ═══════ 2. Данные: блоки, темы, глоссарий, лента ═══════
-const BLOCKS = [];
-const TOPICS = [];
-const GLOSSARY = [];
+// Формат записей — см. AGENTS.md, раздел «Модель данных».
+// Текст — всегда объект { ru, en, es }. Ссылки между записями — по id.
+
+const PRIORITIES = ["must", "basic", "plus"];
+const RESOURCE_KINDS = ["docs", "course", "book", "article", "video", "repo", "tool"];
+const CODE_LANGS = ["python", "sql", "typescript", "bash", "json", "text"];
+
+const BLOCKS = [
+  {
+    id: "foundation", order: 1, priority: "must",
+    title: { ru: "Фундамент: разработка ПО", en: "Foundation: software engineering", es: "Fundamentos: desarrollo de software" },
+    summary: {
+      ru: "Без уверенного программирования работу AI-инженера не получить: большая часть задач здесь обычная инженерная работа.",
+      en: "You will not get an AI engineering job without solid programming: most of the work is ordinary software engineering.",
+      es: "Sin programar con soltura no se consigue trabajo de AI Engineer: la mayor parte de las tareas es ingeniería de software normal.",
+    },
+  },
+  {
+    id: "llm", order: 2, priority: "must",
+    title: { ru: "Понимание LLM и моделей", en: "Understanding LLMs and models", es: "Entender los LLM y los modelos" },
+    summary: {
+      ru: "Понимать модели настолько, чтобы предсказывать их поведение и выбирать подходящую под задачу.",
+      en: "Understand models well enough to predict their behaviour and pick the right one for the task.",
+      es: "Entender los modelos lo suficiente para predecir su comportamiento y elegir el adecuado para cada tarea.",
+    },
+  },
+  {
+    id: "api", order: 3, priority: "must",
+    title: { ru: "Работа с моделями через API", en: "Working with models via API", es: "Trabajar con modelos mediante API" },
+    summary: {
+      ru: "Ежедневный инструмент AI-инженера: как стабильно получать от модели нужный результат.",
+      en: "The AI engineer's daily tool: how to get the result you need from a model, reliably.",
+      es: "La herramienta diaria del AI Engineer: cómo obtener del modelo el resultado necesario de forma fiable.",
+    },
+  },
+  {
+    id: "rag", order: 4, priority: "must",
+    title: { ru: "RAG и работа со знаниями компании", en: "RAG and company knowledge", es: "RAG y el conocimiento de la empresa" },
+    summary: {
+      ru: "Как дать модели доступ к документам и данным компании, чтобы она отвечала по ним и ссылалась на источники.",
+      en: "How to give a model access to company documents and data so it answers from them and cites its sources.",
+      es: "Cómo dar al modelo acceso a los documentos y datos de la empresa para que responda con ellos y cite las fuentes.",
+    },
+  },
+  {
+    id: "agents", order: 5, priority: "must",
+    title: { ru: "Агенты и оркестрация", en: "Agents and orchestration", es: "Agentes y orquestación" },
+    summary: {
+      ru: "Системы, где модель сама планирует шаги и вызывает инструменты, включая MCP.",
+      en: "Systems where the model plans its own steps and calls tools, including MCP.",
+      es: "Sistemas en los que el modelo planifica sus pasos y llama a herramientas, incluido MCP.",
+    },
+  },
+  {
+    id: "evals", order: 6, priority: "must",
+    title: { ru: "Evals: измерение качества", en: "Evals: measuring quality", es: "Evals: medir la calidad" },
+    summary: {
+      ru: "Как доказать цифрами, что AI-функция работает, и не сломать её следующим изменением.",
+      en: "How to prove with numbers that an AI feature works, and keep the next change from breaking it.",
+      es: "Cómo demostrar con datos que una función de IA funciona y evitar que el siguiente cambio la rompa.",
+    },
+  },
+  {
+    id: "production", order: 7, priority: "basic",
+    title: { ru: "Продакшн: LLMOps, стоимость, безопасность", en: "Production: LLMOps, cost, security", es: "Producción: LLMOps, coste y seguridad" },
+    summary: {
+      ru: "Как AI-сервис живёт под нагрузкой: наблюдаемость, цена запросов, защита от атак на промпт.",
+      en: "How an AI service lives under load: observability, cost per request, protection against prompt attacks.",
+      es: "Cómo vive un servicio de IA bajo carga: observabilidad, coste por petición y protección frente a ataques al prompt.",
+    },
+  },
+  {
+    id: "ml", order: 8, priority: "plus",
+    title: { ru: "ML-основы и fine-tuning", en: "ML basics and fine-tuning", es: "Fundamentos de ML y fine-tuning" },
+    summary: {
+      ru: "Достаточно ML, чтобы понимать, когда дообучение модели лучше промпта, и провести такой эксперимент.",
+      en: "Enough ML to know when fine-tuning beats prompting, and to run that experiment.",
+      es: "El ML suficiente para saber cuándo el fine-tuning supera al prompt y llevar a cabo ese experimento.",
+    },
+  },
+  {
+    id: "product", order: 9, priority: "must",
+    title: { ru: "Продуктовые и soft skills", en: "Product and soft skills", es: "Producto y soft skills" },
+    summary: {
+      ru: "Находить задачи, где AI действительно помогает, и объяснять решения бизнесу.",
+      en: "Find problems where AI genuinely helps, and explain the decisions to the business.",
+      es: "Encontrar problemas en los que la IA ayuda de verdad y explicar las decisiones al negocio.",
+    },
+  },
+];
+
+const TOPICS = [
+  {
+    id: "python-basics", block: "foundation",
+    title: { ru: "Python с нуля", en: "Python from scratch", es: "Python desde cero" },
+    what: {
+      ru: "Python — основной язык AI-разработки: на нём написаны SDK провайдеров моделей, фреймворки для RAG и агентов, библиотеки для данных. Начать стоит с базового синтаксиса: переменные, списки и словари, циклы, функции, модули и виртуальное окружение.",
+      en: "Python is the main language of AI development: model provider SDKs, RAG and agent frameworks and data libraries are all written in it. Start with the basic syntax: variables, lists and dictionaries, loops, functions, modules and a virtual environment.",
+      es: "Python es el lenguaje principal del desarrollo de IA: en él están los SDK de los proveedores de modelos, los frameworks de RAG y agentes y las librerías de datos. Conviene empezar por la sintaxis básica: variables, listas y diccionarios, bucles, funciones, módulos y entorno virtual.",
+    },
+    why: {
+      ru: "Почти каждая вакансия AI Engineer требует уверенный Python. Без него не получится ни вызвать модель, ни написать тесты, ни пройти live coding на собеседовании.",
+      en: "Almost every AI Engineer job asks for confident Python. Without it you cannot call a model, write tests or pass the live-coding interview.",
+      es: "Casi todas las ofertas de AI Engineer piden Python con soltura. Sin él no se puede llamar a un modelo, escribir tests ni superar el live coding de la entrevista.",
+    },
+    fromSql: {
+      ru: "Список словарей в Python похож на результат запроса: каждая строка — словарь «столбец → значение». List comprehension — это SELECT … WHERE в одну строку. Главное отличие от PL/SQL: данные живут в памяти программы, а не в базе, и типы проверяются при выполнении, а не при компиляции.",
+      en: "A list of dictionaries in Python looks like a query result: each row is a \"column → value\" dictionary. A list comprehension is a one-line SELECT … WHERE. The main difference from PL/SQL: data lives in program memory, not in the database, and types are checked at run time, not at compile time.",
+      es: "Una lista de diccionarios en Python se parece al resultado de una consulta: cada fila es un diccionario «columna → valor». Una list comprehension es un SELECT … WHERE en una línea. La diferencia principal con PL/SQL: los datos viven en la memoria del programa, no en la base de datos, y los tipos se comprueban al ejecutar, no al compilar.",
+    },
+    concepts: [],
+    example: {
+      lang: "python",
+      code: 'employees = [\n    {"name": "Ana", "dept": "IT", "salary": 4200},\n    {"name": "Luis", "dept": "HR", "salary": 3100},\n]\n\n# SELECT name FROM employees WHERE salary > 4000\nrich = [e["name"] for e in employees if e["salary"] > 4000]\nprint(rich)  # [\'Ana\']',
+    },
+    resources: [
+      { title: "The Python Tutorial", url: "https://docs.python.org/3/tutorial/", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Установите Python 3 и создайте виртуальное окружение. Напишите скрипт, который читает CSV с сотрудниками, считает среднюю зарплату по отделам (аналог GROUP BY) и печатает результат.",
+      en: "Install Python 3 and create a virtual environment. Write a script that reads an employees CSV, computes the average salary per department (like GROUP BY) and prints the result.",
+      es: "Instala Python 3 y crea un entorno virtual. Escribe un script que lea un CSV de empleados, calcule el salario medio por departamento (como GROUP BY) e imprima el resultado.",
+    },
+    prereq: [],
+    related: [],
+    checked: "2026-11-06",
+  },
+  {
+    id: "tokens", block: "llm",
+    title: { ru: "Токены", en: "Tokens", es: "Tokens" },
+    what: {
+      ru: "Токен (token) — кусочек текста, обычно часть слова, с которым работает модель. Модель читает и пишет текст токенами и предсказывает следующий токен по предыдущим.",
+      en: "A token is a piece of text, usually part of a word, that a model works with. The model reads and writes text as tokens and predicts the next token from the previous ones.",
+      es: "Un token es un fragmento de texto, normalmente parte de una palabra, con el que trabaja el modelo. El modelo lee y escribe texto en tokens y predice el siguiente token a partir de los anteriores.",
+    },
+    why: {
+      ru: "В токенах считаются цена запроса, размер контекстного окна и скорость ответа. Текст на русском обычно занимает больше токенов, чем тот же текст на английском, поэтому стоит дороже.",
+      en: "Request price, context window size and response speed are all measured in tokens. Text in Russian or Spanish usually takes more tokens than the same text in English, so it costs more.",
+      es: "El precio de la petición, el tamaño de la ventana de contexto y la velocidad de respuesta se miden en tokens. Un texto en español o ruso suele ocupar más tokens que el mismo texto en inglés, así que cuesta más.",
+    },
+    concepts: ["token"],
+    example: {
+      lang: "python",
+      code: 'import anthropic\n\nclient = anthropic.Anthropic()\nresult = client.messages.count_tokens(\n    model="claude-sonnet-5-5",\n    messages=[{"role": "user", "content": "Привет, мир!"}],\n)\nprint(result.input_tokens)',
+    },
+    resources: [
+      { title: "Andrej Karpathy — Intro to Large Language Models", url: "https://www.youtube.com/watch?v=zjkBMFhNj_g", kind: "video", lang: "en" },
+      { title: "Anthropic — Token counting", url: "https://platform.claude.com/docs/en/build-with-claude/token-counting", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Посчитайте токены одного и того же абзаца на русском, английском и испанском. Во сколько раз отличается цена?",
+      en: "Count the tokens of the same paragraph in Russian, English and Spanish. How much does the price differ?",
+      es: "Cuenta los tokens del mismo párrafo en ruso, inglés y español. ¿Cuánto varía el precio?",
+    },
+    prereq: [],
+    related: ["embeddings"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "embeddings", block: "llm",
+    title: { ru: "Эмбеддинги", en: "Embeddings", es: "Embeddings" },
+    what: {
+      ru: "Эмбеддинг (embedding) — вектор из сотен или тысяч чисел, который описывает смысл текста. Тексты с близким смыслом получают близкие векторы, даже если в них разные слова.",
+      en: "An embedding is a vector of hundreds or thousands of numbers that describes the meaning of a text. Texts with similar meaning get similar vectors, even when they use different words.",
+      es: "Un embedding es un vector de cientos o miles de números que describe el significado de un texto. Los textos con significado parecido obtienen vectores cercanos, aunque usen palabras distintas.",
+    },
+    why: {
+      ru: "На эмбеддингах построен семантический поиск, а значит и RAG: найти куски документов, близкие по смыслу к вопросу пользователя.",
+      en: "Semantic search, and therefore RAG, is built on embeddings: finding document chunks that are close in meaning to the user's question.",
+      es: "La búsqueda semántica, y por tanto RAG, se basa en embeddings: encontrar fragmentos de documentos cercanos en significado a la pregunta del usuario.",
+    },
+    fromSql: {
+      ru: "Здесь ваш опыт с БД — преимущество. Расширение pgvector добавляет в PostgreSQL тип vector и индекс для поиска ближайших соседей: ORDER BY embedding <=> :query_vector LIMIT 5 — это и есть семантический поиск на чистом SQL.",
+      en: "Your database experience is an advantage here. The pgvector extension adds a vector type and a nearest-neighbour index to PostgreSQL: ORDER BY embedding <=> :query_vector LIMIT 5 is semantic search in plain SQL.",
+      es: "Aquí tu experiencia con bases de datos es una ventaja. La extensión pgvector añade a PostgreSQL el tipo vector y un índice de vecinos más cercanos: ORDER BY embedding <=> :query_vector LIMIT 5 es búsqueda semántica en SQL puro.",
+    },
+    concepts: ["embedding", "cosine-similarity"],
+    example: {
+      lang: "sql",
+      code: "CREATE EXTENSION vector;\n\nCREATE TABLE docs (\n  id bigserial PRIMARY KEY,\n  content text,\n  embedding vector(1024)\n);\n\n-- 5 ближайших по смыслу документов (косинусное расстояние)\nSELECT id, content\nFROM docs\nORDER BY embedding <=> :query_embedding\nLIMIT 5;",
+    },
+    resources: [
+      { title: "pgvector", url: "https://github.com/pgvector/pgvector", kind: "repo", lang: "en" },
+    ],
+    practice: {
+      ru: "Получите эмбеддинги для десяти коротких фраз и найдите для каждой самую близкую по косинусному сходству. Совпадает ли результат с вашей интуицией?",
+      en: "Get embeddings for ten short phrases and find the closest one to each by cosine similarity. Does the result match your intuition?",
+      es: "Obtén embeddings de diez frases cortas y busca para cada una la más cercana por similitud coseno. ¿Coincide el resultado con tu intuición?",
+    },
+    prereq: ["tokens"],
+    related: [],
+    checked: "2026-11-06",
+  },
+];
+
+const GLOSSARY = [
+  {
+    id: "token",
+    term: { ru: "токен", en: "token", es: "token" },
+    definition: {
+      ru: "Единица текста, с которой работает модель: обычно часть слова. В токенах считаются цена и лимиты контекста.",
+      en: "The unit of text a model works with, usually part of a word. Price and context limits are counted in tokens.",
+      es: "Unidad de texto con la que trabaja el modelo, normalmente parte de una palabra. El precio y los límites de contexto se cuentan en tokens.",
+    },
+    topics: ["tokens"],
+  },
+  {
+    id: "embedding",
+    term: { ru: "эмбеддинг", en: "embedding", es: "embedding" },
+    definition: {
+      ru: "Вектор чисел, описывающий смысл текста; близкие по смыслу тексты дают близкие векторы.",
+      en: "A vector of numbers describing the meaning of a text; texts with similar meaning give similar vectors.",
+      es: "Vector de números que describe el significado de un texto; textos de significado parecido dan vectores cercanos.",
+    },
+    topics: ["embeddings"],
+  },
+  {
+    id: "cosine-similarity",
+    term: { ru: "косинусное сходство", en: "cosine similarity", es: "similitud coseno" },
+    definition: {
+      ru: "Мера близости двух векторов по углу между ними: 1 — одинаковое направление, 0 — не связаны.",
+      en: "A measure of how close two vectors are by the angle between them: 1 means the same direction, 0 means unrelated.",
+      es: "Medida de cercanía entre dos vectores según el ángulo que forman: 1 es la misma dirección, 0 indica que no están relacionados.",
+    },
+    topics: ["embeddings"],
+  },
+];
+
 const CHANGELOG = [];
 
 // ═══════ 3. Проверка данных (validateData) ═══════
@@ -130,11 +355,121 @@ function isLocalized(value) {
     && LANGS.every((lang) => typeof value[lang] === "string" && value[lang].trim() !== "");
 }
 
-function validateData() {
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const ID_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+function isValidDate(value) {
+  if (typeof value !== "string" || !DATE_RE.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+// Проверяет данные справочника. Принимает набор данных, чтобы валидатор
+// мог прогонять и заведомо сломанные примеры; по умолчанию — данные страницы.
+function validateData(data = { UI, BLOCKS, TOPICS, GLOSSARY, CHANGELOG }) {
   const issues = [];
-  for (const [key, value] of Object.entries(UI)) {
-    if (!isLocalized(value)) issues.push(`UI.${key}: нужен текст на ${LANGS.join("/")}`);
+  const add = (where, message) => issues.push(`${where}: ${message}`);
+  const needText = (where, value) => {
+    if (!isLocalized(value)) add(where, `нужен текст на ${LANGS.join("/")}`);
+  };
+  const collectIds = (list, name) => {
+    const ids = new Set();
+    list.forEach((item, index) => {
+      const where = `${name}[${index}]`;
+      if (typeof item.id !== "string" || !ID_RE.test(item.id)) add(where, `id «${item.id}» должен быть в kebab-case`);
+      else if (ids.has(item.id)) add(where, `повторяющийся id «${item.id}»`);
+      else ids.add(item.id);
+    });
+    return ids;
+  };
+  const checkRefs = (where, refs, ids, kind) => {
+    if (!Array.isArray(refs)) {
+      add(where, "должен быть массивом");
+      return;
+    }
+    if (new Set(refs).size !== refs.length) add(where, "ссылки повторяются");
+    for (const ref of refs) if (!ids.has(ref)) add(where, `нет ${kind} «${ref}»`);
+  };
+
+  for (const [key, value] of Object.entries(data.UI)) needText(`UI.${key}`, value);
+
+  const blockIds = collectIds(data.BLOCKS, "BLOCKS");
+  const topicIds = collectIds(data.TOPICS, "TOPICS");
+  const termIds = collectIds(data.GLOSSARY, "GLOSSARY");
+
+  const orders = data.BLOCKS.map((block) => block.order);
+  if (new Set(orders).size !== orders.length) add("BLOCKS", "повторяется order");
+  for (const block of data.BLOCKS) {
+    const where = `BLOCKS.${block.id}`;
+    if (!Number.isInteger(block.order)) add(where, "order должен быть целым числом");
+    if (!PRIORITIES.includes(block.priority)) add(where, `priority должен быть одним из ${PRIORITIES.join(", ")}`);
+    needText(`${where}.title`, block.title);
+    needText(`${where}.summary`, block.summary);
   }
+
+  for (const topic of data.TOPICS) {
+    const where = `TOPICS.${topic.id}`;
+    if (!blockIds.has(topic.block)) add(where, `нет блока «${topic.block}»`);
+    for (const field of ["title", "what", "why", "practice"]) needText(`${where}.${field}`, topic[field]);
+    if (topic.fromSql !== undefined) needText(`${where}.fromSql`, topic.fromSql);
+    checkRefs(`${where}.concepts`, topic.concepts, termIds, "термина");
+    checkRefs(`${where}.prereq`, topic.prereq, topicIds, "темы");
+    checkRefs(`${where}.related`, topic.related, topicIds, "темы");
+    if (Array.isArray(topic.prereq) && topic.prereq.includes(topic.id)) add(where, "тема ссылается на себя в prereq");
+    if (Array.isArray(topic.related) && topic.related.includes(topic.id)) add(where, "тема ссылается на себя в related");
+    if (!isValidDate(topic.checked)) add(where, "checked должен быть датой ГГГГ-ММ-ДД");
+    if (topic.example !== undefined) {
+      if (!CODE_LANGS.includes(topic.example.lang)) add(`${where}.example`, `lang должен быть одним из ${CODE_LANGS.join(", ")}`);
+      if (typeof topic.example.code !== "string" || topic.example.code.trim() === "") add(`${where}.example`, "пустой code");
+    }
+    if (!Array.isArray(topic.resources) || topic.resources.length === 0) {
+      add(where, "нужен хотя бы один ресурс");
+    } else {
+      topic.resources.forEach((resource, index) => {
+        const at = `${where}.resources[${index}]`;
+        if (typeof resource.title !== "string" || resource.title.trim() === "") add(at, "пустой title");
+        if (typeof resource.url !== "string" || !/^https:\/\/[^\s]+$/.test(resource.url)) add(at, "url должен начинаться с https://");
+        if (!RESOURCE_KINDS.includes(resource.kind)) add(at, `kind должен быть одним из ${RESOURCE_KINDS.join(", ")}`);
+        if (!LANGS.includes(resource.lang)) add(at, `lang должен быть одним из ${LANGS.join(", ")}`);
+      });
+    }
+  }
+
+  // Циклы в prereq: тема не может, через цепочку, требовать саму себя.
+  const prereqOf = new Map(data.TOPICS.map((topic) => [topic.id, Array.isArray(topic.prereq) ? topic.prereq : []]));
+  const visiting = new Set();
+  const done = new Set();
+  const visit = (id, path) => {
+    if (done.has(id)) return;
+    if (visiting.has(id)) {
+      add("TOPICS", `цикл в prereq: ${[...path, id].join(" → ")}`);
+      return;
+    }
+    visiting.add(id);
+    for (const next of prereqOf.get(id) || []) visit(next, [...path, id]);
+    visiting.delete(id);
+    done.add(id);
+  };
+  for (const id of prereqOf.keys()) visit(id, []);
+
+  for (const term of data.GLOSSARY) {
+    const where = `GLOSSARY.${term.id}`;
+    needText(`${where}.term`, term.term);
+    needText(`${where}.definition`, term.definition);
+    checkRefs(`${where}.topics`, term.topics, topicIds, "темы");
+  }
+
+  data.CHANGELOG.forEach((entry, index) => {
+    const where = `CHANGELOG[${index}]`;
+    if (!isValidDate(entry.date)) add(where, "date должен быть датой ГГГГ-ММ-ДД");
+    needText(`${where}.title`, entry.title);
+    needText(`${where}.text`, entry.text);
+    checkRefs(`${where}.topics`, entry.topics, topicIds, "темы");
+    if (typeof entry.source !== "string" || !/^https:\/\/[^\s]+$/.test(entry.source)) add(where, "source должен начинаться с https://");
+  });
+  const dates = data.CHANGELOG.map((entry) => entry.date);
+  if (dates.some((date, i) => i > 0 && date > dates[i - 1])) add("CHANGELOG", "записи должны идти от новых к старым");
+
   return issues;
 }
 
