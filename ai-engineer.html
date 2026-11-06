@@ -162,6 +162,8 @@ h2.page-title { margin: 0 0 8px; font-size: 1.6rem; line-height: 1.25; }
 .badge.basic { color: var(--basic); }
 .badge.plus { color: var(--plus); }
 .section { margin-top: 20px; }
+h3.card-title { margin: 0 0 8px; font-size: 1.1rem; }
+.hint { margin: 8px 0 0; color: var(--muted); font-size: 0.88rem; }
 .section h3 { margin: 0 0 6px; font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
 .section p { margin: 0; }
 .from-sql { padding: 12px 14px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 8px 8px 0; }
@@ -201,6 +203,60 @@ pre {
 .results p { margin: 2px 0 0; color: var(--muted); font-size: 0.9rem; }
 mark { background: var(--accent-soft); color: inherit; padding: 0 1px; border-radius: 2px; }
 .empty { color: var(--muted); }
+.progress-link {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 0.9rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.progress-link[aria-current="page"] { border-color: var(--accent); }
+.bar { position: relative; width: 64px; height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+.bar > span { position: absolute; inset: 0 auto 0 0; background: var(--plus); }
+.bar.wide { width: 100%; height: 8px; }
+.status-dot { display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; border: 1.5px solid var(--muted); vertical-align: 1px; }
+.status-dot.learning { border-color: var(--basic); background: var(--basic); }
+.status-dot.understood { border-color: var(--plus); background: var(--plus); }
+.status-dot.applied { border-color: var(--accent); background: var(--accent); }
+.status-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 0; }
+.status-row .segmented button { font-size: 0.85rem; }
+textarea {
+  width: 100%;
+  min-height: 110px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+.btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+.btn.primary { border-color: var(--accent); background: var(--accent); color: var(--accent-text); }
+.btn.link { border: 0; padding: 0; background: none; color: var(--muted); text-decoration: underline; font-size: 0.85rem; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.block-progress { display: grid; grid-template-columns: minmax(0, 1fr) 120px 56px; gap: 6px 12px; align-items: center; margin: 0; }
+.block-progress dt { min-width: 0; }
+.block-progress dd { margin: 0; color: var(--muted); font-size: 0.88rem; text-align: right; font-variant-numeric: tabular-nums; }
+.inbox { margin: 12px 0 0; padding: 0; list-style: none; }
+.inbox li { padding: 8px 0; border-top: 1px solid var(--border); white-space: pre-wrap; overflow-wrap: anywhere; }
+.inbox time { display: block; color: var(--muted); font-size: 0.8rem; }
+.notice { color: var(--plus); font-size: 0.9rem; }
+.notice.error { color: var(--must); }
 .app-footer { max-width: 1200px; margin: 0 auto; padding: 8px 16px 24px; color: var(--muted); font-size: 0.85rem; }
 @media (max-width: 760px) {
   .app-header { position: static; }
@@ -221,6 +277,8 @@ mark { background: var(--accent-soft); color: inherit; padding: 0 1px; border-ra
   .nav:not(.open) .nav-tree { display: none; }
   .nav-tree { margin-top: 8px; }
   .card { padding: 16px; }
+  .block-progress { grid-template-columns: minmax(0, 1fr) 56px; }
+  .block-progress .bar { display: none; }
   h2.page-title { font-size: 1.35rem; }
 }
 </style>
@@ -230,6 +288,7 @@ mark { background: var(--accent-soft); color: inherit; padding: 0 1px; border-ra
   <h1 class="app-title"><a href="#" data-i18n="appTitle"></a></h1>
   <input class="search" id="search" type="search" autocomplete="off">
   <div class="header-controls">
+    <a class="progress-link" id="progress-link" href="#progress"></a>
     <div class="segmented" id="lang-switch" role="group"></div>
     <div class="segmented" id="theme-switch" role="group"></div>
   </div>
@@ -242,8 +301,8 @@ mark { background: var(--accent-soft); color: inherit; padding: 0 1px; border-ra
   <main class="content" id="app"></main>
 </div>
 <footer class="app-footer">
-  <span data-i18n="footerVersion"></span> MVP 0.3 ·
-  <span data-i18n="footerUpdated"></span> 2026-11-07 00:40 (Madrid)
+  <span data-i18n="footerVersion"></span> MVP 0.4 ·
+  <span data-i18n="footerUpdated"></span> 2026-11-07 01:20 (Madrid)
 </footer>
 <script>
 // ════════════════════════════════════════════════════════════════════
@@ -306,6 +365,50 @@ const UI = {
   kind_video: { ru: "видео", en: "video", es: "vídeo" },
   kind_repo: { ru: "репозиторий", en: "repository", es: "repositorio" },
   kind_tool: { ru: "инструмент", en: "tool", es: "herramienta" },
+  status_todo: { ru: "Не начато", en: "Not started", es: "Sin empezar" },
+  status_learning: { ru: "Изучаю", en: "Learning", es: "Estudiando" },
+  status_understood: { ru: "Понял", en: "Understood", es: "Entendido" },
+  status_applied: { ru: "Применил", en: "Applied", es: "Aplicado" },
+  statusLabel: { ru: "Мой статус", en: "My status", es: "Mi estado" },
+  sectionNotes: { ru: "Мои заметки", en: "My notes", es: "Mis notas" },
+  notesPlaceholder: {
+    ru: "Что понял, вопросы, ссылки. Сохраняется автоматически.",
+    en: "What you understood, questions, links. Saved automatically.",
+    es: "Lo que has entendido, dudas, enlaces. Se guarda automáticamente.",
+  },
+  progressLink: { ru: "Мой прогресс", en: "My progress", es: "Mi progreso" },
+  progressSummary: { ru: "Освоено тем", en: "Topics mastered", es: "Temas dominados" },
+  progressHint: {
+    ru: "Освоенной считается тема со статусом «Понял» или «Применил».",
+    en: "A topic counts as mastered when its status is “Understood” or “Applied”.",
+    es: "Un tema cuenta como dominado si su estado es «Entendido» o «Aplicado».",
+  },
+  inProgressTitle: { ru: "Сейчас изучаю", en: "Currently learning", es: "Estudiando ahora" },
+  inProgressEmpty: { ru: "Пока нет тем в работе.", en: "No topics in progress yet.", es: "Aún no hay temas en curso." },
+  inboxTitle: { ru: "Входящие", en: "Inbox", es: "Bandeja de entrada" },
+  inboxHint: {
+    ru: "Быстро сохраните ссылку или мысль, а потом разберите по темам.",
+    en: "Quickly save a link or a thought, then sort it into topics later.",
+    es: "Guarda rápido un enlace o una idea y clasifícalo por temas más tarde.",
+  },
+  inboxAdd: { ru: "Добавить", en: "Add", es: "Añadir" },
+  inboxDelete: { ru: "Удалить", en: "Delete", es: "Borrar" },
+  inboxEmpty: { ru: "Входящих нет.", en: "The inbox is empty.", es: "La bandeja está vacía." },
+  backupTitle: { ru: "Резервная копия", en: "Backup", es: "Copia de seguridad" },
+  backupHint: {
+    ru: "Прогресс, заметки и входящие хранятся только в этом браузере. Сохраняйте копию в файл, чтобы не потерять их или перенести на другой компьютер.",
+    en: "Progress, notes and inbox live only in this browser. Save a copy to a file so you do not lose them or can move them to another computer.",
+    es: "El progreso, las notas y la bandeja solo se guardan en este navegador. Guarda una copia en un archivo para no perderlos o llevarlos a otro ordenador.",
+  },
+  exportButton: { ru: "Сохранить в файл", en: "Save to file", es: "Guardar en archivo" },
+  importButton: { ru: "Загрузить из файла", en: "Load from file", es: "Cargar desde archivo" },
+  importConfirm: {
+    ru: "Заменить текущий прогресс, заметки и входящие данными из файла?",
+    en: "Replace the current progress, notes and inbox with the data from the file?",
+    es: "¿Sustituir el progreso, las notas y la bandeja actuales por los datos del archivo?",
+  },
+  importDone: { ru: "Данные загружены.", en: "Data loaded.", es: "Datos cargados." },
+  importFailed: { ru: "Не удалось прочитать файл: это не резервная копия справочника.", en: "Could not read the file: it is not a backup of this handbook.", es: "No se ha podido leer el archivo: no es una copia de este manual." },
 };
 
 // ═══════ 2. Данные: блоки, темы, глоссарий, лента ═══════
@@ -684,6 +787,7 @@ const sortedBlocks = () => [...BLOCKS].sort((a, b) => a.order - b.order);
 function parseRoute(hash) {
   const value = decodeURIComponent(String(hash || "").replace(/^#/, ""));
   if (value === "") return { view: "home" };
+  if (value === "progress") return { view: "progress" };
   const match = value.match(/^(topic|block)-(.+)$/);
   if (match && match[1] === "topic" && topicById(match[2])) return { view: "topic", id: match[2] };
   if (match && match[1] === "block" && blockById(match[2])) return { view: "block", id: match[2] };
@@ -772,7 +876,20 @@ function snippet(text, query, size = 160) {
 
 // ═══════ 5. Состояние и хранилище ═══════
 const STORAGE_PREFIX = "aie:";
-const state = { lang: DEFAULT_LANG, theme: "auto", query: "", navOpen: false };
+const STATUSES = ["todo", "learning", "understood", "applied"];
+const DONE_STATUSES = ["understood", "applied"];
+const BACKUP_APP = "ai-engineer";
+const BACKUP_VERSION = 1;
+
+const state = {
+  lang: DEFAULT_LANG,
+  theme: "auto",
+  query: "",
+  navOpen: false,
+  topicStatus: {},
+  topicNotes: {},
+  inbox: [],
+};
 
 function readStored(name, fallback) {
   try {
@@ -799,6 +916,74 @@ function normalizeTheme(value) {
   return ["auto", "light", "dark"].includes(value) ? value : "auto";
 }
 
+const isPlainObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+
+// Статусы тем: только известные значения; «не начато» не храним.
+// Id неизвестных тем сохраняем: тему могли временно убрать или переименовать.
+function normalizeTopicStatus(value) {
+  const result = {};
+  if (!isPlainObject(value)) return result;
+  for (const [id, status] of Object.entries(value)) {
+    if (STATUSES.includes(status) && status !== "todo") result[id] = status;
+  }
+  return result;
+}
+
+function normalizeTopicNotes(value) {
+  const result = {};
+  if (!isPlainObject(value)) return result;
+  for (const [id, note] of Object.entries(value)) {
+    if (typeof note === "string" && note.trim() !== "") result[id] = note;
+  }
+  return result;
+}
+
+function normalizeInbox(value) {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set();
+  return value.filter((item) => isPlainObject(item)
+    && typeof item.id === "string" && !seen.has(item.id) && seen.add(item.id)
+    && typeof item.text === "string" && item.text.trim() !== ""
+    && typeof item.created === "string" && !Number.isNaN(Date.parse(item.created)))
+    .map(({ id, text, created }) => ({ id, text, created }));
+}
+
+function topicStatus(id) {
+  return state.topicStatus[id] || "todo";
+}
+
+function progressCounts(topics = TOPICS) {
+  const done = topics.filter((topic) => DONE_STATUSES.includes(topicStatus(topic.id))).length;
+  return { done, total: topics.length };
+}
+
+function buildBackup(now = new Date()) {
+  return {
+    app: BACKUP_APP,
+    version: BACKUP_VERSION,
+    exported: now.toISOString(),
+    topicStatus: state.topicStatus,
+    topicNotes: state.topicNotes,
+    inbox: state.inbox,
+  };
+}
+
+// Разбирает файл резервной копии. Возвращает нормализованные данные или null.
+function parseBackup(text) {
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return null;
+  }
+  if (!isPlainObject(data) || data.app !== BACKUP_APP || !Number.isInteger(data.version) || data.version > BACKUP_VERSION) return null;
+  return {
+    topicStatus: normalizeTopicStatus(data.topicStatus),
+    topicNotes: normalizeTopicNotes(data.topicNotes),
+    inbox: normalizeInbox(data.inbox),
+  };
+}
+
 // ═══════ 6. Отрисовка ═══════
 function renderSegmented(container, options, current, onPick) {
   container.replaceChildren(...options.map(({ value, label }) => {
@@ -822,6 +1007,8 @@ function renderHeader() {
   if (theme === "auto") document.documentElement.removeAttribute("data-theme");
   else document.documentElement.dataset.theme = theme;
   for (const node of document.querySelectorAll("[data-i18n]")) node.textContent = t(node.dataset.i18n, lang);
+
+  renderProgressLink();
 
   const searchBox = document.getElementById("search");
   searchBox.placeholder = t("searchPlaceholder", lang);
@@ -848,6 +1035,20 @@ function renderHeader() {
   });
 }
 
+function progressBar(done, total, extraClass = "") {
+  const percent = total ? Math.round((done / total) * 100) : 0;
+  return h("span", { class: `bar ${extraClass}`.trim(), role: "presentation" }, h("span", { style: `width: ${percent}%` }));
+}
+
+function renderProgressLink() {
+  const { lang } = state;
+  const { done, total } = progressCounts();
+  const link = document.getElementById("progress-link");
+  link.setAttribute("aria-label", `${t("progressLink", lang)}: ${done}/${total}`);
+  link.setAttribute("aria-current", parseRoute(location.hash).view === "progress" ? "page" : "false");
+  link.replaceChildren(progressBar(done, total), `${done}/${total}`);
+}
+
 function renderNav(route) {
   const { lang } = state;
   const currentTopic = route.view === "topic" ? topicById(route.id) : null;
@@ -863,7 +1064,7 @@ function renderNav(route) {
       ? h("ul", {}, topicsOfBlock(block.id).map((topic) => h("li", {}, h("a", {
         href: `#topic-${topic.id}`,
         "aria-current": currentTopic?.id === topic.id ? "page" : undefined,
-      }, loc(topic.title, lang)))))
+      }, h("span", { class: `status-dot ${topicStatus(topic.id)}`, "aria-hidden": "true" }), loc(topic.title, lang)))))
       : null,
   )));
 }
@@ -918,6 +1119,7 @@ function renderTopic(id) {
     ),
     h("h2", { class: "page-title" }, loc(topic.title, lang)),
     h("div", { class: "meta" }, priorityBadge(block.priority, lang), `${t("checkedOn", lang)} ${topic.checked}`),
+    h("div", { class: "status-row" }, h("div", { class: "segmented", id: "topic-status", role: "group", "aria-label": t("statusLabel", lang) })),
     section("sectionWhat", lang, h("p", {}, loc(topic.what, lang))),
     section("sectionWhy", lang, h("p", {}, loc(topic.why, lang))),
     topic.fromSql ? section("sectionFromSql", lang, h("p", { class: "from-sql" }, loc(topic.fromSql, lang))) : null,
@@ -933,7 +1135,137 @@ function renderTopic(id) {
     section("sectionPractice", lang, h("p", {}, loc(topic.practice, lang))),
     topic.prereq.length ? section("sectionPrereq", lang, h("ul", { class: "topic-links" }, topic.prereq.map((ref) => h("li", {}, topicLink(ref, lang))))) : null,
     topic.related.length ? section("sectionRelated", lang, h("ul", { class: "topic-links" }, topic.related.map((ref) => h("li", {}, topicLink(ref, lang))))) : null,
+    section("sectionNotes", lang, h("textarea", { id: "topic-notes", placeholder: t("notesPlaceholder", lang), "aria-label": t("sectionNotes", lang) })),
   );
+}
+
+// Элементы управления карточки темы подключаются после вставки в документ.
+function bindTopicControls(id) {
+  const { lang } = state;
+  renderSegmented(document.getElementById("topic-status"), STATUSES.map((value) => ({ value, label: t(`status_${value}`, lang) })), topicStatus(id), (value) => {
+    if (value === "todo") delete state.topicStatus[id];
+    else state.topicStatus[id] = value;
+    persist("topicStatus");
+    bindTopicControls(id);
+    renderNav(parseRoute(location.hash));
+    renderProgressLink();
+  });
+  const notes = document.getElementById("topic-notes");
+  if (notes.dataset.bound) return;
+  notes.dataset.bound = "1";
+  notes.value = state.topicNotes[id] || "";
+  notes.addEventListener("input", () => {
+    if (notes.value.trim()) state.topicNotes[id] = notes.value;
+    else delete state.topicNotes[id];
+    persist("topicNotes");
+  });
+}
+
+function renderProgress() {
+  const { lang } = state;
+  const { done, total } = progressCounts();
+  const learning = TOPICS.filter((topic) => topicStatus(topic.id) === "learning");
+  document.title = `${t("progressLink", lang)} · ${t("appTitle", lang)}`;
+  return [
+    h("div", { class: "card" },
+      h("p", { class: "crumbs" }, h("a", { href: "#" }, t("appTitle", lang))),
+      h("h2", { class: "page-title" }, t("progressLink", lang)),
+      h("div", { class: "meta" }, `${t("progressSummary", lang)}: ${done}/${total}`),
+      progressBar(done, total, "wide"),
+      h("p", { class: "hint" }, t("progressHint", lang)),
+      h("dl", { class: "block-progress section" }, sortedBlocks().map((block) => {
+        const counts = progressCounts(topicsOfBlock(block.id));
+        return [
+          h("dt", {}, h("a", { href: `#block-${block.id}` }, `${block.order}. ${loc(block.title, lang)}`)),
+          progressBar(counts.done, counts.total),
+          h("dd", {}, `${counts.done}/${counts.total}`),
+        ];
+      })),
+    ),
+    h("div", { class: "card" },
+      h("h3", { class: "card-title" }, t("inProgressTitle", lang)),
+      learning.length
+        ? h("ul", { class: "topic-links" }, learning.map((topic) => h("li", {}, topicLink(topic.id, lang))))
+        : h("p", { class: "empty" }, t("inProgressEmpty", lang)),
+    ),
+    h("div", { class: "card" },
+      h("h3", { class: "card-title" }, t("inboxTitle", lang)),
+      h("p", { class: "lead" }, t("inboxHint", lang)),
+      h("textarea", { id: "inbox-text", "aria-label": t("inboxTitle", lang), style: "min-height: 70px; margin-top: 8px" }),
+      h("div", { class: "row" }, h("button", { class: "btn primary", id: "inbox-add", type: "button" }, t("inboxAdd", lang))),
+      state.inbox.length
+        ? h("ul", { class: "inbox" }, state.inbox.map((item) => h("li", {},
+          h("time", { datetime: item.created }, new Date(item.created).toLocaleString(lang)),
+          item.text,
+          h("div", {}, h("button", { class: "btn link", type: "button", dataset: { inboxDelete: item.id } }, t("inboxDelete", lang))),
+        )))
+        : h("p", { class: "empty" }, t("inboxEmpty", lang)),
+    ),
+    h("div", { class: "card" },
+      h("h3", { class: "card-title" }, t("backupTitle", lang)),
+      h("p", { class: "lead" }, t("backupHint", lang)),
+      h("div", { class: "row" },
+        h("button", { class: "btn", id: "backup-export", type: "button" }, t("exportButton", lang)),
+        h("button", { class: "btn", id: "backup-import", type: "button" }, t("importButton", lang)),
+        h("input", { id: "backup-file", type: "file", accept: "application/json,.json", hidden: true }),
+        h("span", { class: "notice", id: "backup-notice", role: "status" }),
+      ),
+    ),
+  ];
+}
+
+function bindProgressControls() {
+  const { lang } = state;
+  const text = document.getElementById("inbox-text");
+  document.getElementById("inbox-add").addEventListener("click", () => {
+    if (!text.value.trim()) return;
+    const created = new Date().toISOString();
+    state.inbox.unshift({ id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`, text: text.value.trim(), created });
+    persist("inbox");
+    renderMain();
+    document.getElementById("inbox-text").focus();
+  });
+  for (const button of document.querySelectorAll("[data-inbox-delete]")) {
+    button.addEventListener("click", () => {
+      state.inbox = state.inbox.filter((item) => item.id !== button.dataset.inboxDelete);
+      persist("inbox");
+      renderMain();
+    });
+  }
+  document.getElementById("backup-export").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(buildBackup(), null, 2)], { type: "application/json" });
+    const link = h("a", { href: URL.createObjectURL(blob), download: `ai-engineer-backup-${new Date().toISOString().slice(0, 10)}.json` });
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  });
+  const file = document.getElementById("backup-file");
+  document.getElementById("backup-import").addEventListener("click", () => file.click());
+  file.addEventListener("change", async () => {
+    const chosen = file.files[0];
+    if (!chosen) return;
+    const data = parseBackup(await chosen.text());
+    const notice = document.getElementById("backup-notice");
+    if (!data) {
+      notice.className = "notice error";
+      notice.textContent = t("importFailed", lang);
+      file.value = "";
+      return;
+    }
+    if (!window.confirm(t("importConfirm", lang))) {
+      file.value = "";
+      return;
+    }
+    Object.assign(state, data);
+    persist("topicStatus");
+    persist("topicNotes");
+    persist("inbox");
+    renderAll();
+    const after = document.getElementById("backup-notice");
+    after.className = "notice";
+    after.textContent = t("importDone", lang);
+  });
 }
 
 function renderSearch(query) {
@@ -974,11 +1306,15 @@ function renderMain() {
   else if (route.view === "home") content = renderHome();
   else if (route.view === "block") content = renderBlock(route.id);
   else if (route.view === "topic") content = renderTopic(route.id);
+  else if (route.view === "progress") content = renderProgress();
   else {
     document.title = t("appTitle", lang);
     content = h("div", { class: "card" }, h("p", {}, t("notFound", lang)), h("a", { href: "#" }, t("backHome", lang)));
   }
   app.replaceChildren(...[content].flat());
+  if (!state.query.trim() && route.view === "topic") bindTopicControls(route.id);
+  if (!state.query.trim() && route.view === "progress") bindProgressControls();
+  renderProgressLink();
 }
 
 function renderAll() {
@@ -992,6 +1328,9 @@ if (typeof document !== "undefined") {
   if (dataIssues.length) console.warn("Ошибки данных:", dataIssues);
   state.lang = normalizeLang(readStored("lang", DEFAULT_LANG));
   state.theme = normalizeTheme(readStored("theme", "auto"));
+  state.topicStatus = normalizeTopicStatus(readStored("topicStatus", {}));
+  state.topicNotes = normalizeTopicNotes(readStored("topicNotes", {}));
+  state.inbox = normalizeInbox(readStored("inbox", []));
 
   const searchBox = document.getElementById("search");
   searchBox.addEventListener("input", () => {

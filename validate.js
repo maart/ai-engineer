@@ -27,7 +27,7 @@ vm.createContext(sandbox);
 let page = null;
 try {
   vm.runInContext(
-    `${script}\n;globalThis.__page = { dataIssues, validateData, UI, BLOCKS, TOPICS, GLOSSARY, CHANGELOG };`,
+    `${script}\n;globalThis.__page = { dataIssues, validateData, UI, BLOCKS, TOPICS, GLOSSARY, CHANGELOG, state, parseBackup, buildBackup, normalizeTopicStatus, normalizeInbox, progressCounts, search, parseRoute };`,
     sandbox,
     { filename: htmlPath },
   );
@@ -75,6 +75,57 @@ if (page) {
       failures.push(`Самопроверка «${name}»: ошибка не поймана (${issues.join("; ") || "нет ошибок"})`);
     }
   }
+}
+
+// ─── Логика без DOM: резервная копия, прогресс, поиск, адреса ───
+function check(name, condition) {
+  if (!condition) failures.push(`Проверка логики «${name}» не прошла`);
+}
+
+if (page) {
+  const json = (value) => JSON.stringify(value);
+  const firstTopic = page.TOPICS[0].id;
+  check("мусор вместо копии", page.parseBackup("not json") === null);
+  check("чужое приложение", page.parseBackup(json({ app: "other", version: 1 })) === null);
+  check("копия из будущей версии", page.parseBackup(json({ app: "ai-engineer", version: 99 })) === null);
+  const parsed = page.parseBackup(json({
+    app: "ai-engineer",
+    version: 1,
+    topicStatus: { [firstTopic]: "applied", other: "bogus", todoTopic: "todo" },
+    topicNotes: { [firstTopic]: "note", empty: "  ", bad: 5 },
+    inbox: [
+      { id: "a", text: "link", created: "2026-11-06T10:00:00.000Z" },
+      { id: "a", text: "duplicate", created: "2026-11-06T10:00:00.000Z" },
+      { id: "b", text: "  ", created: "2026-11-06T10:00:00.000Z" },
+      { id: "c", text: "bad date", created: "yesterday" },
+      "junk",
+    ],
+  }));
+  check("копия читается", parsed !== null);
+  if (parsed) {
+    check("статусы нормализуются", json(parsed.topicStatus) === json({ [firstTopic]: "applied" }));
+    check("заметки нормализуются", json(parsed.topicNotes) === json({ [firstTopic]: "note" }));
+    check("входящие нормализуются", parsed.inbox.length === 1 && parsed.inbox[0].text === "link");
+  }
+  page.state.topicStatus = { [firstTopic]: "understood" };
+  page.state.topicNotes = { [firstTopic]: "x" };
+  page.state.inbox = [];
+  const backup = page.buildBackup(new Date("2026-11-06T00:00:00Z"));
+  const roundTrip = page.parseBackup(json(backup));
+  check("копия туда и обратно", roundTrip && json(roundTrip.topicStatus) === json(page.state.topicStatus) && roundTrip.topicNotes[firstTopic] === "x");
+  const counts = page.progressCounts();
+  check("прогресс считает «Понял»", counts.done === 1 && counts.total === page.TOPICS.length);
+  page.state.topicStatus = { [firstTopic]: "learning" };
+  check("«Изучаю» не считается освоенным", page.progressCounts().done === 0);
+
+  check("адрес главной", page.parseRoute("").view === "home");
+  check("адрес темы", page.parseRoute(`#topic-${firstTopic}`).view === "topic");
+  check("адрес несуществующей темы", page.parseRoute("#topic-nope").view === "missing");
+  check("адрес прогресса", page.parseRoute("#progress").view === "progress");
+  check("поиск по русскому названию", page.search("эмбеддинги", "ru").some((r) => r.id === "embeddings"));
+  check("поиск по английскому термину из русского интерфейса", page.search("embeddings", "ru").some((r) => r.id === "embeddings"));
+  check("поиск без учёта ударений", page.search("similitud coseno", "es").some((r) => r.id === "cosine-similarity"));
+  check("пустой поиск", page.search("   ", "ru").length === 0);
 }
 
 // ─── Статические проверки разметки ───
