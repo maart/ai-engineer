@@ -104,6 +104,7 @@ if (page) {
     app: "ai-engineer",
     version: 1,
     topicStatus: { [firstTopic]: "applied", other: "bogus", todoTopic: "todo" },
+    lessonStatus: { "t/p": "understood", "t/q": "todo", "t/r": "bogus", nokey: "applied" },
     topicNotes: { [firstTopic]: "note", empty: "  ", bad: 5 },
     quizAnswers: { [firstTopic]: { 0: 2, 1: -1, x: 1, 2: "1" }, junk: [1], empty: {} },
     inbox: [
@@ -117,6 +118,7 @@ if (page) {
   check("копия читается", parsed !== null);
   if (parsed) {
     check("статусы нормализуются", json(parsed.topicStatus) === json({ [firstTopic]: "applied" }));
+    check("статусы урока нормализуются", json(parsed.lessonStatus) === json({ "t/p": "understood" }));
     check("заметки нормализуются", json(parsed.topicNotes) === json({ [firstTopic]: "note" }));
     check("ответы теста нормализуются", json(parsed.quizAnswers) === json({ [firstTopic]: { 0: 2 } }));
     check("входящие нормализуются", parsed.inbox.length === 1 && parsed.inbox[0].text === "link");

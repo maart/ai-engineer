@@ -343,6 +343,8 @@ select {
 .lesson-badge { cursor: pointer; background: none; color: var(--accent); font: inherit; font-size: 0.8rem; font-weight: 600; }
 .lesson-toc { margin: 8px 0 0; padding-left: 22px; }
 .lesson-toc li { margin: 2px 0; }
+.nav-count { margin-left: 6px; color: var(--muted); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+.lesson-toc { list-style: none; padding-left: 0; }
 a.btn { display: inline-block; text-decoration: none; }
 .lesson-body { margin-top: 12px; }
 .lesson-body > p, .lesson-body > .code, .lesson-body > .compare, .lesson-body > .table-wrap, .lesson-body > ul { margin: 0 0 12px; }
@@ -448,8 +450,8 @@ details > p, details > .code { margin: 6px 0 0; }
   <main class="content" id="app"></main>
 </div>
 <footer class="app-footer">
-  <span data-i18n="footerVersion"></span> MVP 1.3 ·
-  <span data-i18n="footerUpdated"></span> 2026-11-07 00:20 (Madrid)
+  <span data-i18n="footerVersion"></span> MVP 1.4 ·
+  <span data-i18n="footerUpdated"></span> 2026-11-07 00:22 (Madrid)
 </footer>
 <script>
 // ════════════════════════════════════════════════════════════════════
@@ -524,6 +526,8 @@ const UI = {
   kind_repo: { ru: "репозиторий", en: "repository", es: "repositorio" },
   kind_tool: { ru: "инструмент", en: "tool", es: "herramienta" },
   lessonBadge: { ru: "Есть урок →", en: "Has a lesson →", es: "Con lección →" },
+  lessonProgress: { ru: "Прогресс урока", en: "Lesson progress", es: "Progreso de la lección" },
+  lessonStatusLabel: { ru: "Статус страницы урока", en: "Lesson page status", es: "Estado de la página" },
   lessonStart: { ru: "Начать урок", en: "Start the lesson", es: "Empezar la lección" },
   pagerBack: { ru: "Назад", en: "Back", es: "Atrás" },
   pagerForward: { ru: "Далее", en: "Next", es: "Siguiente" },
@@ -4031,6 +4035,7 @@ const state = {
   navOpen: false,
   lastTopic: null,
   topicStatus: {},
+  lessonStatus: {},
   topicNotes: {},
   quizAnswers: {},
   inbox: [],
@@ -4080,6 +4085,16 @@ function normalizeTopicStatus(value) {
   return result;
 }
 
+// Статусы страниц урока: { "тема/страница": статус }, те же значения, что у тем.
+function normalizeLessonStatus(value) {
+  const result = {};
+  if (!isPlainObject(value)) return result;
+  for (const [key, status] of Object.entries(value)) {
+    if (/^[^/]+\/[^/]+$/.test(key) && STATUSES.includes(status) && status !== "todo") result[key] = status;
+  }
+  return result;
+}
+
 function normalizeTopicNotes(value) {
   const result = {};
   if (!isPlainObject(value)) return result;
@@ -4114,6 +4129,18 @@ function normalizeInbox(value) {
     .map(({ id, text, created }) => ({ id, text, created }));
 }
 
+const lessonKey = (topicId, pid) => `${topicId}/${pid}`;
+
+function lessonPageStatus(topicId, pid) {
+  return state.lessonStatus[lessonKey(topicId, pid)] || "todo";
+}
+
+// Сколько страниц урока темы освоено («Понял» или «Применил»).
+function lessonCounts(topic) {
+  const pages = lessonPageIds(topic);
+  return { done: pages.filter((pid) => DONE_STATUSES.includes(lessonPageStatus(topic.id, pid))).length, total: pages.length };
+}
+
 function topicStatus(id) {
   return state.topicStatus[id] || "todo";
 }
@@ -4138,6 +4165,7 @@ function buildBackup(now = new Date()) {
     version: BACKUP_VERSION,
     exported: now.toISOString(),
     topicStatus: state.topicStatus,
+    lessonStatus: state.lessonStatus,
     topicNotes: state.topicNotes,
     quizAnswers: state.quizAnswers,
     inbox: state.inbox,
@@ -4155,6 +4183,7 @@ function parseBackup(text) {
   if (!isPlainObject(data) || data.app !== BACKUP_APP || !Number.isInteger(data.version) || data.version > BACKUP_VERSION) return null;
   return {
     topicStatus: normalizeTopicStatus(data.topicStatus),
+    lessonStatus: normalizeLessonStatus(data.lessonStatus),
     topicNotes: normalizeTopicNotes(data.topicNotes),
     quizAnswers: normalizeQuizAnswers(data.quizAnswers),
     inbox: normalizeInbox(data.inbox),
@@ -4250,12 +4279,13 @@ function renderNav(route) {
         href: `#topic-${topic.id}`,
         "aria-current": route.view === "topic" && currentTopic?.id === topic.id ? "page" : undefined,
       }, h("span", { class: `status-dot ${topicStatus(topic.id)}`, "aria-hidden": "true" }), loc(topic.title, lang),
-        isStale(topic.checked) ? h("span", { class: "stale-mark", title: t("stale", lang) }, " ⟳") : null),
+        isStale(topic.checked) ? h("span", { class: "stale-mark", title: t("stale", lang) }, " ⟳") : null,
+        topic.lesson ? h("span", { class: "nav-count", title: t("lessonProgress", lang) }, `${lessonCounts(topic).done}/${lessonCounts(topic).total}`) : null),
       currentTopic?.id === topic.id && topic.lesson
         ? h("ul", { class: "nav-lesson" }, lessonPageIds(topic).map((pid) => h("li", {}, h("a", {
           href: lessonHref(topic, pid),
           "aria-current": route.view === "lesson" && route.part === pid ? "page" : undefined,
-        }, lessonPageTitle(topic, pid, lang)))))
+        }, h("span", { class: `status-dot ${lessonPageStatus(topic.id, pid)}`, "aria-hidden": "true" }), lessonPageTitle(topic, pid, lang)))))
         : null)))
       : null,
   )));
@@ -4564,10 +4594,15 @@ function lessonHref(topic, pid) {
 function renderLessonIntro(topic, lang) {
   const { lesson } = topic;
   const pages = lessonPageIds(topic);
+  const counts = lessonCounts(topic);
   return h("div", { class: "card lesson" },
     h("h3", { class: "card-title" }, t("lessonTitle", lang)),
     h("p", { class: "hint" }, `${t("lessonMinutes", lang)} ${lesson.minutes} ${t("minutesShort", lang)} · ${t("lessonParts", lang)} ${lesson.sections.length}`),
-    h("ol", { class: "lesson-toc" }, pages.map((pid) => h("li", {}, h("a", { href: lessonHref(topic, pid) }, lessonPageTitle(topic, pid, lang))))),
+    h("div", { class: "block-progress-line", title: t("lessonProgress", lang) }, progressBar(counts.done, counts.total),
+      `${t("lessonProgress", lang)}: ${counts.done}/${counts.total}`),
+    h("ol", { class: "lesson-toc" }, pages.map((pid) => h("li", {},
+      h("span", { class: `status-dot ${lessonPageStatus(topic.id, pid)}`, title: t(`status_${lessonPageStatus(topic.id, pid)}`, lang) }),
+      h("a", { href: lessonHref(topic, pid) }, lessonPageTitle(topic, pid, lang))))),
     h("div", { class: "row" }, h("a", { class: "btn primary", href: lessonHref(topic, pages[0]) }, t("lessonStart", lang))),
   );
 }
@@ -4627,6 +4662,7 @@ function renderLessonPage(id, pid) {
       h("a", { href: `#topic-${topic.id}` }, loc(topic.title, lang))),
     h("h2", { class: "page-title" }, title),
     h("p", { class: "hint" }, `${t("lessonTitle", lang)} · ${index + 1}/${pages.length}`),
+    h("div", { class: "status-row" }, h("div", { class: "segmented", id: "lesson-status", role: "group", "aria-label": t("lessonStatusLabel", lang) })),
     h("div", { class: "lesson-body" }, body),
   );
   const list = orderedTopics();
@@ -4659,6 +4695,17 @@ function bindTopicControls(id) {
     if (notes.value.trim()) state.topicNotes[id] = notes.value;
     else delete state.topicNotes[id];
     persist("topicNotes");
+  });
+}
+
+function bindLessonStatus(id, pid) {
+  const key = lessonKey(id, pid);
+  renderSegmented(document.getElementById("lesson-status"), STATUSES.map((value) => ({ value, label: t(`status_${value}`, state.lang) })), lessonPageStatus(id, pid), (value) => {
+    if (value === "todo") delete state.lessonStatus[key];
+    else state.lessonStatus[key] = value;
+    persist("lessonStatus");
+    bindLessonStatus(id, pid);
+    renderNav(parseRoute(location.hash));
   });
 }
 
@@ -4788,6 +4835,7 @@ function bindProgressControls() {
     }
     Object.assign(state, data);
     persist("topicStatus");
+    persist("lessonStatus");
     persist("topicNotes");
     persist("quizAnswers");
     persist("inbox");
@@ -4846,6 +4894,7 @@ function renderMain() {
   }
   app.replaceChildren(...[content].flat());
   if (!state.query.trim() && route.view === "topic") bindTopicControls(route.id);
+  if (!state.query.trim() && route.view === "lesson") bindLessonStatus(route.id, route.part);
   if (!state.query.trim() && route.view === "lesson" && route.part === "quiz") bindQuiz(route.id);
   if (!state.query.trim() && (route.view === "topic" || route.view === "lesson") && state.lastTopic !== route.id) {
     state.lastTopic = route.id;
@@ -4870,6 +4919,7 @@ if (typeof document !== "undefined") {
   state.theme = normalizeTheme(readStored("theme", "auto"));
   state.lastTopic = normalizeLastTopic(readStored("lastTopic", null));
   state.topicStatus = normalizeTopicStatus(readStored("topicStatus", {}));
+  state.lessonStatus = normalizeLessonStatus(readStored("lessonStatus", {}));
   state.topicNotes = normalizeTopicNotes(readStored("topicNotes", {}));
   state.quizAnswers = normalizeQuizAnswers(readStored("quizAnswers", {}));
   state.inbox = normalizeInbox(readStored("inbox", []));
