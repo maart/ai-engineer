@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Engineer</title>
+<title>Как стать AI Engineer</title>
 <style>
 :root {
   --bg: #f4f1ea;
@@ -78,7 +78,19 @@ a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visibl
   border-bottom: 1px solid var(--border);
   background: var(--surface);
 }
-.app-title { margin: 0; font-size: 1.15rem; white-space: nowrap; }
+.app-title { margin: 0; font-size: 1.15rem; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.icon-btn {
+  display: none;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 1.05rem;
+  cursor: pointer;
+}
+[id] { scroll-margin-top: 84px; }
 .app-title a { color: inherit; text-decoration: none; }
 .search {
   flex: 1 1 220px;
@@ -166,6 +178,39 @@ h3.card-title { margin: 0 0 8px; font-size: 1.1rem; }
 .hint { margin: 8px 0 0; color: var(--muted); font-size: 0.88rem; }
 .section h3 { margin: 0 0 6px; font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
 .section p { margin: 0; }
+.section p, .lead, .lesson-part > p, .lesson-list, .callout, .quiz-q, .exercises p { max-width: 70ch; }
+.section.practice { padding: 12px 16px; border: 1px solid var(--border); border-left: 4px solid var(--plus); border-radius: 0 var(--radius) var(--radius) 0; background: var(--surface-2); }
+.links-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px 24px; }
+.sub-label { margin: 0 0 2px; color: var(--muted); font-size: 0.85rem; }
+.res-icon { display: inline-block; min-width: 1.4em; }
+.pager { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; margin-top: 16px; }
+.pager a {
+  display: block;
+  flex: 1 1 220px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+.pager a:hover { border-color: var(--accent); }
+.pager a.next { text-align: right; }
+.pager small { display: block; color: var(--muted); }
+.continue { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 16px; }
+.continue > div { flex: 1 1 240px; }
+.continue-label { margin: 0; color: var(--muted); font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.notes-card summary { font-weight: 600; font-size: 1.1rem; color: var(--text); }
+.notes-card textarea { min-height: 80px; margin-top: 8px; }
+.code-wrap { position: relative; }
+.code-wrap pre { padding-top: 26px; }
+.code-bar { position: absolute; top: 0; right: 0; left: 0; display: flex; justify-content: space-between; align-items: center; padding: 2px 6px 0 12px; color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; pointer-events: none; }
+.copy-btn { pointer-events: auto; padding: 1px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--muted); font: inherit; font-size: 0.75rem; text-transform: none; cursor: pointer; }
+.copy-btn:hover { color: var(--text); border-color: var(--accent); }
+.tok-c { color: var(--muted); font-style: italic; }
+.tok-s { color: var(--plus); }
+.tok-k { color: var(--accent); font-weight: 600; }
+.tok-n { color: var(--basic); }
 .from-sql { padding: 12px 14px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 8px 8px 0; }
 pre {
   margin: 0;
@@ -193,6 +238,14 @@ pre {
   text-decoration: none;
 }
 .block-tile:hover { border-color: var(--accent); }
+.block-tile.p-must { border-left: 4px solid var(--must); }
+.block-tile.p-basic { border-left: 4px solid var(--basic); }
+.block-tile.p-plus { border-left: 4px solid var(--plus); }
+.tile-num { display: inline-block; min-width: 1.4em; margin-right: 4px; color: var(--muted); font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tile-progress { display: flex; gap: 8px; align-items: center; margin-top: 8px; color: var(--muted); font-size: 0.85rem; }
+.tile-progress .bar { flex: 1; width: auto; }
+.block-progress-line { display: flex; gap: 12px; align-items: center; margin: 4px 0 12px; color: var(--muted); font-size: 0.9rem; }
+.block-progress-line .bar { flex: 0 1 200px; width: auto; }
 .block-tile h3 { margin: 0 0 6px; font-size: 1.02rem; }
 .block-tile p { margin: 0 0 8px; color: var(--muted); font-size: 0.9rem; }
 .lead { margin: 0; color: var(--muted); }
@@ -261,7 +314,7 @@ textarea {
 .nav-pages a { padding: 4px 8px; border-radius: 6px; color: var(--text); text-decoration: none; font-size: 0.95rem; }
 .stale-mark { color: var(--basic); }
 .badge.stale { color: var(--basic); border-style: dashed; }
-a.chip { color: var(--text); text-decoration: none; cursor: pointer; }
+a.chip { color: var(--text); text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; }
 a.chip:hover { background: var(--accent-soft); }
 .filters { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-bottom: 8px; }
 select {
@@ -337,8 +390,20 @@ details { margin: 4px 0; }
 summary { cursor: pointer; color: var(--accent); }
 details > p, details > .code { margin: 6px 0 0; }
 .app-footer { max-width: 1200px; margin: 0 auto; padding: 8px 16px 24px; color: var(--muted); font-size: 0.85rem; }
+@media print {
+  .app-header, .nav, .pager, .notes-card, .status-row, .copy-btn, .continue { display: none; }
+  .layout { display: block; padding: 0; }
+  .card { border: 0; padding: 0; }
+  body { background: #fff; color: #000; }
+}
 @media (max-width: 760px) {
-  .app-header { position: static; }
+  .app-header { position: static; flex-wrap: wrap; gap: 8px; }
+  .app-title { flex: 1 1 0; }
+  .icon-btn { display: block; }
+  .search { order: 3; flex: 1 1 100%; }
+  .header-controls { display: none; order: 4; flex: 1 1 100%; }
+  .app-header.open .header-controls { display: flex; }
+  .code-wrap pre { font-size: 0.82rem; }
   .layout { grid-template-columns: minmax(0, 1fr); padding-top: 12px; }
   .nav { position: static; max-height: none; }
   .nav-toggle {
@@ -366,8 +431,9 @@ details > p, details > .code { margin: 6px 0 0; }
 <body>
 <header class="app-header">
   <h1 class="app-title"><a href="#" data-i18n="appTitle"></a></h1>
+  <button class="icon-btn" id="controls-toggle" type="button" aria-expanded="false" aria-controls="header-controls">⚙</button>
   <input class="search" id="search" type="search" autocomplete="off">
-  <div class="header-controls">
+  <div class="header-controls" id="header-controls">
     <a class="progress-link" id="progress-link" href="#progress"></a>
     <div class="segmented" id="lang-switch" role="group"></div>
     <div class="segmented" id="theme-switch" role="group"></div>
@@ -381,8 +447,8 @@ details > p, details > .code { margin: 6px 0 0; }
   <main class="content" id="app"></main>
 </div>
 <footer class="app-footer">
-  <span data-i18n="footerVersion"></span> MVP 1.1 ·
-  <span data-i18n="footerUpdated"></span> 2026-11-07 00:09 (Madrid)
+  <span data-i18n="footerVersion"></span> MVP 1.2 ·
+  <span data-i18n="footerUpdated"></span> 2026-11-07 00:16 (Madrid)
 </footer>
 <script>
 // ════════════════════════════════════════════════════════════════════
@@ -411,6 +477,17 @@ const UI = {
   langLabel: { ru: "Язык", en: "Language", es: "Idioma" },
   themeLabel: { ru: "Тема оформления", en: "Theme", es: "Tema" },
   navToggle: { ru: "Содержание", en: "Contents", es: "Índice" },
+  settingsLabel: { ru: "Настройки", en: "Settings", es: "Ajustes" },
+  sectionLinks: { ru: "Связи", en: "Connections", es: "Conexiones" },
+  pagerLabel: { ru: "Переход между темами", en: "Topic navigation", es: "Navegación entre temas" },
+  pagerPrev: { ru: "Предыдущая тема", en: "Previous topic", es: "Tema anterior" },
+  pagerNext: { ru: "Следующая тема", en: "Next topic", es: "Tema siguiente" },
+  continueTitle: { ru: "Продолжить", en: "Continue", es: "Continuar" },
+  continueLast: { ru: "Последняя открытая", en: "Last opened", es: "Última abierta" },
+  continueNext: { ru: "Рекомендуемая следующая", en: "Recommended next", es: "Siguiente recomendado" },
+  continueAllDone: { ru: "Все темы освоены. Отличная работа!", en: "All topics mastered. Great work!", es: "Todos los temas dominados. ¡Buen trabajo!" },
+  copyCode: { ru: "Копировать", en: "Copy", es: "Copiar" },
+  copiedCode: { ru: "Скопировано", en: "Copied", es: "Copiado" },
   searchPlaceholder: { ru: "Поиск по темам и терминам", en: "Search topics and terms", es: "Buscar temas y términos" },
   homeLead: {
     ru: "AI-инженер строит продукты на готовых моделях: RAG, агенты, интеграции, evals. Здесь собрано всё, что нужно для первой работы, по девяти блокам навыков.",
@@ -3939,6 +4016,7 @@ const state = {
   theme: "auto",
   query: "",
   navOpen: false,
+  lastTopic: null,
   topicStatus: {},
   topicNotes: {},
   quizAnswers: {},
@@ -3969,6 +4047,11 @@ function normalizeLang(value) {
 
 function normalizeTheme(value) {
   return ["auto", "light", "dark"].includes(value) ? value : "auto";
+}
+
+// Последняя открытая тема: только id существующей темы, иначе null.
+function normalizeLastTopic(value) {
+  return typeof value === "string" && topicById(value) ? value : null;
 }
 
 const isPlainObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
@@ -4022,6 +4105,15 @@ function topicStatus(id) {
   return state.topicStatus[id] || "todo";
 }
 
+const orderedTopics = () => sortedBlocks().flatMap((block) => topicsOfBlock(block.id));
+
+// Следующая рекомендуемая тема: первая неосвоенная, у которой освоено всё, на что она опирается;
+// если таких нет, просто первая неосвоенная.
+function recommendedTopic() {
+  const open = orderedTopics().filter((topic) => !DONE_STATUSES.includes(topicStatus(topic.id)));
+  return open.find((topic) => topic.prereq.every((id) => DONE_STATUSES.includes(topicStatus(id)))) || open[0] || null;
+}
+
 function progressCounts(topics = TOPICS) {
   const done = topics.filter((topic) => DONE_STATUSES.includes(topicStatus(topic.id))).length;
   return { done, total: topics.length };
@@ -4058,8 +4150,8 @@ function parseBackup(text) {
 
 // ═══════ 6. Отрисовка ═══════
 function renderSegmented(container, options, current, onPick) {
-  container.replaceChildren(...options.map(({ value, label }) => {
-    const button = h("button", { type: "button", "aria-pressed": String(value === current) }, label);
+  container.replaceChildren(...options.map(({ value, label, title }) => {
+    const button = h("button", { type: "button", "aria-pressed": String(value === current), title, "aria-label": title }, label);
     button.addEventListener("click", () => onPick(value));
     return button;
   }));
@@ -4083,8 +4175,11 @@ function renderHeader() {
   renderProgressLink();
 
   const searchBox = document.getElementById("search");
-  searchBox.placeholder = t("searchPlaceholder", lang);
+  searchBox.placeholder = `${t("searchPlaceholder", lang)}  ( / )`;
   searchBox.setAttribute("aria-label", t("searchPlaceholder", lang));
+  const controlsToggle = document.getElementById("controls-toggle");
+  controlsToggle.setAttribute("aria-label", t("settingsLabel", lang));
+  controlsToggle.title = t("settingsLabel", lang);
 
   const langSwitch = document.getElementById("lang-switch");
   langSwitch.setAttribute("aria-label", t("langLabel", lang));
@@ -4097,9 +4192,9 @@ function renderHeader() {
   const themeSwitch = document.getElementById("theme-switch");
   themeSwitch.setAttribute("aria-label", t("themeLabel", lang));
   renderSegmented(themeSwitch, [
-    { value: "auto", label: t("themeAuto", lang) },
-    { value: "light", label: t("themeLight", lang) },
-    { value: "dark", label: t("themeDark", lang) },
+    { value: "auto", label: "◐", title: t("themeAuto", lang) },
+    { value: "light", label: "☀", title: t("themeLight", lang) },
+    { value: "dark", label: "☾", title: t("themeDark", lang) },
   ], theme, (value) => {
     state.theme = value;
     persist("theme");
@@ -4150,16 +4245,28 @@ function renderNav(route) {
 function renderHome() {
   const { lang } = state;
   document.title = t("appTitle", lang);
+  const last = state.lastTopic ? topicById(state.lastTopic) : null;
+  const next = recommendedTopic();
+  const continueItem = (labelKey, topic) => h("div", {},
+    h("p", { class: "continue-label" }, t(labelKey, lang)),
+    h("a", { href: `#topic-${topic.id}` }, loc(topic.title, lang)));
   return [
     h("div", { class: "card" },
       h("h2", { class: "page-title" }, t("appTitle", lang)),
       h("p", { class: "lead" }, t("homeLead", lang)),
+      h("div", { class: "continue", "aria-label": t("continueTitle", lang) },
+        last ? continueItem("continueLast", last) : null,
+        next ? continueItem("continueNext", next) : h("p", { class: "notice" }, t("continueAllDone", lang))),
     ),
-    h("div", { class: "blocks-grid" }, sortedBlocks().map((block) => h("a", { class: "block-tile", href: `#block-${block.id}` },
-      h("h3", {}, `${block.order}. ${loc(block.title, lang)}`),
-      h("p", {}, loc(block.summary, lang)),
-      h("div", { class: "meta" }, priorityBadge(block.priority, lang), `${t("topicsCount", lang)} ${topicsOfBlock(block.id).length}`),
-    ))),
+    h("div", { class: "blocks-grid" }, sortedBlocks().map((block) => {
+      const counts = progressCounts(topicsOfBlock(block.id));
+      return h("a", { class: `block-tile p-${block.priority}`, href: `#block-${block.id}` },
+        h("h3", {}, h("span", { class: "tile-num" }, block.order), loc(block.title, lang)),
+        h("p", {}, loc(block.summary, lang)),
+        h("div", { class: "meta" }, priorityBadge(block.priority, lang), `${t("topicsCount", lang)} ${counts.total}`),
+        h("div", { class: "tile-progress", title: t("progressSummary", lang) }, progressBar(counts.done, counts.total), `${counts.done}/${counts.total}`),
+      );
+    })),
     h("div", { class: "card", style: "margin-top: 16px" },
       h("h3", { class: "card-title" }, t("allTopics", lang)),
       h("div", { class: "filters", id: "topic-filters" }),
@@ -4267,9 +4374,12 @@ function renderBlock(id) {
     h("h2", { class: "page-title" }, `${block.order}. ${loc(block.title, lang)}`),
     h("div", { class: "meta" }, priorityBadge(block.priority, lang)),
     h("p", {}, loc(block.summary, lang)),
+    h("div", { class: "block-progress-line" }, progressBar(progressCounts(topics).done, topics.length),
+      `${t("progressSummary", lang)}: ${progressCounts(topics).done}/${topics.length}`),
     h("div", { class: "section" },
       topics.length
-        ? h("ul", { class: "topic-links" }, topics.map((topic) => h("li", {}, topicLink(topic.id, lang))))
+        ? h("ul", { class: "topic-links" }, topics.map((topic) => h("li", {},
+          h("span", { class: `status-dot ${topicStatus(topic.id)}`, title: t(`status_${topicStatus(topic.id)}`, lang) }), topicLink(topic.id, lang))))
         : h("p", { class: "empty" }, t("noTopicsYet", lang)),
     ),
   );
@@ -4277,6 +4387,61 @@ function renderBlock(id) {
 
 function section(titleKey, lang, ...content) {
   return h("section", { class: "section" }, h("h3", {}, t(titleKey, lang)), content);
+}
+
+const KIND_ICONS = { docs: "📄", course: "🎓", book: "📖", article: "📰", video: "▶️", repo: "🗂", tool: "🛠" };
+
+// Предыдущая и следующая темы в сквозном порядке блоков.
+function renderPager(id, lang) {
+  const list = orderedTopics();
+  const index = list.findIndex((topic) => topic.id === id);
+  const link = (topic, cls, key) => h("a", { class: cls, href: `#topic-${topic.id}` }, h("small", {}, t(key, lang)), loc(topic.title, lang));
+  const prev = list[index - 1];
+  const next = list[index + 1];
+  if (!prev && !next) return null;
+  return h("nav", { class: "pager", "aria-label": t("pagerLabel", lang) },
+    prev ? link(prev, "prev", "pagerPrev") : h("span"),
+    next ? link(next, "next", "pagerNext") : null);
+}
+
+// Лёгкая подсветка кода без зависимостей: комментарии, строки, числа, ключевые слова.
+const KEYWORDS = {
+  python: "def class return if elif else for while in not and or is None True False import from as with try except finally raise lambda yield async await pass break continue",
+  sql: "select from where group by order having join left right inner outer on insert into values update set delete create table index view as and or not null is in between like limit declare begin end if then else loop exception when return procedure function package cursor open fetch close",
+  typescript: "const let var function return if else for while of in new class interface type import from export async await try catch throw null undefined true false",
+  bash: "if then else fi for do done while case esac function echo export cd",
+  json: "true false null",
+};
+
+function highlightCode(code, lang) {
+  const words = KEYWORDS[lang];
+  if (!words) return [code];
+  const comment = lang === "python" || lang === "bash" ? "#.*" : lang === "sql" ? "--.*|/\\*[\\s\\S]*?\\*/" : lang === "typescript" ? "//.*|/\\*[\\s\\S]*?\\*/" : "(?!)";
+  const re = new RegExp(`(${comment})|("(?:\\\\.|[^"\\\\\\n])*"|'(?:\\\\.|[^'\\\\\\n])*')|\\b(\\d+(?:\\.\\d+)?)\\b|\\b([A-Za-z_]\\w*)\\b`, "g");
+  const set = new Set(words.split(" "));
+  const nodes = [];
+  let last = 0;
+  for (const m of code.matchAll(re)) {
+    if (m.index > last) nodes.push(code.slice(last, m.index));
+    const [text, com, str, num, word] = m;
+    const key = lang === "sql" ? word?.toLowerCase() : word;
+    if (com) nodes.push(h("span", { class: "tok-c" }, text));
+    else if (str) nodes.push(h("span", { class: "tok-s" }, text));
+    else if (num) nodes.push(h("span", { class: "tok-n" }, text));
+    else if (word && set.has(key)) nodes.push(h("span", { class: "tok-k" }, text));
+    else nodes.push(text);
+    last = m.index + text.length;
+  }
+  if (last < code.length) nodes.push(code.slice(last));
+  return nodes;
+}
+
+// Блок кода с подписью языка и кнопкой «Копировать» (обработчик — через делегирование в запуске).
+function codeWrap(lang, code) {
+  return h("div", { class: "code-wrap" },
+    h("div", { class: "code-bar" }, h("span", {}, lang),
+      h("button", { class: "copy-btn", type: "button", dataset: { copy: "1" } }, t("copyCode", state.lang))),
+    h("pre", {}, h("code", { class: `lang-${lang}` }, highlightCode(code, lang))));
 }
 
 function renderTopic(id) {
@@ -4301,19 +4466,28 @@ function renderTopic(id) {
       const term = termById(termId);
       return h("li", {}, h("a", { class: "chip", href: `#term-${term.id}`, title: loc(term.definition, lang) }, loc(term.term, lang)));
     }))) : null,
-    topic.example ? section("sectionExample", lang, h("pre", {}, h("code", { class: `lang-${topic.example.lang}` }, topic.example.code))) : null,
+    topic.example ? section("sectionExample", lang, codeWrap(topic.example.lang, topic.example.code)) : null,
     section("sectionResources", lang, h("ul", { class: "resources" }, topic.resources.map((resource) => h("li", {},
+      h("span", { class: "res-icon", "aria-hidden": "true" }, KIND_ICONS[resource.kind]),
       h("a", { href: resource.url, target: "_blank", rel: "noopener" }, resource.title), " ",
       h("span", { class: "res-meta" }, `· ${t(`kind_${resource.kind}`, lang)} · ${resource.lang.toUpperCase()}`),
     )))),
-    section("sectionPractice", lang, h("p", {}, loc(topic.practice, lang))),
-    topic.prereq.length ? section("sectionPrereq", lang, h("ul", { class: "topic-links" }, topic.prereq.map((ref) => h("li", {}, topicLink(ref, lang))))) : null,
-    topic.related.length ? section("sectionRelated", lang, h("ul", { class: "topic-links" }, topic.related.map((ref) => h("li", {}, topicLink(ref, lang))))) : null,
+    (() => {
+      const practice = section("sectionPractice", lang, h("p", {}, loc(topic.practice, lang)));
+      practice.classList.add("practice");
+      return practice;
+    })(),
+    topic.prereq.length || topic.related.length ? section("sectionLinks", lang, h("div", { class: "links-grid" },
+      topic.prereq.length ? h("div", {}, h("p", { class: "sub-label" }, t("sectionPrereq", lang)),
+        h("ul", { class: "topic-links" }, topic.prereq.map((ref) => h("li", {}, topicLink(ref, lang))))) : null,
+      topic.related.length ? h("div", {}, h("p", { class: "sub-label" }, t("sectionRelated", lang)),
+        h("ul", { class: "topic-links" }, topic.related.map((ref) => h("li", {}, topicLink(ref, lang))))) : null,
+    )) : null,
   );
-  const notes = h("div", { class: "card" },
-    h("h3", { class: "card-title" }, t("sectionNotes", lang)),
+  const notes = h("details", { class: "card notes-card", open: state.topicNotes[id] ? true : undefined },
+    h("summary", {}, t("sectionNotes", lang)),
     h("textarea", { id: "topic-notes", placeholder: t("notesPlaceholder", lang), "aria-label": t("sectionNotes", lang) }));
-  return [overview, ...(topic.lesson ? renderLesson(topic, lang) : []), notes];
+  return [overview, ...(topic.lesson ? renderLesson(topic, lang) : []), notes, renderPager(id, lang)].filter(Boolean);
 }
 
 // ─── Урок внутри темы ───
@@ -4326,7 +4500,7 @@ function richText(text) {
 
 function codeBlock(lang, code, output) {
   return h("div", { class: "code" },
-    h("pre", {}, h("code", { class: `lang-${lang}` }, code)),
+    codeWrap(lang, code),
     output ? h("pre", { class: "output", "aria-label": "output" }, output) : null,
   );
 }
@@ -4418,7 +4592,10 @@ function bindTopicControls(id) {
   for (const button of document.querySelectorAll("[data-jump]")) {
     if (button.dataset.bound) continue;
     button.dataset.bound = "1";
-    button.addEventListener("click", () => document.getElementById(button.dataset.jump).scrollIntoView({ behavior: "smooth", block: "start" }));
+    button.addEventListener("click", () => document.getElementById(button.dataset.jump).scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: "start",
+    }));
   }
   bindQuiz(id);
   const notes = document.getElementById("topic-notes");
@@ -4616,6 +4793,10 @@ function renderMain() {
   }
   app.replaceChildren(...[content].flat());
   if (!state.query.trim() && route.view === "topic") bindTopicControls(route.id);
+  if (!state.query.trim() && route.view === "topic" && state.lastTopic !== route.id) {
+    state.lastTopic = route.id;
+    persist("lastTopic");
+  }
   if (!state.query.trim() && route.view === "progress") bindProgressControls();
   if (!state.query.trim() && route.view === "home") bindHomeControls();
   if (!state.query.trim() && route.view === "glossary" && route.id) document.getElementById(`term-${route.id}`).scrollIntoView({ block: "center" });
@@ -4633,6 +4814,7 @@ if (typeof document !== "undefined") {
   if (dataIssues.length) console.warn("Ошибки данных:", dataIssues);
   state.lang = normalizeLang(readStored("lang", DEFAULT_LANG));
   state.theme = normalizeTheme(readStored("theme", "auto"));
+  state.lastTopic = normalizeLastTopic(readStored("lastTopic", null));
   state.topicStatus = normalizeTopicStatus(readStored("topicStatus", {}));
   state.topicNotes = normalizeTopicNotes(readStored("topicNotes", {}));
   state.quizAnswers = normalizeQuizAnswers(readStored("quizAnswers", {}));
@@ -4657,6 +4839,34 @@ if (typeof document !== "undefined") {
     state.navOpen = false;
     window.scrollTo(0, 0);
     renderMain();
+  });
+  const header = document.querySelector(".app-header");
+  const controlsToggle = document.getElementById("controls-toggle");
+  controlsToggle.addEventListener("click", () => {
+    const open = header.classList.toggle("open");
+    controlsToggle.setAttribute("aria-expanded", String(open));
+  });
+  // «/» или Ctrl/⌘+K — перейти в поиск.
+  document.addEventListener("keydown", (event) => {
+    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || "");
+    if ((event.key === "/" && !typing && !event.metaKey && !event.ctrlKey) || ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k")) {
+      event.preventDefault();
+      searchBox.focus();
+      searchBox.select();
+    }
+  });
+  // Кнопка «Копировать» в блоках кода.
+  document.getElementById("app").addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-copy]");
+    if (!button) return;
+    const text = button.closest(".code-wrap").querySelector("code").textContent;
+    try {
+      await navigator.clipboard.writeText(text);
+      button.textContent = t("copiedCode", state.lang);
+      setTimeout(() => { button.textContent = t("copyCode", state.lang); }, 1500);
+    } catch {
+      // Буфер обмена недоступен: пользователь скопирует вручную.
+    }
   });
   document.getElementById("nav-toggle").addEventListener("click", () => {
     state.navOpen = !state.navOpen;
