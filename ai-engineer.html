@@ -178,7 +178,7 @@ h3.card-title { margin: 0 0 8px; font-size: 1.1rem; }
 .hint { margin: 8px 0 0; color: var(--muted); font-size: 0.88rem; }
 .section h3 { margin: 0 0 6px; font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
 .section p { margin: 0; }
-.section p, .lead, .lesson-part > p, .lesson-list, .callout, .quiz-q, .exercises p { max-width: 70ch; }
+.section p, .lead, .lesson-body > p, .lesson-list, .callout, .quiz-q, .exercises p { max-width: 70ch; }
 .section.practice { padding: 12px 16px; border: 1px solid var(--border); border-left: 4px solid var(--plus); border-radius: 0 var(--radius) var(--radius) 0; background: var(--surface-2); }
 .links-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px 24px; }
 .sub-label { margin: 0 0 2px; color: var(--muted); font-size: 0.85rem; }
@@ -343,10 +343,11 @@ select {
 .lesson-badge { cursor: pointer; background: none; color: var(--accent); font: inherit; font-size: 0.8rem; font-weight: 600; }
 .lesson-toc { margin: 8px 0 0; padding-left: 22px; }
 .lesson-toc li { margin: 2px 0; }
-.lesson-toc .btn.link { color: var(--accent); font-size: 0.95rem; text-align: left; }
-.lesson-part { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); scroll-margin-top: 80px; }
-.lesson-part h4 { margin: 0 0 8px; font-size: 1.12rem; }
-.lesson-part > p, .lesson-part > .code, .lesson-part > .compare, .lesson-part > .table-wrap, .lesson-part > ul { margin: 0 0 12px; }
+a.btn { display: inline-block; text-decoration: none; }
+.lesson-body { margin-top: 12px; }
+.lesson-body > p, .lesson-body > .code, .lesson-body > .compare, .lesson-body > .table-wrap, .lesson-body > ul { margin: 0 0 12px; }
+.nav-block ul ul { padding-left: 12px; }
+.nav-block ul ul a { font-size: 0.85rem; }
 .lesson-list { padding-left: 20px; }
 .lesson-list li { margin: 3px 0; }
 code.inline { padding: 1px 5px; border-radius: 4px; background: var(--surface-2); font: 0.88em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
@@ -447,8 +448,8 @@ details > p, details > .code { margin: 6px 0 0; }
   <main class="content" id="app"></main>
 </div>
 <footer class="app-footer">
-  <span data-i18n="footerVersion"></span> MVP 1.2 ·
-  <span data-i18n="footerUpdated"></span> 2026-11-07 00:16 (Madrid)
+  <span data-i18n="footerVersion"></span> MVP 1.3 ·
+  <span data-i18n="footerUpdated"></span> 2026-11-07 00:20 (Madrid)
 </footer>
 <script>
 // ════════════════════════════════════════════════════════════════════
@@ -522,7 +523,10 @@ const UI = {
   kind_video: { ru: "видео", en: "video", es: "vídeo" },
   kind_repo: { ru: "репозиторий", en: "repository", es: "repositorio" },
   kind_tool: { ru: "инструмент", en: "tool", es: "herramienta" },
-  lessonBadge: { ru: "Есть урок ↓", en: "Lesson inside ↓", es: "Con lección ↓" },
+  lessonBadge: { ru: "Есть урок →", en: "Has a lesson →", es: "Con lección →" },
+  lessonStart: { ru: "Начать урок", en: "Start the lesson", es: "Empezar la lección" },
+  pagerBack: { ru: "Назад", en: "Back", es: "Atrás" },
+  pagerForward: { ru: "Далее", en: "Next", es: "Siguiente" },
   lessonTitle: { ru: "Урок", en: "Lesson", es: "Lección" },
   lessonMinutes: { ru: "Примерно", en: "About", es: "Unos" },
   minutesShort: { ru: "мин", en: "min", es: "min" },
@@ -3699,6 +3703,7 @@ function validateLesson(where, lesson, add, needText) {
     lesson.sections.forEach((part, pi) => {
       const at = `${where}.sections[${pi}]`;
       if (typeof part.id !== "string" || !ID_RE.test(part.id)) add(at, `id «${part.id}» должен быть в kebab-case`);
+      else if (["cheatsheet", "quiz", "exercises"].includes(part.id)) add(at, `id «${part.id}» занят служебной страницей урока`);
       else if (ids.has(part.id)) add(at, `повторяющийся id «${part.id}»`);
       else ids.add(part.id);
       needText(`${at}.title`, part.title);
@@ -3890,13 +3895,21 @@ const termById = (id) => GLOSSARY.find((term) => term.id === id);
 const topicsOfBlock = (id) => TOPICS.filter((topic) => topic.block === id);
 const sortedBlocks = () => [...BLOCKS].sort((a, b) => a.order - b.order);
 
-// Разбор адреса: #topic-<id>, #block-<id>, пусто — главная.
+// Страницы урока темы: части, шпаргалка (если есть), тест и задачи.
+function lessonPageIds(topic) {
+  if (!topic.lesson) return [];
+  return [...topic.lesson.sections.map((part) => part.id), ...(topic.lesson.cheatsheet ? ["cheatsheet"] : []), "quiz", "exercises"];
+}
+
+// Разбор адреса: #topic-<id>, #topic-<id>/<страница урока>, #block-<id>, пусто — главная.
 function parseRoute(hash) {
   const value = decodeURIComponent(String(hash || "").replace(/^#/, ""));
   if (value === "") return { view: "home" };
   if (value === "progress") return { view: "progress" };
   if (value === "glossary") return { view: "glossary" };
   if (value === "changelog") return { view: "changelog" };
+  const page = value.match(/^topic-([^/]+)\/(.+)$/);
+  if (page && topicById(page[1]) && lessonPageIds(topicById(page[1])).includes(page[2])) return { view: "lesson", id: page[1], part: page[2] };
   const match = value.match(/^(topic|block)-(.+)$/);
   if (match && match[1] === "topic" && topicById(match[2])) return { view: "topic", id: match[2] };
   if (match && match[1] === "block" && blockById(match[2])) return { view: "block", id: match[2] };
@@ -4218,7 +4231,7 @@ function renderProgressLink() {
 
 function renderNav(route) {
   const { lang } = state;
-  const currentTopic = route.view === "topic" ? topicById(route.id) : null;
+  const currentTopic = route.view === "topic" || route.view === "lesson" ? topicById(route.id) : null;
   const currentBlock = route.view === "block" ? route.id : currentTopic?.block;
   document.getElementById("nav").classList.toggle("open", state.navOpen);
   document.getElementById("nav-toggle").setAttribute("aria-expanded", String(state.navOpen));
@@ -4235,9 +4248,15 @@ function renderNav(route) {
     currentBlock === block.id
       ? h("ul", {}, topicsOfBlock(block.id).map((topic) => h("li", {}, h("a", {
         href: `#topic-${topic.id}`,
-        "aria-current": currentTopic?.id === topic.id ? "page" : undefined,
+        "aria-current": route.view === "topic" && currentTopic?.id === topic.id ? "page" : undefined,
       }, h("span", { class: `status-dot ${topicStatus(topic.id)}`, "aria-hidden": "true" }), loc(topic.title, lang),
-        isStale(topic.checked) ? h("span", { class: "stale-mark", title: t("stale", lang) }, " ⟳") : null))))
+        isStale(topic.checked) ? h("span", { class: "stale-mark", title: t("stale", lang) }, " ⟳") : null),
+      currentTopic?.id === topic.id && topic.lesson
+        ? h("ul", { class: "nav-lesson" }, lessonPageIds(topic).map((pid) => h("li", {}, h("a", {
+          href: lessonHref(topic, pid),
+          "aria-current": route.view === "lesson" && route.part === pid ? "page" : undefined,
+        }, lessonPageTitle(topic, pid, lang)))))
+        : null)))
       : null,
   )));
 }
@@ -4391,17 +4410,21 @@ function section(titleKey, lang, ...content) {
 
 const KIND_ICONS = { docs: "📄", course: "🎓", book: "📖", article: "📰", video: "▶️", repo: "🗂", tool: "🛠" };
 
+// Кнопки «назад / далее»: prev и next — { href, title, label } (label — ключ строки интерфейса).
+function pagerNav(prev, next, lang) {
+  if (!prev && !next) return null;
+  const link = (item, cls) => h("a", { class: cls, href: item.href }, h("small", {}, t(item.label, lang)), item.title);
+  return h("nav", { class: "pager", "aria-label": t("pagerLabel", lang) },
+    prev ? link(prev, "prev") : h("span"),
+    next ? link(next, "next") : null);
+}
+
 // Предыдущая и следующая темы в сквозном порядке блоков.
 function renderPager(id, lang) {
   const list = orderedTopics();
   const index = list.findIndex((topic) => topic.id === id);
-  const link = (topic, cls, key) => h("a", { class: cls, href: `#topic-${topic.id}` }, h("small", {}, t(key, lang)), loc(topic.title, lang));
-  const prev = list[index - 1];
-  const next = list[index + 1];
-  if (!prev && !next) return null;
-  return h("nav", { class: "pager", "aria-label": t("pagerLabel", lang) },
-    prev ? link(prev, "prev", "pagerPrev") : h("span"),
-    next ? link(next, "next", "pagerNext") : null);
+  const item = (topic, label) => (topic ? { href: `#topic-${topic.id}`, title: loc(topic.title, lang), label } : null);
+  return pagerNav(item(list[index - 1], "pagerPrev"), item(list[index + 1], "pagerNext"), lang);
 }
 
 // Лёгкая подсветка кода без зависимостей: комментарии, строки, числа, ключевые слова.
@@ -4457,7 +4480,7 @@ function renderTopic(id) {
     h("h2", { class: "page-title" }, loc(topic.title, lang)),
     h("div", { class: "meta" }, priorityBadge(block.priority, lang), `${t("checkedOn", lang)} ${topic.checked}`,
       isStale(topic.checked) ? h("span", { class: "badge stale", title: t("staleHint", lang) }, t("stale", lang)) : null,
-      topic.lesson ? h("button", { class: "badge lesson-badge", type: "button", dataset: { jump: "lesson-" + topic.lesson.sections[0].id } }, t("lessonBadge", lang)) : null),
+      topic.lesson ? h("a", { class: "badge lesson-badge", href: lessonHref(topic, topic.lesson.sections[0].id) }, t("lessonBadge", lang)) : null),
     h("div", { class: "status-row" }, h("div", { class: "segmented", id: "topic-status", role: "group", "aria-label": t("statusLabel", lang) })),
     section("sectionWhat", lang, h("p", {}, loc(topic.what, lang))),
     section("sectionWhy", lang, h("p", {}, loc(topic.why, lang))),
@@ -4487,7 +4510,7 @@ function renderTopic(id) {
   const notes = h("details", { class: "card notes-card", open: state.topicNotes[id] ? true : undefined },
     h("summary", {}, t("sectionNotes", lang)),
     h("textarea", { id: "topic-notes", placeholder: t("notesPlaceholder", lang), "aria-label": t("sectionNotes", lang) }));
-  return [overview, ...(topic.lesson ? renderLesson(topic, lang) : []), notes, renderPager(id, lang)].filter(Boolean);
+  return [overview, topic.lesson ? renderLessonIntro(topic, lang) : null, notes, renderPager(id, lang)].filter(Boolean);
 }
 
 // ─── Урок внутри темы ───
@@ -4526,30 +4549,35 @@ function renderLessonBlock(block, lang) {
   }
 }
 
-function renderLesson(topic, lang) {
+// Страницы урока (третий уровень): части, шпаргалка, тест, задачи. Адрес: #topic-<id>/<страница>.
+function lessonPageTitle(topic, pid, lang) {
+  const part = topic.lesson.sections.find((item) => item.id === pid);
+  if (part) return loc(part.title, lang);
+  return t({ cheatsheet: "lessonCheatsheet", quiz: "lessonQuiz", exercises: "lessonExercises" }[pid], lang);
+}
+
+function lessonHref(topic, pid) {
+  return `#topic-${topic.id}/${pid}`;
+}
+
+// Карточка на странице темы: вход в урок и его оглавление.
+function renderLessonIntro(topic, lang) {
+  const { lesson } = topic;
+  const pages = lessonPageIds(topic);
+  return h("div", { class: "card lesson" },
+    h("h3", { class: "card-title" }, t("lessonTitle", lang)),
+    h("p", { class: "hint" }, `${t("lessonMinutes", lang)} ${lesson.minutes} ${t("minutesShort", lang)} · ${t("lessonParts", lang)} ${lesson.sections.length}`),
+    h("ol", { class: "lesson-toc" }, pages.map((pid) => h("li", {}, h("a", { href: lessonHref(topic, pid) }, lessonPageTitle(topic, pid, lang))))),
+    h("div", { class: "row" }, h("a", { class: "btn primary", href: lessonHref(topic, pages[0]) }, t("lessonStart", lang))),
+  );
+}
+
+function renderQuiz(topic, lang) {
   const { lesson } = topic;
   const answers = state.quizAnswers[topic.id] || {};
   const answered = lesson.quiz.filter((_, i) => answers[i] !== undefined).length;
   const correct = lesson.quiz.filter((q, i) => answers[i] === q.answer).length;
-  const cards = [
-    h("div", { class: "card lesson" },
-      h("h3", { class: "card-title" }, t("lessonTitle", lang)),
-      h("p", { class: "hint" }, `${t("lessonMinutes", lang)} ${lesson.minutes} ${t("minutesShort", lang)} · ${t("lessonParts", lang)} ${lesson.sections.length}`),
-      h("ol", { class: "lesson-toc" }, lesson.sections.map((part) => h("li", {},
-        h("button", { class: "btn link", type: "button", dataset: { jump: `lesson-${part.id}` } }, loc(part.title, lang))))),
-      lesson.sections.map((part, index) => h("section", { class: "lesson-part", id: `lesson-${part.id}` },
-        h("h4", {}, `${index + 1}. ${loc(part.title, lang)}`),
-        part.blocks.map((block) => renderLessonBlock(block, lang)),
-      )),
-    ),
-  ];
-  if (lesson.cheatsheet) {
-    cards.push(h("div", { class: "card" },
-      h("h3", { class: "card-title", id: "lesson-cheatsheet" }, t("lessonCheatsheet", lang)),
-      renderLessonBlock({ type: "table", head: lesson.cheatsheet.head, rows: lesson.cheatsheet.rows }, lang)));
-  }
-  cards.push(h("div", { class: "card", id: "lesson-quiz" },
-    h("h3", { class: "card-title" }, t("lessonQuiz", lang)),
+  return h("div", { id: "lesson-quiz" },
     h("p", { class: "hint", id: "quiz-score" }, `${t("quizScore", lang)} ${correct}/${lesson.quiz.length}` + (answered < lesson.quiz.length ? ` · ${t("quizLeft", lang)} ${lesson.quiz.length - answered}` : "")),
     h("ol", { class: "quiz" }, lesson.quiz.map((q, qi) => {
       const chosen = answers[qi];
@@ -4566,16 +4594,50 @@ function renderLesson(topic, lang) {
       );
     })),
     answered ? h("button", { class: "btn link", type: "button", id: "quiz-reset" }, t("quizReset", lang)) : null,
-  ));
-  cards.push(h("div", { class: "card" },
-    h("h3", { class: "card-title" }, t("lessonExercises", lang)),
-    h("ol", { class: "exercises" }, lesson.exercises.map((exercise) => h("li", {},
-      h("p", {}, richText(loc(exercise.task, lang))),
-      exercise.hint ? h("details", {}, h("summary", {}, t("exerciseHint", lang)), h("p", {}, richText(loc(exercise.hint, lang)))) : null,
-      h("details", {}, h("summary", {}, t("exerciseSolution", lang)), codeBlock(exercise.solution.lang, exercise.solution.code, exercise.solution.output)),
-    ))),
-  ));
-  return cards;
+  );
+}
+
+function renderExercises(topic, lang) {
+  return h("ol", { class: "exercises" }, topic.lesson.exercises.map((exercise) => h("li", {},
+    h("p", {}, richText(loc(exercise.task, lang))),
+    exercise.hint ? h("details", {}, h("summary", {}, t("exerciseHint", lang)), h("p", {}, richText(loc(exercise.hint, lang)))) : null,
+    h("details", {}, h("summary", {}, t("exerciseSolution", lang)), codeBlock(exercise.solution.lang, exercise.solution.code, exercise.solution.output)),
+  )));
+}
+
+function renderLessonPage(id, pid) {
+  const { lang } = state;
+  const topic = topicById(id);
+  const block = blockById(topic.block);
+  const { lesson } = topic;
+  const title = lessonPageTitle(topic, pid, lang);
+  const pages = lessonPageIds(topic);
+  const index = pages.indexOf(pid);
+  document.title = `${title} · ${loc(topic.title, lang)} · ${t("appTitle", lang)}`;
+  const part = lesson.sections.find((item) => item.id === pid);
+  let body;
+  if (part) body = part.blocks.map((item) => renderLessonBlock(item, lang));
+  else if (pid === "cheatsheet") body = renderLessonBlock({ type: "table", head: lesson.cheatsheet.head, rows: lesson.cheatsheet.rows }, lang);
+  else if (pid === "quiz") body = renderQuiz(topic, lang);
+  else body = renderExercises(topic, lang);
+  const card = h("article", { class: "card lesson-page" },
+    h("p", { class: "crumbs" },
+      h("a", { href: "#" }, t("appTitle", lang)), " / ",
+      h("a", { href: `#block-${block.id}` }, `${block.order}. ${loc(block.title, lang)}`), " / ",
+      h("a", { href: `#topic-${topic.id}` }, loc(topic.title, lang))),
+    h("h2", { class: "page-title" }, title),
+    h("p", { class: "hint" }, `${t("lessonTitle", lang)} · ${index + 1}/${pages.length}`),
+    h("div", { class: "lesson-body" }, body),
+  );
+  const list = orderedTopics();
+  const nextTopic = list[list.findIndex((item) => item.id === id) + 1];
+  const prev = index > 0
+    ? { href: lessonHref(topic, pages[index - 1]), title: lessonPageTitle(topic, pages[index - 1], lang), label: "pagerBack" }
+    : { href: `#topic-${id}`, title: loc(topic.title, lang), label: "pagerBack" };
+  const next = index < pages.length - 1
+    ? { href: lessonHref(topic, pages[index + 1]), title: lessonPageTitle(topic, pages[index + 1], lang), label: "pagerForward" }
+    : (nextTopic ? { href: `#topic-${nextTopic.id}`, title: loc(nextTopic.title, lang), label: "pagerNext" } : null);
+  return [card, pagerNav(prev, next, lang)].filter(Boolean);
 }
 
 // Элементы управления карточки темы подключаются после вставки в документ.
@@ -4589,15 +4651,6 @@ function bindTopicControls(id) {
     renderNav(parseRoute(location.hash));
     renderProgressLink();
   });
-  for (const button of document.querySelectorAll("[data-jump]")) {
-    if (button.dataset.bound) continue;
-    button.dataset.bound = "1";
-    button.addEventListener("click", () => document.getElementById(button.dataset.jump).scrollIntoView({
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-      block: "start",
-    }));
-  }
-  bindQuiz(id);
   const notes = document.getElementById("topic-notes");
   if (notes.dataset.bound) return;
   notes.dataset.bound = "1";
@@ -4611,10 +4664,9 @@ function bindTopicControls(id) {
 
 function bindQuiz(id) {
   const quiz = document.getElementById("lesson-quiz");
-  if (!quiz || quiz.dataset.bound) return;
-  quiz.dataset.bound = "1";
+  if (!quiz) return;
   const rerender = () => {
-    const fresh = renderLesson(topicById(id), state.lang).find((card) => card.id === "lesson-quiz");
+    const fresh = renderQuiz(topicById(id), state.lang);
     quiz.replaceWith(fresh);
     bindQuiz(id);
   };
@@ -4784,6 +4836,7 @@ function renderMain() {
   else if (route.view === "home") content = renderHome();
   else if (route.view === "block") content = renderBlock(route.id);
   else if (route.view === "topic") content = renderTopic(route.id);
+  else if (route.view === "lesson") content = renderLessonPage(route.id, route.part);
   else if (route.view === "progress") content = renderProgress();
   else if (route.view === "glossary") content = renderGlossary(route.id);
   else if (route.view === "changelog") content = renderChangelog();
@@ -4793,7 +4846,8 @@ function renderMain() {
   }
   app.replaceChildren(...[content].flat());
   if (!state.query.trim() && route.view === "topic") bindTopicControls(route.id);
-  if (!state.query.trim() && route.view === "topic" && state.lastTopic !== route.id) {
+  if (!state.query.trim() && route.view === "lesson" && route.part === "quiz") bindQuiz(route.id);
+  if (!state.query.trim() && (route.view === "topic" || route.view === "lesson") && state.lastTopic !== route.id) {
     state.lastTopic = route.id;
     persist("lastTopic");
   }

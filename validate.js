@@ -134,7 +134,12 @@ if (page) {
 
   check("адрес главной", page.parseRoute("").view === "home");
   check("адрес темы", page.parseRoute(`#topic-${firstTopic}`).view === "topic");
-  check("адрес несуществующей темы", page.parseRoute("#topic-nope").view === "missing");
+  const lessonTopic = page.TOPICS.find((item) => item.lesson);
+  const firstPart = lessonTopic.lesson.sections[0].id;
+  check("адрес страницы урока", page.parseRoute(`#topic-${lessonTopic.id}/${firstPart}`).view === "lesson");
+  check("адрес теста урока", page.parseRoute(`#topic-${lessonTopic.id}/quiz`).part === "quiz");
+  check("адрес несуществующей страницы урока", page.parseRoute(`#topic-${lessonTopic.id}/nope`).view === "missing");
+  check("адрес несуществующей темы",page.parseRoute("#topic-nope").view === "missing");
   check("адрес прогресса", page.parseRoute("#progress").view === "progress");
   check("поиск по русскому названию", page.search("эмбеддинги", "ru").some((r) => r.id === "embeddings"));
   check("поиск по английскому термину из русского интерфейса", page.search("embeddings", "ru").some((r) => r.id === "embeddings"));
