@@ -27,7 +27,7 @@ vm.createContext(sandbox);
 let page = null;
 try {
   vm.runInContext(
-    `${script}\n;globalThis.__page = { dataIssues, validateData, UI, BLOCKS, TOPICS, GLOSSARY, CHANGELOG, state, parseBackup, buildBackup, normalizeTopicStatus, normalizeInbox, progressCounts, search, parseRoute, isStale, filteredTopics, setLessonStatus, applyQuizProgress, lessonPageIds, lessonCounts, topicLevels, buildNotesMarkdown, normalizeActivity, activityCounts, recordActivity };`,
+    `${script}\n;globalThis.__page = { dataIssues, validateData, UI, BLOCKS, TOPICS, GLOSSARY, CHANGELOG, state, parseBackup, buildBackup, normalizeTopicStatus, normalizeInbox, progressCounts, search, parseRoute, isStale, filteredTopics, setLessonStatus, applyQuizProgress, lessonPageIds, lessonCounts, topicLevels, buildNotesMarkdown, normalizeActivity, activityCounts, recordActivity, findTermMentions, normalizeCardStatus, buildDeck, LINKS_CHECKED };`,
     sandbox,
     { filename: htmlPath },
   );
@@ -186,6 +186,23 @@ if (page) {
   page.state.inbox = [];
   check("заметки выгружаются в Markdown", page.buildNotesMarkdown("ru").count === 1 && page.buildNotesMarkdown("ru").text.includes("моя заметка"));
   page.state.topicNotes = {};
+  {
+    const ids = (text, lang) => page.findTermMentions(text, lang).map((m) => m.id);
+    check("термин находится с окончанием", ids("Эмбеддинги хранят в векторной базе.", "ru").includes("embedding"));
+    check("английский термин в русском тексте", ids("Строим RAG для компании", "ru").includes("rag"));
+    check("термин не ищется внутри слова", !ids("storage и pragma", "en").includes("rag"));
+    check("испанский термин", ids("Usamos una ventana de contexto grande", "es").includes("context-window"));
+  }
+  check("карточки: статусы нормализуются", JSON.stringify(page.normalizeCardStatus({ a: "known", b: "review", c: "new", d: 1 })) === JSON.stringify({ a: "known", b: "review" }));
+  page.state.cardStatus = { [page.GLOSSARY[0].id]: "known", [page.GLOSSARY[1].id]: "review" };
+  {
+    const left = page.buildDeck("left");
+    check("колода «Осталось» без освоенных, повторы первыми", left.ids.length === page.GLOSSARY.length - 1 && left.ids[0] === page.GLOSSARY[1].id && !left.ids.includes(page.GLOSSARY[0].id));
+    check("колода «Знаю»", page.buildDeck("known").ids.length === 1 && page.buildDeck("all").ids.length === page.GLOSSARY.length);
+  }
+  page.state.cardStatus = {};
+  check("адрес карточек", page.parseRoute("#cards").view === "cards");
+  check("дата сверки ссылок корректна и не в будущем", /^\d{4}-\d{2}-\d{2}$/.test(page.LINKS_CHECKED) && Date.parse(`${page.LINKS_CHECKED}T00:00:00Z`) <= Date.now() + 86400000);
   check("пустой поиск", page.search("   ", "ru").length === 0);
   check("адрес термина", page.parseRoute(`#term-${page.GLOSSARY[0].id}`).view === "glossary");
   check("адрес ленты", page.parseRoute("#changelog").view === "changelog");
@@ -216,7 +233,8 @@ async function checkLinks() {
   for (const url of urls) {
     try {
       const response = await fetch(url, { method: "GET", redirect: "follow", signal: AbortSignal.timeout(20000) });
-      if (!response.ok) failures.push(`Ссылка ${url}: HTTP ${response.status}`);
+      if ([401, 403, 429].includes(response.status)) console.log("⚠", url, `HTTP ${response.status}: сайт отвечает, но не пускает бота; откройте ссылку в браузере`);
+      else if (!response.ok) failures.push(`Ссылка ${url}: HTTP ${response.status}`);
       else console.log("✓", url);
     } catch (error) {
       failures.push(`Ссылка ${url}: ${error.cause?.code || error.message}`);
@@ -227,6 +245,7 @@ async function checkLinks() {
 (async () => {
   if (page && process.argv.includes("--links")) await checkLinks();
   for (const failure of failures) console.log("✗", failure);
+  if (page && process.argv.includes("--links") && !failures.length) console.log(`Ссылки в порядке. Поставьте LINKS_CHECKED = "${new Date().toISOString().slice(0, 10)}" в ai-engineer.html.`);
   console.log(failures.length ? `RESULT: FAIL (${failures.length})` : "RESULT: PASS");
   process.exit(failures.length ? 1 : 0);
 })();

@@ -357,6 +357,16 @@ select {
 .map-after { display: block; margin-left: 20px; color: var(--muted); font-size: 0.85rem; }
 .map-block { color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
 .lesson-bar { display: none; }
+.flashcard { margin-top: 16px; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); }
+.flashcard-term { margin: 6px 0 0; font-size: 1.6rem; font-weight: 700; line-height: 1.25; }
+.flashcard-en { margin: 0; color: var(--muted); }
+.flashcard-back { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+.flashcard-back p { margin: 0 0 8px; }
+.term-link { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-decoration: underline dotted var(--accent); text-underline-offset: 3px; cursor: help; }
+.term-link:hover, .term-link[aria-expanded="true"] { background: var(--accent-soft); }
+#term-pop { position: fixed; z-index: 40; max-width: min(340px, calc(100vw - 16px)); padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25); font-size: 0.92rem; }
+#term-pop strong { display: block; }
+#term-pop p { margin: 4px 0; }
 .nav-count { margin-left: 6px; color: var(--muted); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
 .lesson-toc { list-style: none; padding-left: 0; }
 a.btn { display: inline-block; text-decoration: none; }
@@ -477,8 +487,8 @@ details > p, details > .code { margin: 6px 0 0; }
 <div class="sr-only" id="live" role="status" aria-live="polite"></div>
 </div>
 <footer class="app-footer">
-  <span data-i18n="footerVersion"></span> MVP 1.6 ·
-  <span data-i18n="footerUpdated"></span> 2026-11-07 00:36 (Madrid)
+  <span data-i18n="footerVersion"></span> MVP 1.7 ·
+  <span data-i18n="footerUpdated"></span> 2026-11-07 00:42 (Madrid)
 </footer>
 <script>
 // ════════════════════════════════════════════════════════════════════
@@ -555,6 +565,37 @@ const UI = {
   lessonBadge: { ru: "Есть урок →", en: "Has a lesson →", es: "Con lección →" },
   lessonProgress: { ru: "Прогресс урока", en: "Lesson progress", es: "Progreso de la lección" },
   lessonStatusLabel: { ru: "Статус страницы урока", en: "Lesson page status", es: "Estado de la página" },
+  termOpen: { ru: "В глоссарий →", en: "Open in glossary →", es: "Abrir en el glosario →" },
+  cardsTitle: { ru: "Карточки терминов", en: "Term flashcards", es: "Tarjetas de términos" },
+  cardsLead: {
+    ru: "Вспомните определение, потом проверьте себя. Отмеченные «Знаю» выпадают из колоды, «Повторить» возвращаются первыми.",
+    en: "Recall the definition, then check yourself. Cards marked “Know it” leave the deck; “Review” cards come back first.",
+    es: "Recuerda la definición y compruébalo. Las tarjetas marcadas «Lo sé» salen del mazo; las de «Repasar» vuelven primero.",
+  },
+  cardsFilterLeft: { ru: "Осталось", en: "Remaining", es: "Pendientes" },
+  cardsFilterAll: { ru: "Все", en: "All", es: "Todas" },
+  cardsFilterKnown: { ru: "Знаю", en: "Known", es: "Sabidas" },
+  cardsShow: { ru: "Показать определение", en: "Show the definition", es: "Mostrar la definición" },
+  cardsKnow: { ru: "Знаю", en: "Know it", es: "Lo sé" },
+  cardsReview: { ru: "Повторить", en: "Review", es: "Repasar" },
+  cardsCount: { ru: "Карточка", en: "Card", es: "Tarjeta" },
+  cardsOf: { ru: "из", en: "of", es: "de" },
+  cardsStats: { ru: "Знаю", en: "Known", es: "Sabidas" },
+  cardsStatsReview: { ru: "Повторить", en: "Review", es: "Repasar" },
+  cardsStatsNew: { ru: "Новых", en: "New", es: "Nuevas" },
+  cardsDone: { ru: "Колода пройдена.", en: "Deck finished.", es: "Mazo terminado." },
+  cardsEmpty: { ru: "В этой колоде нет карточек.", en: "No cards in this deck.", es: "No hay tarjetas en este mazo." },
+  cardsRestart: { ru: "Начать колоду заново", en: "Restart the deck", es: "Reiniciar el mazo" },
+  cardsKeys: { ru: "Клавиши: пробел — показать, ← повторить, → знаю", en: "Keys: space reveals, ← review, → know it", es: "Teclas: espacio muestra, ← repasar, → lo sé" },
+  freshTitle: { ru: "Актуальность справочника", en: "How up to date the handbook is", es: "Vigencia del manual" },
+  freshLinks: { ru: "Последняя сверка ссылок:", en: "Links last checked:", es: "Última comprobación de enlaces:" },
+  freshOverdue: { ru: "пора сверить", en: "due for a check", es: "toca comprobar" },
+  freshStale: { ru: "Тем, требующих проверки:", en: "Topics needing review:", es: "Temas por revisar:" },
+  freshHint: {
+    ru: "Ссылки проверяются командой node validate.js --links примерно раз в неделю.",
+    en: "Links are checked with node validate.js --links roughly once a week.",
+    es: "Los enlaces se comprueban con node validate.js --links más o menos una vez por semana.",
+  },
   skipLink: { ru: "К содержимому", en: "Skip to content", es: "Ir al contenido" },
   quizPassed: { ru: "Тест зачтён.", en: "Quiz passed.", es: "Test superado." },
   quizNotPassed: {
@@ -3721,6 +3762,9 @@ const CHANGELOG = [
   },
 ];
 
+// Дата последней проверки всех ссылок: обновляется после `node validate.js --links` без ошибок.
+const LINKS_CHECKED = "2026-11-07";
+
 // ═══════ 3. Проверка данных (validateData) ═══════
 function isLocalized(value) {
   return value !== null && typeof value === "object"
@@ -3968,6 +4012,7 @@ function parseRoute(hash) {
   if (value === "glossary") return { view: "glossary" };
   if (value === "changelog") return { view: "changelog" };
   if (value === "map") return { view: "map" };
+  if (value === "cards") return { view: "cards" };
   const page = value.match(/^topic-([^/]+)\/(.+)$/);
   if (page && topicById(page[1]) && lessonPageIds(topicById(page[1])).includes(page[2])) return { view: "lesson", id: page[1], part: page[2] };
   const match = value.match(/^(topic|block)-(.+)$/);
@@ -4105,6 +4150,8 @@ const state = {
   lastTopic: null,
   lastPage: null,
   activity: {},
+  cardStatus: {},
+  cardDeck: null,
   topicStatus: {},
   lessonStatus: {},
   topicNotes: {},
@@ -4178,6 +4225,16 @@ function normalizeActivity(value) {
   if (!isPlainObject(value)) return result;
   for (const [day, count] of Object.entries(value)) {
     if (DATE_RE.test(day) && Number.isInteger(count) && count > 0) result[day] = count;
+  }
+  return result;
+}
+
+// Карточки терминов: { idТермина: "known" | "review" }; «новая» не хранится.
+function normalizeCardStatus(value) {
+  const result = {};
+  if (!isPlainObject(value)) return result;
+  for (const [id, status] of Object.entries(value)) {
+    if (status === "known" || status === "review") result[id] = status;
   }
   return result;
 }
@@ -4362,6 +4419,7 @@ function buildBackup(now = new Date()) {
     topicStatus: state.topicStatus,
     lessonStatus: state.lessonStatus,
     activity: state.activity,
+    cardStatus: state.cardStatus,
     topicNotes: state.topicNotes,
     quizAnswers: state.quizAnswers,
     inbox: state.inbox,
@@ -4381,6 +4439,7 @@ function parseBackup(text) {
     topicStatus: normalizeTopicStatus(data.topicStatus),
     lessonStatus: normalizeLessonStatus(data.lessonStatus),
     activity: normalizeActivity(data.activity),
+    cardStatus: normalizeCardStatus(data.cardStatus),
     topicNotes: normalizeTopicNotes(data.topicNotes),
     quizAnswers: normalizeQuizAnswers(data.quizAnswers),
     inbox: normalizeInbox(data.inbox),
@@ -4464,6 +4523,7 @@ function renderNav(route) {
   const pageLink = (view, key) => h("a", { href: `#${view}`, "aria-current": route.view === view ? "page" : undefined }, t(key, lang));
   document.getElementById("nav-tree").replaceChildren(h("div", { class: "nav-pages" },
     pageLink("glossary", "glossaryTitle"),
+    pageLink("cards", "cardsTitle"),
     pageLink("changelog", "changelogTitle"),
     pageLink("progress", "progressLink"),
     pageLink("map", "mapTitle"),
@@ -4582,6 +4642,7 @@ function renderGlossary(focusId) {
     h("p", { class: "crumbs" }, h("a", { href: "#" }, t("appTitle", lang))),
     h("h2", { class: "page-title" }, t("glossaryTitle", lang)),
     h("p", { class: "lead" }, t("glossaryLead", lang)),
+    h("div", { class: "row" }, h("a", { class: "btn primary", href: "#cards" }, t("cardsTitle", lang))),
     terms.length
       ? h("dl", { class: "glossary" }, terms.map((term) => h("div", { class: `term${term.id === focusId ? " focused" : ""}`, id: `term-${term.id}` },
         h("dt", {}, loc(term.term, lang)),
@@ -4611,6 +4672,118 @@ function renderMap() {
       ))),
     )),
   );
+}
+
+const cardState = (id) => state.cardStatus[id] || "new";
+const CARD_FILTERS = ["left", "all", "known"];
+
+// Колода: сначала «Повторить», затем новые; фильтр «Все» и «Знаю» показывает и освоенные.
+function buildDeck(filter) {
+  const rank = { review: 0, new: 1, known: 2 };
+  const terms = GLOSSARY.filter((term) => (filter === "all" ? true : filter === "known" ? cardState(term.id) === "known" : cardState(term.id) !== "known"));
+  terms.sort((a, b) => rank[cardState(a.id)] - rank[cardState(b.id)]);
+  return { filter, ids: terms.map((term) => term.id), pos: 0, revealed: false };
+}
+
+function cardCounts() {
+  const known = GLOSSARY.filter((term) => cardState(term.id) === "known").length;
+  const review = GLOSSARY.filter((term) => cardState(term.id) === "review").length;
+  return { known, review, fresh: GLOSSARY.length - known - review };
+}
+
+function renderCards() {
+  const { lang } = state;
+  document.title = `${t("cardsTitle", lang)} · ${t("appTitle", lang)}`;
+  if (!state.cardDeck) state.cardDeck = buildDeck("left");
+  return h("div", { class: "card" },
+    h("p", { class: "crumbs" }, h("a", { href: "#" }, t("appTitle", lang)), " / ", h("a", { href: "#glossary" }, t("glossaryTitle", lang))),
+    h("h2", { class: "page-title" }, t("cardsTitle", lang)),
+    h("p", { class: "lead" }, t("cardsLead", lang)),
+    h("div", { class: "status-row" }, h("div", { class: "segmented", id: "cards-filter", role: "group", "aria-label": t("cardsTitle", lang) })),
+    h("p", { class: "hint", id: "cards-stats" }),
+    h("p", { class: "hint keys-hint" }, t("cardsKeys", lang)),
+    h("div", { id: "card-area" }),
+  );
+}
+
+function renderCardArea() {
+  const { lang } = state;
+  const deck = state.cardDeck;
+  const counts = cardCounts();
+  document.getElementById("cards-stats").textContent = `${t("cardsStats", lang)}: ${counts.known} · ${t("cardsStatsReview", lang)}: ${counts.review} · ${t("cardsStatsNew", lang)}: ${counts.fresh}`;
+  renderSegmented(document.getElementById("cards-filter"), CARD_FILTERS.map((value) => ({
+    value,
+    label: t({ left: "cardsFilterLeft", all: "cardsFilterAll", known: "cardsFilterKnown" }[value], lang),
+  })), deck.filter, (value) => {
+    state.cardDeck = buildDeck(value);
+    renderCardArea();
+  });
+  const area = document.getElementById("card-area");
+  if (!deck.ids.length) {
+    area.replaceChildren(h("p", { class: "empty" }, t("cardsEmpty", lang)));
+    return;
+  }
+  if (deck.pos >= deck.ids.length) {
+    const again = h("button", { class: "btn primary", type: "button" }, t("cardsRestart", lang));
+    again.addEventListener("click", () => {
+      state.cardDeck = buildDeck(deck.filter);
+      renderCardArea();
+    });
+    area.replaceChildren(h("div", { class: "flashcard" }, h("p", { class: "notice" }, t("cardsDone", lang)), h("div", { class: "row" }, again)));
+    return;
+  }
+  const term = termById(deck.ids[deck.pos]);
+  const answer = (status) => {
+    if (status === "known" && cardState(term.id) !== "known") recordActivity();
+    state.cardStatus[term.id] = status;
+    persist("cardStatus");
+    deck.pos += 1;
+    deck.revealed = false;
+    renderCardArea();
+    area.querySelector("button")?.focus();
+  };
+  const front = [
+    h("p", { class: "hint" }, `${t("cardsCount", lang)} ${deck.pos + 1} ${t("cardsOf", lang)} ${deck.ids.length}`),
+    h("p", { class: "flashcard-term" }, loc(term.term, lang)),
+    term.term.en !== loc(term.term, lang) ? h("p", { class: "flashcard-en" }, term.term.en) : null,
+  ];
+  let controls;
+  if (!deck.revealed) {
+    const show = h("button", { class: "btn primary", type: "button" }, t("cardsShow", lang));
+    show.addEventListener("click", () => {
+      deck.revealed = true;
+      renderCardArea();
+      document.querySelector("#card-area .btn.primary")?.focus();
+    });
+    controls = h("div", { class: "row" }, show);
+  } else {
+    const review = h("button", { class: "btn", type: "button" }, t("cardsReview", lang));
+    const know = h("button", { class: "btn primary", type: "button" }, t("cardsKnow", lang));
+    review.addEventListener("click", () => answer("review"));
+    know.addEventListener("click", () => answer("known"));
+    controls = [
+      h("div", { class: "flashcard-back" },
+        h("p", {}, loc(term.definition, lang)),
+        h("p", { class: "term-langs" }, LANGS.filter((code) => code !== lang).map((code) => h("span", {}, h("b", {}, code.toUpperCase()), " ", term.term[code]))),
+        h("p", { class: "term-topics" }, term.topics.map((id, i) => [i ? ", " : "", topicLink(id, lang)]))),
+      h("div", { class: "row" }, review, know),
+    ];
+  }
+  area.replaceChildren(h("div", { class: "flashcard", "aria-live": "polite" }, front, controls));
+}
+
+// Клавиши на странице карточек: пробел или Enter — показать, ← повторить, → знаю.
+function handleCardKeys(event, typing) {
+  if (typing || event.metaKey || event.ctrlKey || event.altKey || state.query.trim() || parseRoute(location.hash).view !== "cards") return;
+  const deck = state.cardDeck;
+  if (!deck || deck.pos >= deck.ids.length) return;
+  if (!deck.revealed && (event.key === " " || event.key === "Enter") && document.activeElement === document.body) {
+    event.preventDefault();
+    deck.revealed = true;
+    renderCardArea();
+  } else if (deck.revealed && (event.key === "ArrowRight" || event.key === "ArrowLeft")) {
+    document.querySelectorAll("#card-area .flashcard .row .btn")[event.key === "ArrowRight" ? 1 : 0]?.click();
+  }
 }
 
 function renderChangelog() {
@@ -4732,9 +4905,9 @@ function renderTopic(id) {
       isStale(topic.checked) ? h("span", { class: "badge stale", title: t("staleHint", lang) }, t("stale", lang)) : null,
       topic.lesson ? h("a", { class: "badge lesson-badge", href: lessonHref(topic, topic.lesson.sections[0].id) }, t("lessonBadge", lang)) : null),
     h("div", { class: "status-row" }, h("div", { class: "segmented", id: "topic-status", role: "group", "aria-label": t("statusLabel", lang) })),
-    section("sectionWhat", lang, h("p", {}, loc(topic.what, lang))),
-    section("sectionWhy", lang, h("p", {}, loc(topic.why, lang))),
-    topic.fromSql ? section("sectionFromSql", lang, h("p", { class: "from-sql" }, loc(topic.fromSql, lang))) : null,
+    section("sectionWhat", lang, h("p", {}, richText(loc(topic.what, lang), true))),
+    section("sectionWhy", lang, h("p", {}, richText(loc(topic.why, lang), true))),
+    topic.fromSql ? section("sectionFromSql", lang, h("p", { class: "from-sql" }, richText(loc(topic.fromSql, lang), true))) : null,
     topic.concepts.length ? section("sectionConcepts", lang, h("ul", { class: "chips" }, topic.concepts.map((termId) => {
       const term = termById(termId);
       return h("li", {}, h("a", { class: "chip", href: `#term-${term.id}`, title: loc(term.definition, lang) }, loc(term.term, lang)));
@@ -4746,7 +4919,7 @@ function renderTopic(id) {
       h("span", { class: "res-meta" }, `· ${t(`kind_${resource.kind}`, lang)} · ${resource.lang.toUpperCase()}`),
     )))),
     (() => {
-      const practice = section("sectionPractice", lang, h("p", {}, loc(topic.practice, lang)));
+      const practice = section("sectionPractice", lang, h("p", {}, richText(loc(topic.practice, lang), true)));
       practice.classList.add("practice");
       return practice;
     })(),
@@ -4765,10 +4938,76 @@ function renderTopic(id) {
 
 // ─── Урок внутри темы ───
 // Текст урока поддерживает `код` в обратных кавычках.
-function richText(text) {
-  return text.split(/(`[^`]+`)/).filter(Boolean).map((part) => (part.startsWith("`") && part.endsWith("`") && part.length > 2
-    ? h("code", { class: "inline" }, part.slice(1, -1))
-    : part));
+// Упоминания терминов глоссария в тексте: { id, start, end }. Форма термина — то, что до скобки или запятой;
+// после неё допускаются до трёх букв (окончание: «эмбеддинги», «evals»).
+const termMatchers = {};
+function termMatcher(lang) {
+  if (termMatchers[lang]) return termMatchers[lang];
+  const map = new Map();
+  const forms = [];
+  for (const term of GLOSSARY) {
+    for (const raw of [loc(term.term, lang), term.term.en]) {
+      const form = raw.split(/[,(]/)[0].trim().toLowerCase();
+      if (form.length >= 3) forms.push({ form, id: term.id });
+    }
+  }
+  forms.sort((a, b) => b.form.length - a.form.length);
+  for (const { form, id } of forms) if (!map.has(form)) map.set(form, id);
+  const escaped = [...map.keys()].map((form) => form.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const re = new RegExp(`(?<![\\p{L}\\p{N}_-])(${escaped.join("|")})\\p{L}{0,3}(?![\\p{L}\\p{N}_])`, "giu");
+  termMatchers[lang] = { re, map };
+  return termMatchers[lang];
+}
+
+function findTermMentions(text, lang) {
+  const { re, map } = termMatcher(lang);
+  re.lastIndex = 0;
+  return [...text.matchAll(re)].map((m) => ({ id: map.get(m[1].toLowerCase()), start: m.index, end: m.index + m[0].length }));
+}
+
+// Текст с `inline-кодом`; при linkTerms первое упоминание каждого термина — кнопка с подсказкой.
+function richText(text, linkTerms = false) {
+  const seen = new Set();
+  return text.split(/(`[^`]+`)/).filter(Boolean).flatMap((part) => {
+    if (part.startsWith("`") && part.endsWith("`") && part.length > 2) return [h("code", { class: "inline" }, part.slice(1, -1))];
+    if (!linkTerms) return [part];
+    const nodes = [];
+    let last = 0;
+    for (const mention of findTermMentions(part, state.lang)) {
+      if (seen.has(mention.id)) continue;
+      seen.add(mention.id);
+      nodes.push(part.slice(last, mention.start));
+      nodes.push(h("button", { class: "term-link", type: "button", "aria-expanded": "false", dataset: { term: mention.id } }, part.slice(mention.start, mention.end)));
+      last = mention.end;
+    }
+    nodes.push(part.slice(last));
+    return nodes.filter((node) => node !== "");
+  });
+}
+
+// Подсказка с определением термина рядом с кнопкой.
+function hideTermPopover() {
+  document.getElementById("term-pop")?.remove();
+  for (const button of document.querySelectorAll('[data-term][aria-expanded="true"]')) button.setAttribute("aria-expanded", "false");
+}
+
+function showTermPopover(button) {
+  hideTermPopover();
+  const { lang } = state;
+  const term = termById(button.dataset.term);
+  const others = LANGS.filter((code) => code !== lang).map((code) => `${code.toUpperCase()} ${term.term[code]}`).join(" · ");
+  const pop = h("div", { id: "term-pop", role: "dialog", "aria-label": loc(term.term, lang) },
+    h("strong", {}, loc(term.term, lang)),
+    h("p", { class: "res-meta" }, others),
+    h("p", {}, loc(term.definition, lang)),
+    h("a", { href: `#term-${term.id}` }, t("termOpen", lang)));
+  document.body.append(pop);
+  button.setAttribute("aria-expanded", "true");
+  const at = button.getBoundingClientRect();
+  const box = pop.getBoundingClientRect();
+  const below = at.bottom + 8 + box.height < window.innerHeight;
+  pop.style.left = `${Math.min(Math.max(8, at.left), Math.max(8, window.innerWidth - box.width - 8))}px`;
+  pop.style.top = `${below ? at.bottom + 8 : Math.max(8, at.top - box.height - 8)}px`;
 }
 
 function codeBlock(lang, code, output) {
@@ -4780,10 +5019,10 @@ function codeBlock(lang, code, output) {
 
 function renderLessonBlock(block, lang) {
   switch (block.type) {
-    case "p": return h("p", {}, richText(loc(block.text, lang)));
-    case "list": return h("ul", { class: "lesson-list" }, block.items.map((item) => h("li", {}, richText(loc(item, lang)))));
-    case "tip": return h("p", { class: "callout tip" }, h("b", {}, `${t("lessonTip", lang)} `), richText(loc(block.text, lang)));
-    case "warn": return h("p", { class: "callout warn" }, h("b", {}, `${t("lessonWarn", lang)} `), richText(loc(block.text, lang)));
+    case "p": return h("p", {}, richText(loc(block.text, lang), true));
+    case "list": return h("ul", { class: "lesson-list" }, block.items.map((item) => h("li", {}, richText(loc(item, lang), true))));
+    case "tip": return h("p", { class: "callout tip" }, h("b", {}, `${t("lessonTip", lang)} `), richText(loc(block.text, lang), true));
+    case "warn": return h("p", { class: "callout warn" }, h("b", {}, `${t("lessonWarn", lang)} `), richText(loc(block.text, lang), true));
     case "code": return [block.caption ? h("p", { class: "caption" }, richText(loc(block.caption, lang))) : null, codeBlock(block.lang, block.code, block.output)];
     case "compare": return h("div", { class: "compare" },
       h("div", {}, h("div", { class: "compare-label" }, "PL/SQL"), codeBlock("sql", block.sql)),
@@ -5052,6 +5291,13 @@ function renderProgress() {
       h("p", { class: "hint" }, t("activityHint", lang)),
     ),
     h("div", { class: "card" },
+      h("h3", { class: "card-title" }, t("freshTitle", lang)),
+      h("p", {}, `${t("freshLinks", lang)} ${LINKS_CHECKED} `,
+        Math.floor((Date.now() - Date.parse(`${LINKS_CHECKED}T00:00:00Z`)) / 86400000) > 7 ? h("span", { class: "badge stale" }, t("freshOverdue", lang)) : null),
+      h("p", {}, `${t("freshStale", lang)} ${TOPICS.filter((topic) => isStale(topic.checked)).length}`),
+      h("p", { class: "hint" }, t("freshHint", lang)),
+    ),
+    h("div", { class: "card" },
       h("h3", { class: "card-title" }, t("inboxTitle", lang)),
       h("p", { class: "lead" }, t("inboxHint", lang)),
       h("textarea", { id: "inbox-text", "aria-label": t("inboxTitle", lang), style: "min-height: 70px; margin-top: 8px" }),
@@ -5140,6 +5386,7 @@ function bindProgressControls() {
     persist("topicStatus");
     persist("lessonStatus");
     persist("activity");
+    persist("cardStatus");
     persist("topicNotes");
     persist("quizAnswers");
     persist("inbox");
@@ -5198,6 +5445,7 @@ function renderMain() {
   else if (route.view === "topic") content = renderTopic(route.id);
   else if (route.view === "lesson") content = renderLessonPage(route.id, route.part);
   else if (route.view === "map") content = renderMap();
+  else if (route.view === "cards") content = renderCards();
   else if (route.view === "progress") content = renderProgress();
   else if (route.view === "glossary") content = renderGlossary(route.id);
   else if (route.view === "changelog") content = renderChangelog();
@@ -5207,6 +5455,7 @@ function renderMain() {
   }
   app.replaceChildren(...[content].flat());
   if (!state.query.trim() && route.view === "topic") bindTopicControls(route.id);
+  if (!state.query.trim() && route.view === "cards") renderCardArea();
   if (!state.query.trim() && route.view === "lesson") bindLessonStatus(route.id, route.part);
   if (!state.query.trim() && route.view === "lesson" && route.part === "quiz") bindQuiz(route.id);
   if (!state.query.trim() && (route.view === "topic" || route.view === "lesson")) {
@@ -5240,6 +5489,7 @@ if (typeof document !== "undefined") {
   state.topicStatus = normalizeTopicStatus(readStored("topicStatus", {}));
   state.lessonStatus = normalizeLessonStatus(readStored("lessonStatus", {}));
   state.activity = normalizeActivity(readStored("activity", {}));
+  state.cardStatus = normalizeCardStatus(readStored("cardStatus", {}));
   state.topicNotes = normalizeTopicNotes(readStored("topicNotes", {}));
   state.quizAnswers = normalizeQuizAnswers(readStored("quizAnswers", {}));
   state.inbox = normalizeInbox(readStored("inbox", []));
@@ -5261,6 +5511,8 @@ if (typeof document !== "undefined") {
     searchBox.value = "";
     state.query = "";
     state.navOpen = false;
+    state.cardDeck = null;
+    hideTermPopover();
     window.scrollTo(0, 0);
     renderMain();
   });
@@ -5284,7 +5536,18 @@ if (typeof document !== "undefined") {
       return;
     }
     handleLessonKeys(event, typing);
+    handleCardKeys(event, typing);
   });
+  // Подсказки терминов: клик по слову открывает определение, клик в стороне или Esc закрывает.
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-term]");
+    if (button) {
+      if (button.getAttribute("aria-expanded") === "true") hideTermPopover();
+      else showTermPopover(button);
+    } else if (!event.target.closest("#term-pop")) hideTermPopover();
+  });
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") hideTermPopover(); });
+  window.addEventListener("scroll", hideTermPopover, { passive: true });
   // Кнопка «Копировать» в блоках кода.
   document.getElementById("app").addEventListener("click", async (event) => {
     const button = event.target.closest("[data-copy]");
