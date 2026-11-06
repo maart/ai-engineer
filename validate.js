@@ -27,7 +27,7 @@ vm.createContext(sandbox);
 let page = null;
 try {
   vm.runInContext(
-    `${script}\n;globalThis.__page = { dataIssues, validateData, UI, BLOCKS, TOPICS, GLOSSARY, CHANGELOG, state, parseBackup, buildBackup, normalizeTopicStatus, normalizeInbox, progressCounts, search, parseRoute };`,
+    `${script}\n;globalThis.__page = { dataIssues, validateData, UI, BLOCKS, TOPICS, GLOSSARY, CHANGELOG, state, parseBackup, buildBackup, normalizeTopicStatus, normalizeInbox, progressCounts, search, parseRoute, isStale, filteredTopics };`,
     sandbox,
     { filename: htmlPath },
   );
@@ -126,6 +126,17 @@ if (page) {
   check("поиск по английскому термину из русского интерфейса", page.search("embeddings", "ru").some((r) => r.id === "embeddings"));
   check("поиск без учёта ударений", page.search("similitud coseno", "es").some((r) => r.id === "cosine-similarity"));
   check("пустой поиск", page.search("   ", "ru").length === 0);
+  check("адрес термина", page.parseRoute(`#term-${page.GLOSSARY[0].id}`).view === "glossary");
+  check("адрес ленты", page.parseRoute("#changelog").view === "changelog");
+  const now = new Date("2026-11-06T12:00:00Z");
+  check("свежая тема", !page.isStale("2026-10-01", now));
+  check("120 дней — ещё свежая", !page.isStale("2026-07-09", now));
+  check("старая тема", page.isStale("2026-06-01", now));
+  page.state.topicStatus = { [firstTopic]: "learning" };
+  check("фильтр по статусу", page.filteredTopics({ status: "learning", priority: "any", stale: false }, now).map((x) => x.id).join() === firstTopic);
+  check("фильтр по устаревшим", page.filteredTopics({ status: "any", priority: "any", stale: true }, new Date("2030-01-01T00:00:00Z")).length === page.TOPICS.length);
+  check("фильтр по приоритету", page.filteredTopics({ status: "any", priority: "plus", stale: false }, now)
+    .every((x) => page.BLOCKS.find((b) => b.id === x.block).priority === "plus"));
 }
 
 // ─── Статические проверки разметки ───

@@ -257,6 +257,36 @@ textarea {
 .inbox time { display: block; color: var(--muted); font-size: 0.8rem; }
 .notice { color: var(--plus); font-size: 0.9rem; }
 .notice.error { color: var(--must); }
+.nav-pages { display: flex; flex-direction: column; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.nav-pages a { padding: 4px 8px; border-radius: 6px; color: var(--text); text-decoration: none; font-size: 0.95rem; }
+.stale-mark { color: var(--basic); }
+.badge.stale { color: var(--basic); border-style: dashed; }
+a.chip { color: var(--text); text-decoration: none; cursor: pointer; }
+a.chip:hover { background: var(--accent-soft); }
+.filters { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-bottom: 8px; }
+select {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+}
+.check { display: inline-flex; gap: 6px; align-items: center; font-size: 0.9rem; }
+.glossary { margin: 16px 0 0; }
+.term { padding: 12px 0; border-top: 1px solid var(--border); scroll-margin-top: 90px; }
+.term.focused { margin: 0 -12px; padding: 12px; border-radius: 8px; background: var(--accent-soft); }
+.term dt { font-weight: 700; }
+.term dd { margin: 2px 0 0; }
+.term-langs { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: 0.9rem; }
+.term-langs b { font-size: 0.75rem; }
+.term-topics { font-size: 0.9rem; }
+.changelog { margin: 16px 0 0; padding: 0; list-style: none; }
+.changelog li { padding: 14px 0; border-top: 1px solid var(--border); }
+.changelog time { color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.changelog h3 { margin: 2px 0 4px; font-size: 1.05rem; }
+.changelog p { margin: 0 0 4px; }
 .app-footer { max-width: 1200px; margin: 0 auto; padding: 8px 16px 24px; color: var(--muted); font-size: 0.85rem; }
 @media (max-width: 760px) {
   .app-header { position: static; }
@@ -301,8 +331,8 @@ textarea {
   <main class="content" id="app"></main>
 </div>
 <footer class="app-footer">
-  <span data-i18n="footerVersion"></span> MVP 0.4 ·
-  <span data-i18n="footerUpdated"></span> 2026-11-07 01:20 (Madrid)
+  <span data-i18n="footerVersion"></span> MVP 0.5 ·
+  <span data-i18n="footerUpdated"></span> 2026-11-07 01:50 (Madrid)
 </footer>
 <script>
 // ════════════════════════════════════════════════════════════════════
@@ -365,6 +395,33 @@ const UI = {
   kind_video: { ru: "видео", en: "video", es: "vídeo" },
   kind_repo: { ru: "репозиторий", en: "repository", es: "repositorio" },
   kind_tool: { ru: "инструмент", en: "tool", es: "herramienta" },
+  glossaryTitle: { ru: "Глоссарий", en: "Glossary", es: "Glosario" },
+  glossaryLead: {
+    ru: "Термины на трёх языках: пригодится на собеседованиях в любой стране.",
+    en: "Terms in three languages, handy for interviews in any country.",
+    es: "Términos en tres idiomas, útiles para entrevistas en cualquier país.",
+  },
+  glossaryEmpty: { ru: "Терминов пока нет.", en: "No terms yet.", es: "Aún no hay términos." },
+  changelogTitle: { ru: "Лента изменений", en: "What changed", es: "Novedades" },
+  changelogLead: {
+    ru: "Что меняется в индустрии и какие темы справочника это затрагивает. Новые записи сверху.",
+    en: "What is changing in the industry and which topics it affects. Newest first.",
+    es: "Qué cambia en el sector y a qué temas del manual afecta. Lo más reciente primero.",
+  },
+  changelogEmpty: { ru: "Записей пока нет.", en: "No entries yet.", es: "Aún no hay entradas." },
+  changelogSource: { ru: "Источник", en: "Source", es: "Fuente" },
+  stale: { ru: "Проверить актуальность", en: "Needs review", es: "Revisar vigencia" },
+  staleHint: {
+    ru: "Тема не проверялась больше 120 дней: технологии могли измениться.",
+    en: "This topic has not been checked for over 120 days: the technology may have changed.",
+    es: "Este tema lleva más de 120 días sin revisarse: la tecnología puede haber cambiado.",
+  },
+  allTopics: { ru: "Все темы", en: "All topics", es: "Todos los temas" },
+  filterStatus: { ru: "Статус", en: "Status", es: "Estado" },
+  filterPriority: { ru: "Приоритет", en: "Priority", es: "Prioridad" },
+  filterAny: { ru: "Любой", en: "Any", es: "Cualquiera" },
+  filterStale: { ru: "Только требующие проверки", en: "Only needing review", es: "Solo los que hay que revisar" },
+  filterNothing: { ru: "Под фильтр ничего не подходит.", en: "Nothing matches the filter.", es: "Nada coincide con el filtro." },
   status_todo: { ru: "Не начато", en: "Not started", es: "Sin empezar" },
   status_learning: { ru: "Изучаю", en: "Learning", es: "Estudiando" },
   status_understood: { ru: "Понял", en: "Understood", es: "Entendido" },
@@ -788,10 +845,22 @@ function parseRoute(hash) {
   const value = decodeURIComponent(String(hash || "").replace(/^#/, ""));
   if (value === "") return { view: "home" };
   if (value === "progress") return { view: "progress" };
+  if (value === "glossary") return { view: "glossary" };
+  if (value === "changelog") return { view: "changelog" };
   const match = value.match(/^(topic|block)-(.+)$/);
   if (match && match[1] === "topic" && topicById(match[2])) return { view: "topic", id: match[2] };
   if (match && match[1] === "block" && blockById(match[2])) return { view: "block", id: match[2] };
+  const term = value.match(/^term-(.+)$/);
+  if (term && termById(term[1])) return { view: "glossary", id: term[1] };
   return { view: "missing" };
+}
+
+const STALE_DAYS = 120;
+
+// Тема «устарела», если с даты checked прошло больше STALE_DAYS дней.
+function isStale(checked, now = new Date()) {
+  const days = Math.floor((now.getTime() - Date.parse(`${checked}T00:00:00Z`)) / 86400000);
+  return days > STALE_DAYS;
 }
 
 function normalizeForSearch(text) {
@@ -889,6 +958,7 @@ const state = {
   topicStatus: {},
   topicNotes: {},
   inbox: [],
+  filter: { status: "any", priority: "any", stale: false },
 };
 
 function readStored(name, fallback) {
@@ -1055,7 +1125,12 @@ function renderNav(route) {
   const currentBlock = route.view === "block" ? route.id : currentTopic?.block;
   document.getElementById("nav").classList.toggle("open", state.navOpen);
   document.getElementById("nav-toggle").setAttribute("aria-expanded", String(state.navOpen));
-  document.getElementById("nav-tree").replaceChildren(...sortedBlocks().map((block) => h("div", { class: "nav-block" },
+  const pageLink = (view, key) => h("a", { href: `#${view}`, "aria-current": route.view === view ? "page" : undefined }, t(key, lang));
+  document.getElementById("nav-tree").replaceChildren(h("div", { class: "nav-pages" },
+    pageLink("glossary", "glossaryTitle"),
+    pageLink("changelog", "changelogTitle"),
+    pageLink("progress", "progressLink"),
+  ), ...sortedBlocks().map((block) => h("div", { class: "nav-block" },
     h("a", {
       href: `#block-${block.id}`,
       "aria-current": route.view === "block" && route.id === block.id ? "page" : undefined,
@@ -1064,7 +1139,8 @@ function renderNav(route) {
       ? h("ul", {}, topicsOfBlock(block.id).map((topic) => h("li", {}, h("a", {
         href: `#topic-${topic.id}`,
         "aria-current": currentTopic?.id === topic.id ? "page" : undefined,
-      }, h("span", { class: `status-dot ${topicStatus(topic.id)}`, "aria-hidden": "true" }), loc(topic.title, lang)))))
+      }, h("span", { class: `status-dot ${topicStatus(topic.id)}`, "aria-hidden": "true" }), loc(topic.title, lang),
+        isStale(topic.checked) ? h("span", { class: "stale-mark", title: t("stale", lang) }, " ⟳") : null))))
       : null,
   )));
 }
@@ -1082,7 +1158,101 @@ function renderHome() {
       h("p", {}, loc(block.summary, lang)),
       h("div", { class: "meta" }, priorityBadge(block.priority, lang), `${t("topicsCount", lang)} ${topicsOfBlock(block.id).length}`),
     ))),
+    h("div", { class: "card", style: "margin-top: 16px" },
+      h("h3", { class: "card-title" }, t("allTopics", lang)),
+      h("div", { class: "filters", id: "topic-filters" }),
+      h("div", { id: "topic-list" }),
+    ),
   ];
+}
+
+function filteredTopics(filter = state.filter, now = new Date()) {
+  return sortedBlocks().flatMap((block) => topicsOfBlock(block.id)).filter((topic) => {
+    if (filter.status !== "any" && topicStatus(topic.id) !== filter.status) return false;
+    if (filter.priority !== "any" && blockById(topic.block).priority !== filter.priority) return false;
+    if (filter.stale && !isStale(topic.checked, now)) return false;
+    return true;
+  });
+}
+
+function renderTopicList() {
+  const { lang } = state;
+  const topics = filteredTopics();
+  document.getElementById("topic-list").replaceChildren(topics.length
+    ? h("ul", { class: "results" }, topics.map((topic) => h("li", {},
+      h("div", { class: "kind" }, `${blockById(topic.block).order}. ${loc(blockById(topic.block).title, lang)}`),
+      h("span", { class: `status-dot ${topicStatus(topic.id)}`, title: t(`status_${topicStatus(topic.id)}`, lang) }),
+      topicLink(topic.id, lang),
+      isStale(topic.checked) ? [" ", h("span", { class: "badge stale" }, t("stale", lang))] : null,
+    )))
+    : h("p", { class: "empty" }, t("filterNothing", lang)));
+}
+
+function bindHomeControls() {
+  const { lang } = state;
+  const select = (name, labelKey, values, labelOf) => {
+    const control = h("select", { "aria-label": t(labelKey, lang) },
+      h("option", { value: "any" }, `${t(labelKey, lang)}: ${t("filterAny", lang)}`),
+      values.map((value) => h("option", { value }, `${t(labelKey, lang)}: ${labelOf(value)}`)));
+    control.value = state.filter[name];
+    control.addEventListener("change", () => {
+      state.filter[name] = control.value;
+      renderTopicList();
+    });
+    return control;
+  };
+  const stale = h("input", { type: "checkbox", id: "filter-stale" });
+  stale.checked = state.filter.stale;
+  stale.addEventListener("change", () => {
+    state.filter.stale = stale.checked;
+    renderTopicList();
+  });
+  document.getElementById("topic-filters").replaceChildren(
+    select("status", "filterStatus", STATUSES, (value) => t(`status_${value}`, lang)),
+    select("priority", "filterPriority", PRIORITIES, (value) => t(`priority_${value}`, lang)),
+    h("label", { class: "check" }, stale, t("filterStale", lang)),
+  );
+  renderTopicList();
+}
+
+function renderGlossary(focusId) {
+  const { lang } = state;
+  const collator = new Intl.Collator(lang);
+  const terms = [...GLOSSARY].sort((a, b) => collator.compare(loc(a.term, lang), loc(b.term, lang)));
+  document.title = `${t("glossaryTitle", lang)} · ${t("appTitle", lang)}`;
+  return h("div", { class: "card" },
+    h("p", { class: "crumbs" }, h("a", { href: "#" }, t("appTitle", lang))),
+    h("h2", { class: "page-title" }, t("glossaryTitle", lang)),
+    h("p", { class: "lead" }, t("glossaryLead", lang)),
+    terms.length
+      ? h("dl", { class: "glossary" }, terms.map((term) => h("div", { class: `term${term.id === focusId ? " focused" : ""}`, id: `term-${term.id}` },
+        h("dt", {}, loc(term.term, lang)),
+        h("dd", { class: "term-langs" }, LANGS.filter((code) => code !== lang).map((code) => h("span", {}, h("b", {}, code.toUpperCase()), " ", term.term[code]))),
+        h("dd", {}, loc(term.definition, lang)),
+        h("dd", { class: "term-topics" }, term.topics.map((id, i) => [i ? ", " : "", topicLink(id, lang)])),
+      )))
+      : h("p", { class: "empty" }, t("glossaryEmpty", lang)),
+  );
+}
+
+function renderChangelog() {
+  const { lang } = state;
+  document.title = `${t("changelogTitle", lang)} · ${t("appTitle", lang)}`;
+  return h("div", { class: "card" },
+    h("p", { class: "crumbs" }, h("a", { href: "#" }, t("appTitle", lang))),
+    h("h2", { class: "page-title" }, t("changelogTitle", lang)),
+    h("p", { class: "lead" }, t("changelogLead", lang)),
+    CHANGELOG.length
+      ? h("ol", { class: "changelog" }, CHANGELOG.map((entry) => h("li", {},
+        h("time", { datetime: entry.date }, entry.date),
+        h("h3", {}, loc(entry.title, lang)),
+        h("p", {}, loc(entry.text, lang)),
+        h("p", { class: "res-meta" },
+          entry.topics.map((id) => [topicLink(id, lang), " · "]),
+          h("a", { href: entry.source, target: "_blank", rel: "noopener" }, t("changelogSource", lang))),
+      )))
+      : h("p", { class: "empty" }, t("changelogEmpty", lang)),
+  );
 }
 
 function renderBlock(id) {
@@ -1118,14 +1288,15 @@ function renderTopic(id) {
       h("a", { href: `#block-${block.id}` }, `${block.order}. ${loc(block.title, lang)}`),
     ),
     h("h2", { class: "page-title" }, loc(topic.title, lang)),
-    h("div", { class: "meta" }, priorityBadge(block.priority, lang), `${t("checkedOn", lang)} ${topic.checked}`),
+    h("div", { class: "meta" }, priorityBadge(block.priority, lang), `${t("checkedOn", lang)} ${topic.checked}`,
+      isStale(topic.checked) ? h("span", { class: "badge stale", title: t("staleHint", lang) }, t("stale", lang)) : null),
     h("div", { class: "status-row" }, h("div", { class: "segmented", id: "topic-status", role: "group", "aria-label": t("statusLabel", lang) })),
     section("sectionWhat", lang, h("p", {}, loc(topic.what, lang))),
     section("sectionWhy", lang, h("p", {}, loc(topic.why, lang))),
     topic.fromSql ? section("sectionFromSql", lang, h("p", { class: "from-sql" }, loc(topic.fromSql, lang))) : null,
     topic.concepts.length ? section("sectionConcepts", lang, h("ul", { class: "chips" }, topic.concepts.map((termId) => {
       const term = termById(termId);
-      return h("li", { class: "chip", title: loc(term.definition, lang), tabindex: "0" }, loc(term.term, lang));
+      return h("li", {}, h("a", { class: "chip", href: `#term-${term.id}`, title: loc(term.definition, lang) }, loc(term.term, lang)));
     }))) : null,
     topic.example ? section("sectionExample", lang, h("pre", {}, h("code", { class: `lang-${topic.example.lang}` }, topic.example.code))) : null,
     section("sectionResources", lang, h("ul", { class: "resources" }, topic.resources.map((resource) => h("li", {},
@@ -1307,6 +1478,8 @@ function renderMain() {
   else if (route.view === "block") content = renderBlock(route.id);
   else if (route.view === "topic") content = renderTopic(route.id);
   else if (route.view === "progress") content = renderProgress();
+  else if (route.view === "glossary") content = renderGlossary(route.id);
+  else if (route.view === "changelog") content = renderChangelog();
   else {
     document.title = t("appTitle", lang);
     content = h("div", { class: "card" }, h("p", {}, t("notFound", lang)), h("a", { href: "#" }, t("backHome", lang)));
@@ -1314,6 +1487,8 @@ function renderMain() {
   app.replaceChildren(...[content].flat());
   if (!state.query.trim() && route.view === "topic") bindTopicControls(route.id);
   if (!state.query.trim() && route.view === "progress") bindProgressControls();
+  if (!state.query.trim() && route.view === "home") bindHomeControls();
+  if (!state.query.trim() && route.view === "glossary" && route.id) document.getElementById(`term-${route.id}`).scrollIntoView({ block: "center" });
   renderProgressLink();
 }
 
@@ -1349,8 +1524,8 @@ if (typeof document !== "undefined") {
     searchBox.value = "";
     state.query = "";
     state.navOpen = false;
-    renderMain();
     window.scrollTo(0, 0);
+    renderMain();
   });
   document.getElementById("nav-toggle").addEventListener("click", () => {
     state.navOpen = !state.navOpen;
