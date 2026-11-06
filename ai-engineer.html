@@ -348,7 +348,8 @@ select {
 a.btn { display: inline-block; text-decoration: none; }
 .lesson-body { margin-top: 12px; }
 .lesson-body > p, .lesson-body > .code, .lesson-body > .compare, .lesson-body > .table-wrap, .lesson-body > ul { margin: 0 0 12px; }
-.nav-block ul ul { padding-left: 12px; }
+.nav-block ul ul { margin: 2px 0 6px 10px; padding-left: 10px; border-left: 2px solid var(--border); }
+.status-dot.lesson-dot { width: 7px; height: 7px; margin-right: 8px; border-radius: 1px; transform: rotate(45deg); vertical-align: 1px; }
 .nav-block ul ul a { font-size: 0.85rem; }
 .lesson-list { padding-left: 20px; }
 .lesson-list li { margin: 3px 0; }
@@ -450,8 +451,8 @@ details > p, details > .code { margin: 6px 0 0; }
   <main class="content" id="app"></main>
 </div>
 <footer class="app-footer">
-  <span data-i18n="footerVersion"></span> MVP 1.4 ·
-  <span data-i18n="footerUpdated"></span> 2026-11-07 00:22 (Madrid)
+  <span data-i18n="footerVersion"></span> MVP 1.5 ·
+  <span data-i18n="footerUpdated"></span> 2026-11-07 00:30 (Madrid)
 </footer>
 <script>
 // ════════════════════════════════════════════════════════════════════
@@ -4285,7 +4286,7 @@ function renderNav(route) {
         ? h("ul", { class: "nav-lesson" }, lessonPageIds(topic).map((pid) => h("li", {}, h("a", {
           href: lessonHref(topic, pid),
           "aria-current": route.view === "lesson" && route.part === pid ? "page" : undefined,
-        }, h("span", { class: `status-dot ${lessonPageStatus(topic.id, pid)}`, "aria-hidden": "true" }), lessonPageTitle(topic, pid, lang)))))
+        }, h("span", { class: `status-dot lesson-dot ${lessonPageStatus(topic.id, pid)}`, "aria-hidden": "true" }), lessonPageTitle(topic, pid, lang)))))
         : null)))
       : null,
   )));
@@ -4601,7 +4602,7 @@ function renderLessonIntro(topic, lang) {
     h("div", { class: "block-progress-line", title: t("lessonProgress", lang) }, progressBar(counts.done, counts.total),
       `${t("lessonProgress", lang)}: ${counts.done}/${counts.total}`),
     h("ol", { class: "lesson-toc" }, pages.map((pid) => h("li", {},
-      h("span", { class: `status-dot ${lessonPageStatus(topic.id, pid)}`, title: t(`status_${lessonPageStatus(topic.id, pid)}`, lang) }),
+      h("span", { class: `status-dot lesson-dot ${lessonPageStatus(topic.id, pid)}`, title: t(`status_${lessonPageStatus(topic.id, pid)}`, lang) }),
       h("a", { href: lessonHref(topic, pid) }, lessonPageTitle(topic, pid, lang))))),
     h("div", { class: "row" }, h("a", { class: "btn primary", href: lessonHref(topic, pages[0]) }, t("lessonStart", lang))),
   );
