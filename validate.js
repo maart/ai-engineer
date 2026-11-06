@@ -27,7 +27,7 @@ vm.createContext(sandbox);
 let page = null;
 try {
   vm.runInContext(
-    `${script}\n;globalThis.__page = { dataIssues, validateData, UI, BLOCKS, TOPICS, GLOSSARY, CHANGELOG, state, parseBackup, buildBackup, normalizeTopicStatus, normalizeInbox, progressCounts, search, parseRoute, isStale, filteredTopics };`,
+    `${script}\n;globalThis.__page = { dataIssues, validateData, UI, BLOCKS, TOPICS, GLOSSARY, CHANGELOG, state, parseBackup, buildBackup, normalizeTopicStatus, normalizeInbox, progressCounts, search, parseRoute, isStale, filteredTopics, setLessonStatus, applyQuizProgress, lessonPageIds, lessonCounts, topicLevels, buildNotesMarkdown, normalizeActivity, activityCounts, recordActivity };`,
     sandbox,
     { filename: htmlPath },
   );
@@ -147,6 +147,45 @@ if (page) {
   check("поиск по английскому термину из русского интерфейса", page.search("embeddings", "ru").some((r) => r.id === "embeddings"));
   check("поиск без учёта ударений", page.search("similitud coseno", "es").some((r) => r.id === "cosine-similarity"));
   check("поиск по тексту урока", page.search("f-строка", "ru").some((r) => r.id === "python-basics"));
+  check("поиск ведёт на страницу урока", page.search("f-строка", "ru").some((r) => r.kind === "lesson" && r.id === "python-basics" && typeof r.pid === "string"));
+  check("адрес карты тем", page.parseRoute("#map").view === "map");
+  const levels = page.topicLevels();
+  check("карта тем содержит все темы", levels.flat().length === page.TOPICS.length);
+  check("карта: тема стоит глубже своих prereq", page.TOPICS.every((topic) => topic.prereq.every((ref) => levels.findIndex((l) => l.some((x) => x.id === ref)) < levels.findIndex((l) => l.some((x) => x.id === topic.id)))));
+  {
+    const lt = page.TOPICS.find((item) => item.lesson);
+    const pages = page.lessonPageIds(lt);
+    page.state.topicStatus = {};
+    page.state.lessonStatus = {};
+    page.setLessonStatus(lt.id, pages[0], "learning");
+    check("первая отметка урока — тема «Изучаю»", page.state.topicStatus[lt.id] === "learning");
+    pages.forEach((pid) => page.setLessonStatus(lt.id, pid, "understood"));
+    check("все страницы освоены — тема «Понял»", page.state.topicStatus[lt.id] === "understood");
+    page.state.topicStatus[lt.id] = "applied";
+    page.setLessonStatus(lt.id, pages[0], "todo");
+    check("прогресс урока не понижает статус темы", page.state.topicStatus[lt.id] === "applied");
+    page.state.lessonStatus = {};
+    page.state.quizAnswers = { [lt.id]: Object.fromEntries(lt.lesson.quiz.map((q, i) => [i, q.answer])) };
+    page.applyQuizProgress(lt.id);
+    check("тест с верными ответами зачтён", page.state.lessonStatus[`${lt.id}/quiz`] === "understood");
+    page.state.lessonStatus = {};
+    page.state.quizAnswers = { [lt.id]: { 0: (lt.lesson.quiz[0].answer + 1) % lt.lesson.quiz[0].options.length } };
+    page.applyQuizProgress(lt.id);
+    check("начатый тест — «Изучаю»", page.state.lessonStatus[`${lt.id}/quiz`] === "learning");
+    page.state.topicStatus = {};
+    page.state.lessonStatus = {};
+    page.state.quizAnswers = {};
+  }
+  page.state.activity = {};
+  page.recordActivity(new Date("2026-11-07T12:00:00"));
+  page.recordActivity(new Date("2026-11-07T13:00:00"));
+  check("активность считается за день и неделю", page.activityCounts(new Date("2026-11-09T12:00:00")).week === 2 && page.activityCounts(new Date("2026-11-07T12:00:00")).today === 2);
+  check("активность нормализуется", JSON.stringify(page.normalizeActivity({ "2026-11-07": 2, bad: 1, "2026-11-08": -1 })) === JSON.stringify({ "2026-11-07": 2 }));
+  page.state.activity = {};
+  page.state.topicNotes = { [page.TOPICS[0].id]: "моя заметка" };
+  page.state.inbox = [];
+  check("заметки выгружаются в Markdown", page.buildNotesMarkdown("ru").count === 1 && page.buildNotesMarkdown("ru").text.includes("моя заметка"));
+  page.state.topicNotes = {};
   check("пустой поиск", page.search("   ", "ru").length === 0);
   check("адрес термина", page.parseRoute(`#term-${page.GLOSSARY[0].id}`).view === "glossary");
   check("адрес ленты", page.parseRoute("#changelog").view === "changelog");

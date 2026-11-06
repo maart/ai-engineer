@@ -16,8 +16,8 @@
   --accent-soft: #e3e9fb;
   --accent-text: #ffffff;
   --must: #b4372a;
-  --basic: #8a6100;
-  --plus: #2f7a46;
+  --basic: #7a5300;
+  --plus: #28683b;
   --code-bg: #f7f5f0;
   --radius: 10px;
   color-scheme: light;
@@ -64,6 +64,10 @@ body {
   font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-feature-settings: "calt" 0;
 }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); border: 0; white-space: nowrap; }
+.skip-link { position: absolute; left: 8px; top: -60px; z-index: 30; padding: 8px 14px; border-radius: 8px; background: var(--accent); color: var(--accent-text); }
+.skip-link:focus { top: 8px; }
+.content:focus { outline: none; }
 a { color: var(--accent); }
 a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .app-header {
@@ -343,6 +347,16 @@ select {
 .lesson-badge { cursor: pointer; background: none; color: var(--accent); font: inherit; font-size: 0.8rem; font-weight: 600; }
 .lesson-toc { margin: 8px 0 0; padding-left: 22px; }
 .lesson-toc li { margin: 2px 0; }
+.keys-hint { margin: 4px 0 0; }
+.activity { display: flex; flex-wrap: wrap; gap: 8px 32px; margin: 8px 0 0; }
+.activity b { display: block; font-size: 1.5rem; line-height: 1.2; }
+.map-level + .map-level { margin-top: 16px; }
+.map-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.map-list li { padding: 6px 0; border-top: 1px solid var(--border); }
+.map-list li:first-child { border-top: 0; }
+.map-after { display: block; margin-left: 20px; color: var(--muted); font-size: 0.85rem; }
+.map-block { color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.lesson-bar { display: none; }
 .nav-count { margin-left: 6px; color: var(--muted); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
 .lesson-toc { list-style: none; padding-left: 0; }
 a.btn { display: inline-block; text-decoration: none; }
@@ -400,7 +414,17 @@ details > p, details > .code { margin: 6px 0 0; }
   .card { border: 0; padding: 0; }
   body { background: #fff; color: #000; }
 }
+ @media print { .lesson-bar { display: none; } }
 @media (max-width: 760px) {
+  .keys-hint { display: none; }
+  .lesson-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; position: sticky; bottom: 0; z-index: 9; margin: 12px -16px -12px; padding: 8px 12px; border-top: 1px solid var(--border); background: var(--surface); }
+  .lesson-bar > a, .lesson-bar > span { min-width: 48px; min-height: 44px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 1.3rem; text-decoration: none; }
+  .lesson-bar > span { visibility: hidden; }
+  .lesson-jump { position: relative; flex: 1; }
+  .lesson-jump summary { display: flex; align-items: center; justify-content: center; min-height: 44px; border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); list-style: none; }
+  .lesson-jump ul { position: absolute; bottom: calc(100% + 8px); left: 0; right: 0; max-height: 55vh; margin: 0; padding: 6px; overflow: auto; list-style: none; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+  .lesson-jump li a { display: block; padding: 10px 8px; color: var(--text); text-decoration: none; }
+  .lesson-jump li a[aria-current="page"] { background: var(--accent-soft); border-radius: 6px; }
   .app-header { position: static; flex-wrap: wrap; gap: 8px; }
   .app-title { flex: 1 1 0; }
   .icon-btn { display: block; }
@@ -433,6 +457,7 @@ details > p, details > .code { margin: 6px 0 0; }
 </style>
 </head>
 <body>
+<a class="skip-link" id="skip-link" href="#" data-i18n="skipLink"></a>
 <header class="app-header">
   <h1 class="app-title"><a href="#" data-i18n="appTitle"></a></h1>
   <button class="icon-btn" id="controls-toggle" type="button" aria-expanded="false" aria-controls="header-controls">⚙</button>
@@ -448,11 +473,12 @@ details > p, details > .code { margin: 6px 0 0; }
     <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-tree" data-i18n="navToggle"></button>
     <div class="nav-tree" id="nav-tree"></div>
   </nav>
-  <main class="content" id="app"></main>
+  <main class="content" id="app" tabindex="-1"></main>
+<div class="sr-only" id="live" role="status" aria-live="polite"></div>
 </div>
 <footer class="app-footer">
-  <span data-i18n="footerVersion"></span> MVP 1.5 ·
-  <span data-i18n="footerUpdated"></span> 2026-11-07 00:30 (Madrid)
+  <span data-i18n="footerVersion"></span> MVP 1.6 ·
+  <span data-i18n="footerUpdated"></span> 2026-11-07 00:36 (Madrid)
 </footer>
 <script>
 // ════════════════════════════════════════════════════════════════════
@@ -529,6 +555,34 @@ const UI = {
   lessonBadge: { ru: "Есть урок →", en: "Has a lesson →", es: "Con lección →" },
   lessonProgress: { ru: "Прогресс урока", en: "Lesson progress", es: "Progreso de la lección" },
   lessonStatusLabel: { ru: "Статус страницы урока", en: "Lesson page status", es: "Estado de la página" },
+  skipLink: { ru: "К содержимому", en: "Skip to content", es: "Ir al contenido" },
+  quizPassed: { ru: "Тест зачтён.", en: "Quiz passed.", es: "Test superado." },
+  quizNotPassed: {
+    ru: "Для зачёта нужно ответить верно не меньше чем на 70% вопросов. Можно пройти заново.",
+    en: "To pass you need at least 70% correct answers. You can retake the quiz.",
+    es: "Para aprobar hace falta al menos un 70 % de aciertos. Puedes repetir el test.",
+  },
+  lessonKeysHint: { ru: "Клавиши: ← → — страницы, M — отметить «Понял»", en: "Keys: ← → switch pages, M marks “Understood”", es: "Teclas: ← → cambian de página, M marca «Entendido»" },
+  lessonJump: { ru: "Страницы урока", en: "Lesson pages", es: "Páginas de la lección" },
+  lessonsInProgressTitle: { ru: "Уроки в работе", en: "Lessons in progress", es: "Lecciones en curso" },
+  lessonsInProgressEmpty: { ru: "Начатых уроков пока нет.", en: "No lessons started yet.", es: "Aún no hay lecciones empezadas." },
+  activityTitle: { ru: "Активность", en: "Activity", es: "Actividad" },
+  activityToday: { ru: "Сегодня", en: "Today", es: "Hoy" },
+  activityWeek: { ru: "За 7 дней", en: "Last 7 days", es: "Últimos 7 días" },
+  activityHint: {
+    ru: "Считаются страницы урока и темы, которые вы отметили как «Понял» или «Применил».",
+    en: "Counts lesson pages and topics you marked “Understood” or “Applied”.",
+    es: "Cuenta las páginas de lección y los temas que has marcado como «Entendido» o «Aplicado».",
+  },
+  notesExport: { ru: "Заметки в Markdown", en: "Notes as Markdown", es: "Notas en Markdown" },
+  notesExportEmpty: { ru: "Заметок пока нет.", en: "No notes yet.", es: "Aún no hay notas." },
+  mapTitle: { ru: "Карта тем", en: "Topic map", es: "Mapa de temas" },
+  mapLead: {
+    ru: "В каком порядке учить: каждый шаг опирается на темы из предыдущих. Начинайте с шага 1.",
+    en: "What to learn in which order: each step builds on topics from the earlier ones. Start with step 1.",
+    es: "En qué orden estudiar: cada paso se apoya en temas de los anteriores. Empieza por el paso 1.",
+  },
+  mapStep: { ru: "Шаг", en: "Step", es: "Paso" },
   lessonStart: { ru: "Начать урок", en: "Start the lesson", es: "Empezar la lección" },
   pagerBack: { ru: "Назад", en: "Back", es: "Atrás" },
   pagerForward: { ru: "Далее", en: "Next", es: "Siguiente" },
@@ -3913,6 +3967,7 @@ function parseRoute(hash) {
   if (value === "progress") return { view: "progress" };
   if (value === "glossary") return { view: "glossary" };
   if (value === "changelog") return { view: "changelog" };
+  if (value === "map") return { view: "map" };
   const page = value.match(/^topic-([^/]+)\/(.+)$/);
   if (page && topicById(page[1]) && lessonPageIds(topicById(page[1])).includes(page[2])) return { view: "lesson", id: page[1], part: page[2] };
   const match = value.match(/^(topic|block)-(.+)$/);
@@ -3935,14 +3990,21 @@ function normalizeForSearch(text) {
   return String(text).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ё/g, "е");
 }
 
-// Текст урока для поиска: заголовки частей и текстовые блоки на нужном языке.
-function lessonText(lesson, lang) {
-  return lesson.sections.flatMap((part) => [loc(part.title, lang), ...part.blocks.flatMap((block) => {
-    if (block.text) return [loc(block.text, lang)];
-    if (block.items) return block.items.map((item) => loc(item, lang));
-    if (block.note) return [loc(block.note, lang)];
-    return [];
-  })]);
+// Текст страницы урока для поиска: текстовые блоки, вопросы теста, формулировки задач.
+function lessonPageText(topic, pid, lang) {
+  const { lesson } = topic;
+  const part = lesson.sections.find((item) => item.id === pid);
+  if (part) {
+    return part.blocks.flatMap((block) => {
+      if (block.text) return [loc(block.text, lang)];
+      if (block.items) return block.items.map((item) => loc(item, lang));
+      if (block.note) return [loc(block.note, lang)];
+      return [];
+    });
+  }
+  if (pid === "quiz") return lesson.quiz.map((q) => loc(q.q, lang));
+  if (pid === "exercises") return lesson.exercises.map((exercise) => loc(exercise.task, lang));
+  return [];
 }
 
 // Поиск по текущему языку и английским терминам. Возвращает темы и термины,
@@ -3960,9 +4022,15 @@ function search(query, lang) {
   for (const topic of TOPICS) {
     const title = `${loc(topic.title, lang)} ${topic.title.en}`;
     const body = ["what", "why", "fromSql", "practice"].map((field) => (topic[field] ? loc(topic[field], lang) : ""))
-      .concat(topic.lesson ? lessonText(topic.lesson, lang) : []).join(" ");
+      .join(" ");
     const value = score(title, body);
     if (value) results.push({ kind: "topic", id: topic.id, score: value + 1 });
+    if (topic.lesson) {
+      for (const pid of lessonPageIds(topic)) {
+        const pageScore = score(`${lessonPageTitle(topic, pid, lang)} ${loc(topic.title, lang)}`, lessonPageText(topic, pid, lang).join(" "));
+        if (pageScore) results.push({ kind: "lesson", id: topic.id, pid, score: pageScore });
+      }
+    }
   }
   for (const term of GLOSSARY) {
     const value = score(`${loc(term.term, lang)} ${term.term.en}`, loc(term.definition, lang));
@@ -4035,6 +4103,8 @@ const state = {
   query: "",
   navOpen: false,
   lastTopic: null,
+  lastPage: null,
+  activity: {},
   topicStatus: {},
   lessonStatus: {},
   topicNotes: {},
@@ -4096,6 +4166,22 @@ function normalizeLessonStatus(value) {
   return result;
 }
 
+// Страница урока, на которой читатель был последним: только существующая страница последней темы.
+function normalizeLastPage(value, topicId) {
+  const topic = topicId ? topicById(topicId) : null;
+  return typeof value === "string" && topic && lessonPageIds(topic).includes(value) ? value : null;
+}
+
+// Активность: { "ГГГГ-ММ-ДД": число отметок }.
+function normalizeActivity(value) {
+  const result = {};
+  if (!isPlainObject(value)) return result;
+  for (const [day, count] of Object.entries(value)) {
+    if (DATE_RE.test(day) && Number.isInteger(count) && count > 0) result[day] = count;
+  }
+  return result;
+}
+
 function normalizeTopicNotes(value) {
   const result = {};
   if (!isPlainObject(value)) return result;
@@ -4142,6 +4228,114 @@ function lessonCounts(topic) {
   return { done: pages.filter((pid) => DONE_STATUSES.includes(lessonPageStatus(topic.id, pid))).length, total: pages.length };
 }
 
+const pad2 = (n) => String(n).padStart(2, "0");
+const dayKey = (date = new Date()) => `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+
+function recordActivity(now = new Date()) {
+  const key = dayKey(now);
+  state.activity[key] = (state.activity[key] || 0) + 1;
+  persist("activity");
+}
+
+function activityCounts(now = new Date()) {
+  let week = 0;
+  for (let i = 0; i < 7; i += 1) {
+    const day = new Date(now);
+    day.setDate(day.getDate() - i);
+    week += state.activity[dayKey(day)] || 0;
+  }
+  return { today: state.activity[dayKey(now)] || 0, week };
+}
+
+function setTopicStatus(id, value) {
+  const was = DONE_STATUSES.includes(topicStatus(id));
+  if (value === "todo") delete state.topicStatus[id];
+  else state.topicStatus[id] = value;
+  persist("topicStatus");
+  if (!was && DONE_STATUSES.includes(value)) recordActivity();
+}
+
+// Прогресс урока двигает статус темы вперёд, но никогда не понижает его:
+// первая отметка — «Изучаю», все страницы освоены — «Понял».
+function syncTopicFromLesson(topicId) {
+  const topic = topicById(topicId);
+  if (!topic?.lesson) return;
+  const touched = lessonPageIds(topic).some((pid) => lessonPageStatus(topicId, pid) !== "todo");
+  const { done, total } = lessonCounts(topic);
+  const current = topicStatus(topicId);
+  if (done === total && !DONE_STATUSES.includes(current)) state.topicStatus[topicId] = "understood";
+  else if (touched && current === "todo") state.topicStatus[topicId] = "learning";
+  else return;
+  persist("topicStatus");
+}
+
+function setLessonStatus(topicId, pid, value) {
+  const key = lessonKey(topicId, pid);
+  const was = DONE_STATUSES.includes(lessonPageStatus(topicId, pid));
+  if (value === "todo") delete state.lessonStatus[key];
+  else state.lessonStatus[key] = value;
+  persist("lessonStatus");
+  if (!was && DONE_STATUSES.includes(value)) recordActivity();
+  syncTopicFromLesson(topicId);
+}
+
+const QUIZ_PASS = 0.7;
+
+function quizResult(topic) {
+  const answers = state.quizAnswers[topic.id] || {};
+  const { quiz } = topic.lesson;
+  return {
+    total: quiz.length,
+    answered: quiz.filter((_, i) => answers[i] !== undefined).length,
+    correct: quiz.filter((q, i) => answers[i] === q.answer).length,
+  };
+}
+
+// Тест зачитывается при 70% верных ответов; начатый тест — «Изучаю». Статус не понижается.
+function applyQuizProgress(id) {
+  const topic = topicById(id);
+  const { total, answered, correct } = quizResult(topic);
+  if (!answered) return;
+  const status = lessonPageStatus(id, "quiz");
+  if (answered === total && correct / total >= QUIZ_PASS && !DONE_STATUSES.includes(status)) setLessonStatus(id, "quiz", "understood");
+  else if (status === "todo") setLessonStatus(id, "quiz", "learning");
+}
+
+// Заметки и входящие одним Markdown-файлом.
+function buildNotesMarkdown(lang = state.lang) {
+  const parts = [`# ${t("sectionNotes", lang)} · ${t("appTitle", lang)}`];
+  let count = 0;
+  for (const topic of orderedTopics()) {
+    const note = state.topicNotes[topic.id];
+    if (!note) continue;
+    count += 1;
+    parts.push(`## ${blockById(topic.block).order}. ${loc(topic.title, lang)}\n\n${note.trim()}`);
+  }
+  if (state.inbox.length) {
+    parts.push(`## ${t("inboxTitle", lang)}\n\n${state.inbox.map((item) => `- ${item.created.slice(0, 10)}: ${item.text.trim().replace(/\n+/g, " ")}`).join("\n")}`);
+    count += state.inbox.length;
+  }
+  return { text: `${parts.join("\n\n")}\n`, count };
+}
+
+// Шаги изучения по prereq: шаг 0 — темы без зависимостей, дальше — на шаг глубже самой глубокой зависимости.
+function topicLevels() {
+  const depth = {};
+  const visit = (id, seen = new Set()) => {
+    if (id in depth) return depth[id];
+    if (seen.has(id)) return 0;
+    seen.add(id);
+    const topic = topicById(id);
+    depth[id] = topic.prereq.length ? 1 + Math.max(...topic.prereq.map((ref) => visit(ref, seen))) : 0;
+    return depth[id];
+  };
+  const order = orderedTopics();
+  order.forEach((topic) => visit(topic.id));
+  const levels = [];
+  for (const topic of order) (levels[depth[topic.id]] ||= []).push(topic);
+  return levels;
+}
+
 function topicStatus(id) {
   return state.topicStatus[id] || "todo";
 }
@@ -4167,6 +4361,7 @@ function buildBackup(now = new Date()) {
     exported: now.toISOString(),
     topicStatus: state.topicStatus,
     lessonStatus: state.lessonStatus,
+    activity: state.activity,
     topicNotes: state.topicNotes,
     quizAnswers: state.quizAnswers,
     inbox: state.inbox,
@@ -4185,6 +4380,7 @@ function parseBackup(text) {
   return {
     topicStatus: normalizeTopicStatus(data.topicStatus),
     lessonStatus: normalizeLessonStatus(data.lessonStatus),
+    activity: normalizeActivity(data.activity),
     topicNotes: normalizeTopicNotes(data.topicNotes),
     quizAnswers: normalizeQuizAnswers(data.quizAnswers),
     inbox: normalizeInbox(data.inbox),
@@ -4270,6 +4466,7 @@ function renderNav(route) {
     pageLink("glossary", "glossaryTitle"),
     pageLink("changelog", "changelogTitle"),
     pageLink("progress", "progressLink"),
+    pageLink("map", "mapTitle"),
   ), ...sortedBlocks().map((block) => h("div", { class: "nav-block" },
     h("a", {
       href: `#block-${block.id}`,
@@ -4286,7 +4483,8 @@ function renderNav(route) {
         ? h("ul", { class: "nav-lesson" }, lessonPageIds(topic).map((pid) => h("li", {}, h("a", {
           href: lessonHref(topic, pid),
           "aria-current": route.view === "lesson" && route.part === pid ? "page" : undefined,
-        }, h("span", { class: `status-dot lesson-dot ${lessonPageStatus(topic.id, pid)}`, "aria-hidden": "true" }), lessonPageTitle(topic, pid, lang)))))
+        }, h("span", { class: `status-dot lesson-dot ${lessonPageStatus(topic.id, pid)}`, "aria-hidden": "true" }), lessonPageTitle(topic, pid, lang),
+          pid === "quiz" && quizResult(topic).answered ? h("span", { class: "nav-count" }, `${quizResult(topic).correct}/${quizResult(topic).total}`) : null))))
         : null)))
       : null,
   )));
@@ -4297,15 +4495,16 @@ function renderHome() {
   document.title = t("appTitle", lang);
   const last = state.lastTopic ? topicById(state.lastTopic) : null;
   const next = recommendedTopic();
-  const continueItem = (labelKey, topic) => h("div", {},
+  const continueItem = (labelKey, topic, pid) => h("div", {},
     h("p", { class: "continue-label" }, t(labelKey, lang)),
-    h("a", { href: `#topic-${topic.id}` }, loc(topic.title, lang)));
+    h("a", { href: pid ? lessonHref(topic, pid) : `#topic-${topic.id}` },
+      pid ? `${loc(topic.title, lang)} · ${lessonPageTitle(topic, pid, lang)}` : loc(topic.title, lang)));
   return [
     h("div", { class: "card" },
       h("h2", { class: "page-title" }, t("appTitle", lang)),
       h("p", { class: "lead" }, t("homeLead", lang)),
       h("div", { class: "continue", "aria-label": t("continueTitle", lang) },
-        last ? continueItem("continueLast", last) : null,
+        last ? continueItem("continueLast", last, state.lastPage) : null,
         next ? continueItem("continueNext", next) : h("p", { class: "notice" }, t("continueAllDone", lang))),
     ),
     h("div", { class: "blocks-grid" }, sortedBlocks().map((block) => {
@@ -4391,6 +4590,26 @@ function renderGlossary(focusId) {
         h("dd", { class: "term-topics" }, term.topics.map((id, i) => [i ? ", " : "", topicLink(id, lang)])),
       )))
       : h("p", { class: "empty" }, t("glossaryEmpty", lang)),
+  );
+}
+
+function renderMap() {
+  const { lang } = state;
+  document.title = `${t("mapTitle", lang)} · ${t("appTitle", lang)}`;
+  return h("div", { class: "card" },
+    h("p", { class: "crumbs" }, h("a", { href: "#" }, t("appTitle", lang))),
+    h("h2", { class: "page-title" }, t("mapTitle", lang)),
+    h("p", { class: "lead" }, t("mapLead", lang)),
+    topicLevels().map((topics, level) => h("section", { class: "map-level section" },
+      h("h3", {}, `${t("mapStep", lang)} ${level + 1}`),
+      h("ul", { class: "map-list" }, topics.map((topic) => h("li", {},
+        h("span", { class: `status-dot ${topicStatus(topic.id)}`, title: t(`status_${topicStatus(topic.id)}`, lang) }),
+        topicLink(topic.id, lang), " ", h("span", { class: "map-block" }, `[${blockById(topic.block).order}]`),
+        topic.prereq.length
+          ? h("span", { class: "map-after" }, `${t("sectionPrereq", lang)}: `, topic.prereq.map((ref, i) => [i ? ", " : "", topicLink(ref, lang)]))
+          : null,
+      ))),
+    )),
   );
 }
 
@@ -4615,6 +4834,10 @@ function renderQuiz(topic, lang) {
   const correct = lesson.quiz.filter((q, i) => answers[i] === q.answer).length;
   return h("div", { id: "lesson-quiz" },
     h("p", { class: "hint", id: "quiz-score" }, `${t("quizScore", lang)} ${correct}/${lesson.quiz.length}` + (answered < lesson.quiz.length ? ` · ${t("quizLeft", lang)} ${lesson.quiz.length - answered}` : "")),
+    answered === lesson.quiz.length
+      ? h("p", { class: `notice${correct / lesson.quiz.length >= QUIZ_PASS ? "" : " error"}` },
+        correct / lesson.quiz.length >= QUIZ_PASS ? t("quizPassed", lang) : t("quizNotPassed", lang))
+      : null,
     h("ol", { class: "quiz" }, lesson.quiz.map((q, qi) => {
       const chosen = answers[qi];
       const done = chosen !== undefined;
@@ -4641,6 +4864,38 @@ function renderExercises(topic, lang) {
   )));
 }
 
+function announce(text) {
+  const live = document.getElementById("live");
+  if (live) live.textContent = text;
+}
+
+// Соседние страницы: назад — предыдущая страница или тема, далее — следующая страница или следующая тема.
+function lessonNeighbors(topic, pid, lang) {
+  const pages = lessonPageIds(topic);
+  const index = pages.indexOf(pid);
+  const list = orderedTopics();
+  const nextTopic = list[list.findIndex((item) => item.id === topic.id) + 1];
+  const prev = index > 0
+    ? { href: lessonHref(topic, pages[index - 1]), title: lessonPageTitle(topic, pages[index - 1], lang), label: "pagerBack" }
+    : { href: `#topic-${topic.id}`, title: loc(topic.title, lang), label: "pagerBack" };
+  const next = index < pages.length - 1
+    ? { href: lessonHref(topic, pages[index + 1]), title: lessonPageTitle(topic, pages[index + 1], lang), label: "pagerForward" }
+    : (nextTopic ? { href: `#topic-${nextTopic.id}`, title: loc(nextTopic.title, lang), label: "pagerNext" } : null);
+  return { prev, next };
+}
+
+// Нижняя панель урока для телефона: назад, список страниц, далее.
+function lessonBar(topic, pid, lang, prev, next) {
+  const pages = lessonPageIds(topic);
+  return h("div", { class: "lesson-bar" },
+    h("a", { href: prev.href, "aria-label": prev.title }, "‹"),
+    h("details", { class: "lesson-jump" },
+      h("summary", { "aria-label": t("lessonJump", lang) }, `${pages.indexOf(pid) + 1}/${pages.length} ▴`),
+      h("ul", {}, pages.map((item) => h("li", {}, h("a", { href: lessonHref(topic, item), "aria-current": item === pid ? "page" : undefined },
+        h("span", { class: `status-dot lesson-dot ${lessonPageStatus(topic.id, item)}`, "aria-hidden": "true" }), lessonPageTitle(topic, item, lang)))))),
+    next ? h("a", { href: next.href, "aria-label": next.title }, "›") : h("span", { "aria-hidden": "true" }, "›"));
+}
+
 function renderLessonPage(id, pid) {
   const { lang } = state;
   const topic = topicById(id);
@@ -4664,26 +4919,35 @@ function renderLessonPage(id, pid) {
     h("h2", { class: "page-title" }, title),
     h("p", { class: "hint" }, `${t("lessonTitle", lang)} · ${index + 1}/${pages.length}`),
     h("div", { class: "status-row" }, h("div", { class: "segmented", id: "lesson-status", role: "group", "aria-label": t("lessonStatusLabel", lang) })),
+    h("p", { class: "hint keys-hint" }, t("lessonKeysHint", lang)),
     h("div", { class: "lesson-body" }, body),
   );
-  const list = orderedTopics();
-  const nextTopic = list[list.findIndex((item) => item.id === id) + 1];
-  const prev = index > 0
-    ? { href: lessonHref(topic, pages[index - 1]), title: lessonPageTitle(topic, pages[index - 1], lang), label: "pagerBack" }
-    : { href: `#topic-${id}`, title: loc(topic.title, lang), label: "pagerBack" };
-  const next = index < pages.length - 1
-    ? { href: lessonHref(topic, pages[index + 1]), title: lessonPageTitle(topic, pages[index + 1], lang), label: "pagerForward" }
-    : (nextTopic ? { href: `#topic-${nextTopic.id}`, title: loc(nextTopic.title, lang), label: "pagerNext" } : null);
-  return [card, pagerNav(prev, next, lang)].filter(Boolean);
+  const { prev, next } = lessonNeighbors(topic, pid, lang);
+  return [card, pagerNav(prev, next, lang), lessonBar(topic, pid, lang, prev, next)].filter(Boolean);
+}
+
+// Клавиши на странице урока: ← → — страницы, M — отметить «Понял» или снять отметку.
+function handleLessonKeys(event, typing) {
+  if (typing || event.metaKey || event.ctrlKey || event.altKey || state.query.trim()) return;
+  const route = parseRoute(location.hash);
+  if (route.view !== "lesson") return;
+  const topic = topicById(route.id);
+  const { prev, next } = lessonNeighbors(topic, route.part, state.lang);
+  if (event.key === "ArrowLeft" && prev) location.hash = prev.href;
+  else if (event.key === "ArrowRight" && next) location.hash = next.href;
+  else if (event.key.toLowerCase() === "m") {
+    setLessonStatus(route.id, route.part, DONE_STATUSES.includes(lessonPageStatus(route.id, route.part)) ? "todo" : "understood");
+    bindLessonStatus(route.id, route.part);
+    renderNav(route);
+    announce(t(`status_${lessonPageStatus(route.id, route.part)}`, state.lang));
+  }
 }
 
 // Элементы управления карточки темы подключаются после вставки в документ.
 function bindTopicControls(id) {
   const { lang } = state;
   renderSegmented(document.getElementById("topic-status"), STATUSES.map((value) => ({ value, label: t(`status_${value}`, lang) })), topicStatus(id), (value) => {
-    if (value === "todo") delete state.topicStatus[id];
-    else state.topicStatus[id] = value;
-    persist("topicStatus");
+    setTopicStatus(id, value);
     bindTopicControls(id);
     renderNav(parseRoute(location.hash));
     renderProgressLink();
@@ -4700,11 +4964,8 @@ function bindTopicControls(id) {
 }
 
 function bindLessonStatus(id, pid) {
-  const key = lessonKey(id, pid);
   renderSegmented(document.getElementById("lesson-status"), STATUSES.map((value) => ({ value, label: t(`status_${value}`, state.lang) })), lessonPageStatus(id, pid), (value) => {
-    if (value === "todo") delete state.lessonStatus[key];
-    else state.lessonStatus[key] = value;
-    persist("lessonStatus");
+    setLessonStatus(id, pid, value);
     bindLessonStatus(id, pid);
     renderNav(parseRoute(location.hash));
   });
@@ -4726,7 +4987,13 @@ function bindQuiz(id) {
       if (answers[qi] !== undefined) return;
       state.quizAnswers[id] = { ...answers, [qi]: oi };
       persist("quizAnswers");
+      applyQuizProgress(id);
       rerender();
+      const topic = topicById(id);
+      const result = quizResult(topic);
+      announce(`${oi === topic.lesson.quiz[qi].answer ? t("quizRight", state.lang) : t("quizWrong", state.lang)} ${t("quizScore", state.lang)} ${result.correct}/${result.total}`);
+      bindLessonStatus(id, "quiz");
+      renderNav(parseRoute(location.hash));
       document.querySelector(`#lesson-quiz [data-quiz="${qi}:${oi}"]`)?.focus();
       return;
     }
@@ -4742,6 +5009,8 @@ function renderProgress() {
   const { lang } = state;
   const { done, total } = progressCounts();
   const learning = TOPICS.filter((topic) => topicStatus(topic.id) === "learning");
+  const lessonsStarted = TOPICS.filter((topic) => topic.lesson && lessonCounts(topic).done < lessonCounts(topic).total
+    && lessonPageIds(topic).some((pid) => lessonPageStatus(topic.id, pid) !== "todo"));
   document.title = `${t("progressLink", lang)} · ${t("appTitle", lang)}`;
   return [
     h("div", { class: "card" },
@@ -4766,6 +5035,23 @@ function renderProgress() {
         : h("p", { class: "empty" }, t("inProgressEmpty", lang)),
     ),
     h("div", { class: "card" },
+      h("h3", { class: "card-title" }, t("lessonsInProgressTitle", lang)),
+      lessonsStarted.length
+        ? h("ul", { class: "topic-links" }, lessonsStarted.map((topic) => {
+          const counts = lessonCounts(topic);
+          const nextPage = lessonPageIds(topic).find((pid) => !DONE_STATUSES.includes(lessonPageStatus(topic.id, pid)));
+          return h("li", {}, h("a", { href: lessonHref(topic, nextPage) }, `${loc(topic.title, lang)} · ${lessonPageTitle(topic, nextPage, lang)}`), ` (${counts.done}/${counts.total})`);
+        }))
+        : h("p", { class: "empty" }, t("lessonsInProgressEmpty", lang)),
+    ),
+    h("div", { class: "card" },
+      h("h3", { class: "card-title" }, t("activityTitle", lang)),
+      h("div", { class: "activity" },
+        h("div", {}, h("b", {}, activityCounts().today), t("activityToday", lang)),
+        h("div", {}, h("b", {}, activityCounts().week), t("activityWeek", lang))),
+      h("p", { class: "hint" }, t("activityHint", lang)),
+    ),
+    h("div", { class: "card" },
       h("h3", { class: "card-title" }, t("inboxTitle", lang)),
       h("p", { class: "lead" }, t("inboxHint", lang)),
       h("textarea", { id: "inbox-text", "aria-label": t("inboxTitle", lang), style: "min-height: 70px; margin-top: 8px" }),
@@ -4784,6 +5070,7 @@ function renderProgress() {
       h("div", { class: "row" },
         h("button", { class: "btn", id: "backup-export", type: "button" }, t("exportButton", lang)),
         h("button", { class: "btn", id: "backup-import", type: "button" }, t("importButton", lang)),
+        h("button", { class: "btn", id: "notes-export", type: "button" }, t("notesExport", lang)),
         h("input", { id: "backup-file", type: "file", accept: "application/json,.json", hidden: true }),
         h("span", { class: "notice", id: "backup-notice", role: "status" }),
       ),
@@ -4817,6 +5104,21 @@ function bindProgressControls() {
     link.remove();
     setTimeout(() => URL.revokeObjectURL(link.href), 1000);
   });
+  document.getElementById("notes-export").addEventListener("click", () => {
+    const notice = document.getElementById("backup-notice");
+    const { text, count } = buildNotesMarkdown(lang);
+    if (!count) {
+      notice.className = "notice error";
+      notice.textContent = t("notesExportEmpty", lang);
+      return;
+    }
+    const blob = new Blob([text], { type: "text/markdown" });
+    const link = h("a", { href: URL.createObjectURL(blob), download: `ai-engineer-notes-${dayKey()}.md` });
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  });
   const file = document.getElementById("backup-file");
   document.getElementById("backup-import").addEventListener("click", () => file.click());
   file.addEventListener("change", async () => {
@@ -4837,6 +5139,7 @@ function bindProgressControls() {
     Object.assign(state, data);
     persist("topicStatus");
     persist("lessonStatus");
+    persist("activity");
     persist("topicNotes");
     persist("quizAnswers");
     persist("inbox");
@@ -4855,6 +5158,14 @@ function renderSearch(query) {
     h("h2", { class: "page-title" }, t("searchResults", lang)),
     results.length
       ? h("ul", { class: "results" }, results.map((result) => {
+        if (result.kind === "lesson") {
+          const topic = topicById(result.id);
+          return h("li", {},
+            h("div", { class: "kind" }, `${t("lessonTitle", lang)} · ${loc(topic.title, lang)}`),
+            h("a", { href: lessonHref(topic, result.pid) }, highlight(lessonPageTitle(topic, result.pid, lang), query)),
+            h("p", {}, highlight(snippet(lessonPageText(topic, result.pid, lang).join(" "), query), query)),
+          );
+        }
         if (result.kind === "topic") {
           const topic = topicById(result.id);
           return h("li", {},
@@ -4886,6 +5197,7 @@ function renderMain() {
   else if (route.view === "block") content = renderBlock(route.id);
   else if (route.view === "topic") content = renderTopic(route.id);
   else if (route.view === "lesson") content = renderLessonPage(route.id, route.part);
+  else if (route.view === "map") content = renderMap();
   else if (route.view === "progress") content = renderProgress();
   else if (route.view === "glossary") content = renderGlossary(route.id);
   else if (route.view === "changelog") content = renderChangelog();
@@ -4897,9 +5209,14 @@ function renderMain() {
   if (!state.query.trim() && route.view === "topic") bindTopicControls(route.id);
   if (!state.query.trim() && route.view === "lesson") bindLessonStatus(route.id, route.part);
   if (!state.query.trim() && route.view === "lesson" && route.part === "quiz") bindQuiz(route.id);
-  if (!state.query.trim() && (route.view === "topic" || route.view === "lesson") && state.lastTopic !== route.id) {
-    state.lastTopic = route.id;
-    persist("lastTopic");
+  if (!state.query.trim() && (route.view === "topic" || route.view === "lesson")) {
+    const page = route.view === "lesson" ? route.part : null;
+    if (state.lastTopic !== route.id || state.lastPage !== page) {
+      state.lastTopic = route.id;
+      state.lastPage = page;
+      persist("lastTopic");
+      persist("lastPage");
+    }
   }
   if (!state.query.trim() && route.view === "progress") bindProgressControls();
   if (!state.query.trim() && route.view === "home") bindHomeControls();
@@ -4919,8 +5236,10 @@ if (typeof document !== "undefined") {
   state.lang = normalizeLang(readStored("lang", DEFAULT_LANG));
   state.theme = normalizeTheme(readStored("theme", "auto"));
   state.lastTopic = normalizeLastTopic(readStored("lastTopic", null));
+  state.lastPage = normalizeLastPage(readStored("lastPage", null), state.lastTopic);
   state.topicStatus = normalizeTopicStatus(readStored("topicStatus", {}));
   state.lessonStatus = normalizeLessonStatus(readStored("lessonStatus", {}));
+  state.activity = normalizeActivity(readStored("activity", {}));
   state.topicNotes = normalizeTopicNotes(readStored("topicNotes", {}));
   state.quizAnswers = normalizeQuizAnswers(readStored("quizAnswers", {}));
   state.inbox = normalizeInbox(readStored("inbox", []));
@@ -4946,6 +5265,10 @@ if (typeof document !== "undefined") {
     renderMain();
   });
   const header = document.querySelector(".app-header");
+  document.getElementById("skip-link").addEventListener("click", (event) => {
+    event.preventDefault();
+    document.getElementById("app").focus();
+  });
   const controlsToggle = document.getElementById("controls-toggle");
   controlsToggle.addEventListener("click", () => {
     const open = header.classList.toggle("open");
@@ -4958,7 +5281,9 @@ if (typeof document !== "undefined") {
       event.preventDefault();
       searchBox.focus();
       searchBox.select();
+      return;
     }
+    handleLessonKeys(event, typing);
   });
   // Кнопка «Копировать» в блоках кода.
   document.getElementById("app").addEventListener("click", async (event) => {
