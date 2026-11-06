@@ -6,36 +6,54 @@
 <title>AI Engineer</title>
 <style>
 :root {
-  --bg: #f6f4ef;
+  --bg: #f4f1ea;
   --surface: #ffffff;
+  --surface-2: #ebe6db;
   --text: #1d1d1f;
-  --muted: #6b6b70;
-  --border: #d9d5cc;
+  --muted: #66625a;
+  --border: #d6d0c4;
   --accent: #2f5bd3;
+  --accent-soft: #e3e9fb;
   --accent-text: #ffffff;
+  --must: #b4372a;
+  --basic: #8a6100;
+  --plus: #2f7a46;
+  --code-bg: #f7f5f0;
   --radius: 10px;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #111113;
-    --surface: #1c1c20;
+    --bg: #0f0f11;
+    --surface: #1b1b1f;
+    --surface-2: #26262c;
     --text: #ececef;
-    --muted: #9a9aa3;
-    --border: #34343b;
-    --accent: #7c9cff;
+    --muted: #a09fa8;
+    --border: #36363e;
+    --accent: #8aa6ff;
+    --accent-soft: #24304f;
     --accent-text: #0b0b0d;
+    --must: #f08a7e;
+    --basic: #e2b75a;
+    --plus: #79c98f;
+    --code-bg: #141417;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #111113;
-  --surface: #1c1c20;
+  --bg: #0f0f11;
+  --surface: #1b1b1f;
+  --surface-2: #26262c;
   --text: #ececef;
-  --muted: #9a9aa3;
-  --border: #34343b;
-  --accent: #7c9cff;
+  --muted: #a09fa8;
+  --border: #36363e;
+  --accent: #8aa6ff;
+  --accent-soft: #24304f;
   --accent-text: #0b0b0d;
+  --must: #f08a7e;
+  --basic: #e2b75a;
+  --plus: #79c98f;
+  --code-bg: #141417;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -43,47 +61,189 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-feature-settings: "calt" 0;
 }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px 16px;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
+  padding: 10px 16px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
 }
-.app-title { margin: 0; font-size: 1.25rem; }
-.header-controls { display: flex; gap: 8px; align-items: center; }
+.app-title { margin: 0; font-size: 1.15rem; white-space: nowrap; }
+.app-title a { color: inherit; text-decoration: none; }
+.search {
+  flex: 1 1 220px;
+  min-width: 0;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+.header-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .segmented { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 .segmented button {
   border: 0;
   background: transparent;
   color: var(--text);
-  padding: 6px 10px;
+  padding: 5px 10px;
   font: inherit;
+  font-size: 0.9rem;
   cursor: pointer;
 }
 .segmented button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); }
-.segmented button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-main { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
-.app-footer { max-width: 1100px; margin: 0 auto; padding: 16px; color: var(--muted); font-size: 0.85rem; }
+.segmented button:focus-visible { outline-offset: -2px; }
+.layout {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.nav { position: sticky; top: 72px; max-height: calc(100vh - 90px); overflow: auto; }
+.nav-toggle { display: none; }
+.nav-block { margin-bottom: 6px; }
+.nav-block > a {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 5px 8px;
+  border-radius: 8px;
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+}
+.nav-block ul { list-style: none; margin: 0; padding: 0 0 0 26px; }
+.nav-block li a {
+  display: block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  text-decoration: none;
+}
+.nav a:hover { background: var(--surface-2); }
+.nav a[aria-current="page"] { background: var(--accent-soft); color: var(--text); }
+.nav-num { color: var(--muted); font-variant-numeric: tabular-nums; min-width: 1.2em; }
+.content { min-width: 0; }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+}
+.card + .card { margin-top: 16px; }
+.crumbs { margin: 0 0 6px; font-size: 0.9rem; color: var(--muted); }
+.crumbs a { color: var(--muted); }
+h2.page-title { margin: 0 0 8px; font-size: 1.6rem; line-height: 1.25; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; color: var(--muted); font-size: 0.88rem; }
+.badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge.must { color: var(--must); }
+.badge.basic { color: var(--basic); }
+.badge.plus { color: var(--plus); }
+.section { margin-top: 20px; }
+.section h3 { margin: 0 0 6px; font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.section p { margin: 0; }
+.from-sql { padding: 12px 14px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 8px 8px 0; }
+pre {
+  margin: 0;
+  padding: 14px;
+  overflow-x: auto;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: 0.88rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.chip { padding: 2px 10px; border-radius: 999px; background: var(--surface-2); font-size: 0.9rem; cursor: help; }
+.resources { margin: 0; padding-left: 20px; }
+.resources li { margin: 4px 0; }
+.res-meta { color: var(--muted); font-size: 0.85rem; }
+.topic-links { margin: 0; padding-left: 20px; }
+.blocks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 16px; }
+.block-tile {
+  display: block;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  text-decoration: none;
+}
+.block-tile:hover { border-color: var(--accent); }
+.block-tile h3 { margin: 0 0 6px; font-size: 1.02rem; }
+.block-tile p { margin: 0 0 8px; color: var(--muted); font-size: 0.9rem; }
+.lead { margin: 0; color: var(--muted); }
+.results { margin: 0; padding: 0; list-style: none; }
+.results li { padding: 10px 0; border-top: 1px solid var(--border); }
+.results li:first-child { border-top: 0; }
+.results .kind { color: var(--muted); font-size: 0.82rem; }
+.results p { margin: 2px 0 0; color: var(--muted); font-size: 0.9rem; }
+mark { background: var(--accent-soft); color: inherit; padding: 0 1px; border-radius: 2px; }
+.empty { color: var(--muted); }
+.app-footer { max-width: 1200px; margin: 0 auto; padding: 8px 16px 24px; color: var(--muted); font-size: 0.85rem; }
+@media (max-width: 760px) {
+  .app-header { position: static; }
+  .layout { grid-template-columns: minmax(0, 1fr); padding-top: 12px; }
+  .nav { position: static; max-height: none; }
+  .nav-toggle {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .nav:not(.open) .nav-tree { display: none; }
+  .nav-tree { margin-top: 8px; }
+  .card { padding: 16px; }
+  h2.page-title { font-size: 1.35rem; }
+}
 </style>
 </head>
 <body>
 <header class="app-header">
-  <h1 class="app-title" data-i18n="appTitle"></h1>
+  <h1 class="app-title"><a href="#" data-i18n="appTitle"></a></h1>
+  <input class="search" id="search" type="search" autocomplete="off">
   <div class="header-controls">
     <div class="segmented" id="lang-switch" role="group"></div>
     <div class="segmented" id="theme-switch" role="group"></div>
   </div>
 </header>
-<main id="app"></main>
+<div class="layout">
+  <nav class="nav" id="nav">
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-tree" data-i18n="navToggle"></button>
+    <div class="nav-tree" id="nav-tree"></div>
+  </nav>
+  <main class="content" id="app"></main>
+</div>
 <footer class="app-footer">
-  <span data-i18n="footerVersion"></span> MVP 0.2 ·
-  <span data-i18n="footerUpdated"></span> 2026-11-06 23:55 (Madrid)
+  <span data-i18n="footerVersion"></span> MVP 0.3 ·
+  <span data-i18n="footerUpdated"></span> 2026-11-07 00:40 (Madrid)
 </footer>
 <script>
 // ════════════════════════════════════════════════════════════════════
@@ -111,11 +271,41 @@ const UI = {
   themeDark: { ru: "Тёмная", en: "Dark", es: "Oscura" },
   langLabel: { ru: "Язык", en: "Language", es: "Idioma" },
   themeLabel: { ru: "Тема оформления", en: "Theme", es: "Tema" },
-  emptyState: {
-    ru: "Скоро здесь появится карта навыков.",
-    en: "The skills map will appear here soon.",
-    es: "Pronto aquí aparecerá el mapa de habilidades.",
+  navToggle: { ru: "Содержание", en: "Contents", es: "Índice" },
+  searchPlaceholder: { ru: "Поиск по темам и терминам", en: "Search topics and terms", es: "Buscar temas y términos" },
+  homeLead: {
+    ru: "AI-инженер строит продукты на готовых моделях: RAG, агенты, интеграции, evals. Здесь собрано всё, что нужно для первой работы, по девяти блокам навыков.",
+    en: "An AI engineer builds products on top of existing models: RAG, agents, integrations, evals. This handbook collects everything you need for a first job, across nine skill blocks.",
+    es: "Un AI Engineer construye productos sobre modelos existentes: RAG, agentes, integraciones, evals. Aquí está todo lo necesario para el primer trabajo, en nueve bloques de habilidades.",
   },
+  priority_must: { ru: "Обязательно", en: "Required", es: "Imprescindible" },
+  priority_basic: { ru: "Базово", en: "Basics", es: "Lo básico" },
+  priority_plus: { ru: "Плюс", en: "Bonus", es: "Un plus" },
+  topicsCount: { ru: "Тем:", en: "Topics:", es: "Temas:" },
+  noTopicsYet: { ru: "Темы этого блока ещё не добавлены.", en: "No topics in this block yet.", es: "Este bloque aún no tiene temas." },
+  sectionWhat: { ru: "Что это", en: "What it is", es: "Qué es" },
+  sectionWhy: { ru: "Зачем AI-инженеру", en: "Why it matters", es: "Para qué sirve" },
+  sectionFromSql: { ru: "Для SQL-разработчика", en: "For a SQL developer", es: "Para quien viene de SQL" },
+  sectionConcepts: { ru: "Понятия", en: "Concepts", es: "Conceptos" },
+  sectionExample: { ru: "Пример", en: "Example", es: "Ejemplo" },
+  sectionResources: { ru: "Ресурсы", en: "Resources", es: "Recursos" },
+  sectionPractice: { ru: "Практика", en: "Practice", es: "Práctica" },
+  sectionPrereq: { ru: "Опирается на", en: "Builds on", es: "Se basa en" },
+  sectionRelated: { ru: "Связанные темы", en: "Related topics", es: "Temas relacionados" },
+  checkedOn: { ru: "Проверено:", en: "Checked:", es: "Revisado:" },
+  notFound: { ru: "Такой страницы нет.", en: "This page does not exist.", es: "Esta página no existe." },
+  backHome: { ru: "На главную", en: "Back to start", es: "Volver al inicio" },
+  searchResults: { ru: "Результаты поиска", en: "Search results", es: "Resultados de búsqueda" },
+  searchNothing: { ru: "Ничего не найдено.", en: "Nothing found.", es: "No se ha encontrado nada." },
+  kindTopic: { ru: "Тема", en: "Topic", es: "Tema" },
+  kindTerm: { ru: "Термин", en: "Term", es: "Término" },
+  kind_docs: { ru: "документация", en: "docs", es: "documentación" },
+  kind_course: { ru: "курс", en: "course", es: "curso" },
+  kind_book: { ru: "книга", en: "book", es: "libro" },
+  kind_article: { ru: "статья", en: "article", es: "artículo" },
+  kind_video: { ru: "видео", en: "video", es: "vídeo" },
+  kind_repo: { ru: "репозиторий", en: "repository", es: "repositorio" },
+  kind_tool: { ru: "инструмент", en: "tool", es: "herramienta" },
 };
 
 // ═══════ 2. Данные: блоки, темы, глоссарий, лента ═══════
@@ -392,6 +582,8 @@ function validateData(data = { UI, BLOCKS, TOPICS, GLOSSARY, CHANGELOG }) {
   };
 
   for (const [key, value] of Object.entries(data.UI)) needText(`UI.${key}`, value);
+  for (const priority of PRIORITIES) if (!data.UI[`priority_${priority}`]) add("UI", `нет строки priority_${priority}`);
+  for (const kind of RESOURCE_KINDS) if (!data.UI[`kind_${kind}`]) add("UI", `нет строки kind_${kind}`);
 
   const blockIds = collectIds(data.BLOCKS, "BLOCKS");
   const topicIds = collectIds(data.TOPICS, "TOPICS");
@@ -478,9 +670,109 @@ function t(key, lang) {
   return UI[key][lang] ?? UI[key][DEFAULT_LANG];
 }
 
+function loc(value, lang) {
+  return value[lang] ?? value[DEFAULT_LANG];
+}
+
+const blockById = (id) => BLOCKS.find((block) => block.id === id);
+const topicById = (id) => TOPICS.find((topic) => topic.id === id);
+const termById = (id) => GLOSSARY.find((term) => term.id === id);
+const topicsOfBlock = (id) => TOPICS.filter((topic) => topic.block === id);
+const sortedBlocks = () => [...BLOCKS].sort((a, b) => a.order - b.order);
+
+// Разбор адреса: #topic-<id>, #block-<id>, пусто — главная.
+function parseRoute(hash) {
+  const value = decodeURIComponent(String(hash || "").replace(/^#/, ""));
+  if (value === "") return { view: "home" };
+  const match = value.match(/^(topic|block)-(.+)$/);
+  if (match && match[1] === "topic" && topicById(match[2])) return { view: "topic", id: match[2] };
+  if (match && match[1] === "block" && blockById(match[2])) return { view: "block", id: match[2] };
+  return { view: "missing" };
+}
+
+function normalizeForSearch(text) {
+  return String(text).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ё/g, "е");
+}
+
+// Поиск по текущему языку и английским терминам. Возвращает темы и термины,
+// подходящие под все слова запроса; названия весят больше текста.
+function search(query, lang) {
+  const words = normalizeForSearch(query).split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [];
+  const score = (title, body) => {
+    const head = normalizeForSearch(title);
+    const all = `${head} ${normalizeForSearch(body)}`;
+    if (!words.every((word) => all.includes(word))) return 0;
+    return words.reduce((sum, word) => sum + (head.includes(word) ? 3 : 1), 0);
+  };
+  const results = [];
+  for (const topic of TOPICS) {
+    const title = `${loc(topic.title, lang)} ${topic.title.en}`;
+    const body = ["what", "why", "fromSql", "practice"].map((field) => (topic[field] ? loc(topic[field], lang) : "")).join(" ");
+    const value = score(title, body);
+    if (value) results.push({ kind: "topic", id: topic.id, score: value + 1 });
+  }
+  for (const term of GLOSSARY) {
+    const value = score(`${loc(term.term, lang)} ${term.term.en}`, loc(term.definition, lang));
+    if (value) results.push({ kind: "term", id: term.id, score: value });
+  }
+  return results.sort((a, b) => b.score - a.score);
+}
+
+// Создание элементов без innerHTML: текст всегда вставляется как текст.
+function h(tag, props = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(props)) {
+    if (value === undefined || value === null || value === false) continue;
+    if (key === "class") node.className = value;
+    else if (key === "dataset") Object.assign(node.dataset, value);
+    else node.setAttribute(key, value === true ? "" : String(value));
+  }
+  for (const child of children.flat(Infinity)) {
+    if (child === undefined || child === null || child === false) continue;
+    node.append(child instanceof Node ? child : String(child));
+  }
+  return node;
+}
+
+// Подсветка слов запроса в тексте: возвращает узлы.
+function highlight(text, query) {
+  const words = normalizeForSearch(query).split(/\s+/).filter(Boolean);
+  if (!words.length) return [text];
+  const folded = normalizeForSearch(text);
+  if (folded.length !== text.length) return [text];
+  const marks = new Array(text.length).fill(false);
+  for (const word of words) {
+    let index = folded.indexOf(word);
+    while (index !== -1) {
+      for (let i = index; i < index + word.length; i += 1) marks[i] = true;
+      index = folded.indexOf(word, index + word.length);
+    }
+  }
+  const nodes = [];
+  let start = 0;
+  for (let i = 1; i <= text.length; i += 1) {
+    if (i === text.length || marks[i] !== marks[start]) {
+      const piece = text.slice(start, i);
+      nodes.push(marks[start] ? h("mark", {}, piece) : piece);
+      start = i;
+    }
+  }
+  return nodes;
+}
+
+function snippet(text, query, size = 160) {
+  const words = normalizeForSearch(query).split(/\s+/).filter(Boolean);
+  const folded = normalizeForSearch(text);
+  const at = Math.min(...words.map((word) => folded.indexOf(word)).filter((i) => i >= 0), Infinity);
+  if (!Number.isFinite(at) || text.length <= size) return text.length <= size ? text : `${text.slice(0, size)}…`;
+  const from = Math.max(0, at - 40);
+  return `${from > 0 ? "…" : ""}${text.slice(from, from + size)}${from + size < text.length ? "…" : ""}`;
+}
+
 // ═══════ 5. Состояние и хранилище ═══════
 const STORAGE_PREFIX = "aie:";
-const state = { lang: DEFAULT_LANG, theme: "auto" };
+const state = { lang: DEFAULT_LANG, theme: "auto", query: "", navOpen: false };
 
 function readStored(name, fallback) {
   try {
@@ -510,31 +802,37 @@ function normalizeTheme(value) {
 // ═══════ 6. Отрисовка ═══════
 function renderSegmented(container, options, current, onPick) {
   container.replaceChildren(...options.map(({ value, label }) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = label;
-    button.setAttribute("aria-pressed", String(value === current));
+    const button = h("button", { type: "button", "aria-pressed": String(value === current) }, label);
     button.addEventListener("click", () => onPick(value));
     return button;
   }));
 }
 
-function render() {
+function priorityBadge(priority, lang) {
+  return h("span", { class: `badge ${priority}` }, t(`priority_${priority}`, lang));
+}
+
+function topicLink(id, lang) {
+  return h("a", { href: `#topic-${id}` }, loc(topicById(id).title, lang));
+}
+
+function renderHeader() {
   const { lang, theme } = state;
   document.documentElement.lang = lang;
   if (theme === "auto") document.documentElement.removeAttribute("data-theme");
   else document.documentElement.dataset.theme = theme;
-  document.title = t("appTitle", lang);
-  for (const node of document.querySelectorAll("[data-i18n]")) {
-    node.textContent = t(node.dataset.i18n, lang);
-  }
+  for (const node of document.querySelectorAll("[data-i18n]")) node.textContent = t(node.dataset.i18n, lang);
+
+  const searchBox = document.getElementById("search");
+  searchBox.placeholder = t("searchPlaceholder", lang);
+  searchBox.setAttribute("aria-label", t("searchPlaceholder", lang));
 
   const langSwitch = document.getElementById("lang-switch");
   langSwitch.setAttribute("aria-label", t("langLabel", lang));
   renderSegmented(langSwitch, LANGS.map((value) => ({ value, label: value.toUpperCase() })), lang, (value) => {
     state.lang = value;
     persist("lang");
-    render();
+    renderAll();
   });
 
   const themeSwitch = document.getElementById("theme-switch");
@@ -546,13 +844,146 @@ function render() {
   ], theme, (value) => {
     state.theme = value;
     persist("theme");
-    render();
+    renderHeader();
   });
+}
 
+function renderNav(route) {
+  const { lang } = state;
+  const currentTopic = route.view === "topic" ? topicById(route.id) : null;
+  const currentBlock = route.view === "block" ? route.id : currentTopic?.block;
+  document.getElementById("nav").classList.toggle("open", state.navOpen);
+  document.getElementById("nav-toggle").setAttribute("aria-expanded", String(state.navOpen));
+  document.getElementById("nav-tree").replaceChildren(...sortedBlocks().map((block) => h("div", { class: "nav-block" },
+    h("a", {
+      href: `#block-${block.id}`,
+      "aria-current": route.view === "block" && route.id === block.id ? "page" : undefined,
+    }, h("span", { class: "nav-num" }, block.order), loc(block.title, lang)),
+    currentBlock === block.id || topicsOfBlock(block.id).length <= 6
+      ? h("ul", {}, topicsOfBlock(block.id).map((topic) => h("li", {}, h("a", {
+        href: `#topic-${topic.id}`,
+        "aria-current": currentTopic?.id === topic.id ? "page" : undefined,
+      }, loc(topic.title, lang)))))
+      : null,
+  )));
+}
+
+function renderHome() {
+  const { lang } = state;
+  document.title = t("appTitle", lang);
+  return [
+    h("div", { class: "card" },
+      h("h2", { class: "page-title" }, t("appTitle", lang)),
+      h("p", { class: "lead" }, t("homeLead", lang)),
+    ),
+    h("div", { class: "blocks-grid" }, sortedBlocks().map((block) => h("a", { class: "block-tile", href: `#block-${block.id}` },
+      h("h3", {}, `${block.order}. ${loc(block.title, lang)}`),
+      h("p", {}, loc(block.summary, lang)),
+      h("div", { class: "meta" }, priorityBadge(block.priority, lang), `${t("topicsCount", lang)} ${topicsOfBlock(block.id).length}`),
+    ))),
+  ];
+}
+
+function renderBlock(id) {
+  const { lang } = state;
+  const block = blockById(id);
+  const topics = topicsOfBlock(id);
+  document.title = `${loc(block.title, lang)} · ${t("appTitle", lang)}`;
+  return h("div", { class: "card" },
+    h("p", { class: "crumbs" }, h("a", { href: "#" }, t("appTitle", lang))),
+    h("h2", { class: "page-title" }, `${block.order}. ${loc(block.title, lang)}`),
+    h("div", { class: "meta" }, priorityBadge(block.priority, lang)),
+    h("p", {}, loc(block.summary, lang)),
+    h("div", { class: "section" },
+      topics.length
+        ? h("ul", { class: "topic-links" }, topics.map((topic) => h("li", {}, topicLink(topic.id, lang))))
+        : h("p", { class: "empty" }, t("noTopicsYet", lang)),
+    ),
+  );
+}
+
+function section(titleKey, lang, ...content) {
+  return h("section", { class: "section" }, h("h3", {}, t(titleKey, lang)), content);
+}
+
+function renderTopic(id) {
+  const { lang } = state;
+  const topic = topicById(id);
+  const block = blockById(topic.block);
+  document.title = `${loc(topic.title, lang)} · ${t("appTitle", lang)}`;
+  return h("article", { class: "card" },
+    h("p", { class: "crumbs" },
+      h("a", { href: "#" }, t("appTitle", lang)), " / ",
+      h("a", { href: `#block-${block.id}` }, `${block.order}. ${loc(block.title, lang)}`),
+    ),
+    h("h2", { class: "page-title" }, loc(topic.title, lang)),
+    h("div", { class: "meta" }, priorityBadge(block.priority, lang), `${t("checkedOn", lang)} ${topic.checked}`),
+    section("sectionWhat", lang, h("p", {}, loc(topic.what, lang))),
+    section("sectionWhy", lang, h("p", {}, loc(topic.why, lang))),
+    topic.fromSql ? section("sectionFromSql", lang, h("p", { class: "from-sql" }, loc(topic.fromSql, lang))) : null,
+    topic.concepts.length ? section("sectionConcepts", lang, h("ul", { class: "chips" }, topic.concepts.map((termId) => {
+      const term = termById(termId);
+      return h("li", { class: "chip", title: loc(term.definition, lang), tabindex: "0" }, loc(term.term, lang));
+    }))) : null,
+    topic.example ? section("sectionExample", lang, h("pre", {}, h("code", { class: `lang-${topic.example.lang}` }, topic.example.code))) : null,
+    section("sectionResources", lang, h("ul", { class: "resources" }, topic.resources.map((resource) => h("li", {},
+      h("a", { href: resource.url, target: "_blank", rel: "noopener" }, resource.title), " ",
+      h("span", { class: "res-meta" }, `· ${t(`kind_${resource.kind}`, lang)} · ${resource.lang.toUpperCase()}`),
+    )))),
+    section("sectionPractice", lang, h("p", {}, loc(topic.practice, lang))),
+    topic.prereq.length ? section("sectionPrereq", lang, h("ul", { class: "topic-links" }, topic.prereq.map((ref) => h("li", {}, topicLink(ref, lang))))) : null,
+    topic.related.length ? section("sectionRelated", lang, h("ul", { class: "topic-links" }, topic.related.map((ref) => h("li", {}, topicLink(ref, lang))))) : null,
+  );
+}
+
+function renderSearch(query) {
+  const { lang } = state;
+  const results = search(query, lang);
+  document.title = `${t("searchResults", lang)} · ${t("appTitle", lang)}`;
+  return h("div", { class: "card" },
+    h("h2", { class: "page-title" }, t("searchResults", lang)),
+    results.length
+      ? h("ul", { class: "results" }, results.map((result) => {
+        if (result.kind === "topic") {
+          const topic = topicById(result.id);
+          return h("li", {},
+            h("div", { class: "kind" }, `${t("kindTopic", lang)} · ${loc(blockById(topic.block).title, lang)}`),
+            h("a", { href: `#topic-${topic.id}` }, highlight(loc(topic.title, lang), query)),
+            h("p", {}, highlight(snippet(loc(topic.what, lang), query), query)),
+          );
+        }
+        const term = termById(result.id);
+        return h("li", {},
+          h("div", { class: "kind" }, t("kindTerm", lang)),
+          h("strong", {}, highlight(loc(term.term, lang), query)), term.term.en !== loc(term.term, lang) ? ` (${term.term.en})` : "",
+          h("p", {}, highlight(loc(term.definition, lang), query)),
+          h("p", {}, term.topics.map((id, i) => [i ? ", " : "", topicLink(id, lang)])),
+        );
+      }))
+      : h("p", { class: "empty" }, t("searchNothing", lang)),
+  );
+}
+
+function renderMain() {
+  const route = parseRoute(location.hash);
+  renderNav(route);
   const app = document.getElementById("app");
-  const empty = document.createElement("p");
-  empty.textContent = t("emptyState", lang);
-  app.replaceChildren(empty);
+  const { lang } = state;
+  let content;
+  if (state.query.trim()) content = renderSearch(state.query);
+  else if (route.view === "home") content = renderHome();
+  else if (route.view === "block") content = renderBlock(route.id);
+  else if (route.view === "topic") content = renderTopic(route.id);
+  else {
+    document.title = t("appTitle", lang);
+    content = h("div", { class: "card" }, h("p", {}, t("notFound", lang)), h("a", { href: "#" }, t("backHome", lang)));
+  }
+  app.replaceChildren(...[content].flat());
+}
+
+function renderAll() {
+  renderHeader();
+  renderMain();
 }
 
 // ═══════ 7. Запуск ═══════
@@ -561,7 +992,32 @@ if (typeof document !== "undefined") {
   if (dataIssues.length) console.warn("Ошибки данных:", dataIssues);
   state.lang = normalizeLang(readStored("lang", DEFAULT_LANG));
   state.theme = normalizeTheme(readStored("theme", "auto"));
-  render();
+
+  const searchBox = document.getElementById("search");
+  searchBox.addEventListener("input", () => {
+    state.query = searchBox.value;
+    renderMain();
+  });
+  searchBox.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      searchBox.value = "";
+      state.query = "";
+      renderMain();
+    }
+  });
+  window.addEventListener("hashchange", () => {
+    // Переход по ссылке закрывает поиск и мобильное меню.
+    searchBox.value = "";
+    state.query = "";
+    state.navOpen = false;
+    renderMain();
+    window.scrollTo(0, 0);
+  });
+  document.getElementById("nav-toggle").addEventListener("click", () => {
+    state.navOpen = !state.navOpen;
+    renderNav(parseRoute(location.hash));
+  });
+  renderAll();
 }
 </script>
 </body>

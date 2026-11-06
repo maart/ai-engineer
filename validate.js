@@ -55,6 +55,7 @@ function brokenCases() {
     ["плохая дата", (d) => { topic(d).checked = "2026-02-30"; }, /checked должен быть датой/],
     ["http-ссылка", (d) => { topic(d).resources[0].url = "http://example.com"; }, /https:\/\//],
     ["нет ресурсов", (d) => { topic(d).resources = []; }, /хотя бы один ресурс/],
+    ["нет подписи вида ресурса", (d) => { delete d.UI.kind_video; }, /нет строки kind_video/],
     ["плохой приоритет", (d) => { d.BLOCKS[0].priority = "high"; }, /priority должен быть/],
     ["термин без темы", (d) => { d.GLOSSARY[0].topics = ["nope"]; }, /GLOSSARY\..*нет темы/],
     ["лента без порядка", (d) => {
