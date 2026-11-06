@@ -57,6 +57,10 @@ function brokenCases() {
     ["нет ресурсов", (d) => { topic(d).resources = []; }, /хотя бы один ресурс/],
     ["нет подписи вида ресурса", (d) => { delete d.UI.kind_video; }, /нет строки kind_video/],
     ["плохой приоритет", (d) => { d.BLOCKS[0].priority = "high"; }, /priority должен быть/],
+    ["нет обратной ссылки термина", (d) => {
+      const term = d.GLOSSARY.find((item) => item.id === d.TOPICS.find((t) => t.concepts.length).concepts[0]);
+      term.topics = term.topics.filter((id) => id !== d.TOPICS.find((t) => t.concepts.length).id);
+    }, /нет обратной ссылки/],
     ["термин без темы", (d) => { d.GLOSSARY[0].topics = ["nope"]; }, /GLOSSARY\..*нет темы/],
     ["лента без порядка", (d) => {
       const entry = (date) => ({ date, title: page.UI.appTitle, text: page.UI.appTitle, topics: [], source: "https://example.com" });

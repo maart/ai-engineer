@@ -331,8 +331,8 @@ select {
   <main class="content" id="app"></main>
 </div>
 <footer class="app-footer">
-  <span data-i18n="footerVersion"></span> MVP 0.5 ·
-  <span data-i18n="footerUpdated"></span> 2026-11-07 01:50 (Madrid)
+  <span data-i18n="footerVersion"></span> MVP 0.9 ·
+  <span data-i18n="footerUpdated"></span> 2026-11-06 23:45 (Madrid)
 </footer>
 <script>
 // ════════════════════════════════════════════════════════════════════
@@ -597,6 +597,235 @@ const TOPICS = [
     checked: "2026-11-06",
   },
   {
+    id: "python-types-tests", block: "foundation",
+    title: { ru: "Типы, Pydantic и тесты", en: "Types, Pydantic and tests", es: "Tipos, Pydantic y tests" },
+    what: {
+      ru: "Аннотации типов (type hints) описывают, что принимает и возвращает функция. Pydantic превращает класс с аннотациями в схему данных с проверкой и сериализацией в JSON. pytest — стандартный инструмент для тестов: функции test_… с assert внутри.",
+      en: "Type hints describe what a function takes and returns. Pydantic turns an annotated class into a data schema with validation and JSON serialisation. pytest is the standard testing tool: test_… functions with assert inside.",
+      es: "Las anotaciones de tipo (type hints) describen qué recibe y devuelve una función. Pydantic convierte una clase anotada en un esquema de datos con validación y serialización a JSON. pytest es la herramienta estándar de tests: funciones test_… con assert dentro.",
+    },
+    why: {
+      ru: "Ответ модели — это текст, которому нельзя доверять без проверки. Схема Pydantic проверяет его и одновременно служит JSON Schema для структурированного вывода. Тесты отличают инженерный код от демо, и на собеседовании их смотрят в первую очередь.",
+      en: "A model's answer is text you cannot trust without checking. A Pydantic schema validates it and also serves as the JSON Schema for structured output. Tests separate engineering code from a demo, and interviewers look at them first.",
+      es: "La respuesta de un modelo es texto en el que no se puede confiar sin comprobarlo. Un esquema de Pydantic lo valida y además sirve como JSON Schema para la salida estructurada. Los tests distinguen el código de ingeniería de una demo, y en las entrevistas es lo primero que se mira.",
+    },
+    fromSql: {
+      ru: "Модель Pydantic похожа на таблицу с ограничениями: типы столбцов, NOT NULL, CHECK. Только проверка происходит в момент создания объекта, а не при INSERT.",
+      en: "A Pydantic model is like a table with constraints: column types, NOT NULL, CHECK. The difference is that validation happens when the object is created, not on INSERT.",
+      es: "Un modelo de Pydantic se parece a una tabla con restricciones: tipos de columna, NOT NULL, CHECK. La diferencia es que la validación ocurre al crear el objeto, no en el INSERT.",
+    },
+    concepts: ["pydantic", "json-schema"],
+    example: {
+      lang: "python",
+      code: 'from pydantic import BaseModel, Field\n\nclass Invoice(BaseModel):\n    number: str\n    total: float = Field(gt=0)\n    currency: str = "EUR"\n\ninvoice = Invoice.model_validate_json(\'{"number": "A-17", "total": 120.5}\')\nprint(invoice.total)                 # 120.5\nprint(Invoice.model_json_schema())  # JSON Schema for the model\n\ndef test_total_must_be_positive():\n    import pytest\n    with pytest.raises(ValueError):\n        Invoice(number="A-18", total=-1)',
+    },
+    resources: [
+      { title: "Pydantic documentation", url: "https://docs.pydantic.dev/latest/", kind: "docs", lang: "en" },
+      { title: "pytest: Get started", url: "https://docs.pytest.org/en/stable/getting-started.html", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Опишите в Pydantic модель «Сотрудник» с ограничениями (зарплата больше нуля, email валиден). Напишите три теста на pytest: корректные данные, отрицательная зарплата, отсутствующее поле.",
+      en: "Define an Employee model in Pydantic with constraints (salary above zero, valid email). Write three pytest tests: valid data, negative salary, missing field.",
+      es: "Define en Pydantic un modelo «Empleado» con restricciones (salario mayor que cero, email válido). Escribe tres tests con pytest: datos correctos, salario negativo y campo ausente.",
+    },
+    prereq: ["python-basics"],
+    related: ["structured-output"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "async-python", block: "foundation",
+    title: { ru: "Асинхронный Python", en: "Async Python", es: "Python asíncrono" },
+    what: {
+      ru: "async/await позволяет одной программе ждать много сетевых операций одновременно: пока один запрос к модели ждёт ответа, процесс обслуживает другие. Основа — модуль asyncio и цикл событий (event loop).",
+      en: "async/await lets one program wait on many network operations at once: while one model request waits for an answer, the process serves others. It is built on the asyncio module and its event loop.",
+      es: "async/await permite que un programa espere muchas operaciones de red a la vez: mientras una petición al modelo espera respuesta, el proceso atiende otras. Se basa en el módulo asyncio y su bucle de eventos (event loop).",
+    },
+    why: {
+      ru: "Вызов LLM длится секунды и почти всё это время ждёт сеть. Async позволяет держать сотни таких запросов без потока на каждый, параллельно вызывать несколько моделей и инструментов. Этот вопрос часто задают на собеседовании.",
+      en: "An LLM call takes seconds and spends almost all of it waiting on the network. Async lets you hold hundreds of such requests without a thread each and call several models and tools in parallel. It is a common interview question.",
+      es: "Una llamada a un LLM dura segundos y casi todo ese tiempo espera a la red. Async permite mantener cientos de peticiones sin un hilo por cada una y llamar a varios modelos y herramientas en paralelo. Es una pregunta habitual en las entrevistas.",
+    },
+    fromSql: {
+      ru: "В PL/SQL код выполняется последовательно внутри одной сессии. Ближайшая аналогия async — DBMS_PARALLEL_EXECUTE или несколько сессий, только здесь всё происходит в одном процессе и переключение идёт в местах await.",
+      en: "In PL/SQL code runs sequentially within one session. The closest analogy to async is DBMS_PARALLEL_EXECUTE or several sessions, except that here everything happens in one process and switching happens at each await.",
+      es: "En PL/SQL el código se ejecuta de forma secuencial dentro de una sesión. Lo más parecido a async es DBMS_PARALLEL_EXECUTE o varias sesiones, solo que aquí todo ocurre en un proceso y el cambio se produce en cada await.",
+    },
+    concepts: ["async"],
+    example: {
+      lang: "python",
+      code: 'import asyncio\n\nasync def ask(question: str) -> str:\n    await asyncio.sleep(1)          # stands in for a network call to a model\n    return f"answer to {question}"\n\nasync def main():\n    answers = await asyncio.gather(*(ask(q) for q in ["a", "b", "c"]))\n    print(answers)                    # takes ~1 second, not 3\n\nasyncio.run(main())',
+    },
+    resources: [
+      { title: "asyncio — Asynchronous I/O", url: "https://docs.python.org/3/library/asyncio.html", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Напишите скрипт, который параллельно скачивает 10 веб-страниц через httpx.AsyncClient, и сравните время с последовательной версией.",
+      en: "Write a script that downloads 10 web pages in parallel with httpx.AsyncClient and compare the time with a sequential version.",
+      es: "Escribe un script que descargue 10 páginas web en paralelo con httpx.AsyncClient y compara el tiempo con una versión secuencial.",
+    },
+    prereq: ["python-basics"],
+    related: ["web-backend", "provider-sdks"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "web-backend", block: "foundation",
+    title: { ru: "Веб-бэкенд и FastAPI", en: "Web backend and FastAPI", es: "Backend web y FastAPI" },
+    what: {
+      ru: "Большинство AI-функций доступны пользователю через HTTP API. FastAPI — популярный фреймворк на Python: эндпоинты описываются функциями, входные данные проверяет Pydantic, есть async и автоматическая документация. Важные темы: REST, аутентификация, стриминг ответа (SSE, WebSocket), фоновые задачи и очереди.",
+      en: "Most AI features reach users through an HTTP API. FastAPI is a popular Python framework: endpoints are plain functions, Pydantic validates input, async is built in and docs are generated automatically. Key topics: REST, authentication, streaming responses (SSE, WebSocket), background jobs and queues.",
+      es: "La mayoría de las funciones de IA llegan al usuario a través de una API HTTP. FastAPI es un framework de Python muy usado: los endpoints son funciones, Pydantic valida la entrada, tiene async integrado y genera la documentación sola. Temas clave: REST, autenticación, respuestas en streaming (SSE, WebSocket), tareas en segundo plano y colas.",
+    },
+    why: {
+      ru: "Модель отвечает несколько секунд, поэтому ответ стримят по токенам, а долгие задачи уводят в очередь. Сервис на FastAPI с PostgreSQL и тестами — типичный первый проект в портфолио.",
+      en: "A model takes seconds to answer, so responses are streamed token by token and long jobs go to a queue. A FastAPI service with PostgreSQL and tests is a typical first portfolio project.",
+      es: "Un modelo tarda segundos en responder, así que la respuesta se envía token a token y las tareas largas van a una cola. Un servicio en FastAPI con PostgreSQL y tests es un primer proyecto típico de portfolio.",
+    },
+    fromSql: {
+      ru: "Эндпоинт похож на хранимую процедуру, которую вызывают по HTTP: параметры на входе, результат в JSON на выходе. ORDS в Oracle делает ровно это, так что идея вам знакома.",
+      en: "An endpoint is like a stored procedure called over HTTP: parameters in, JSON out. Oracle ORDS does exactly this, so the idea will feel familiar.",
+      es: "Un endpoint se parece a un procedimiento almacenado que se llama por HTTP: parámetros de entrada y JSON de salida. Oracle ORDS hace exactamente eso, así que la idea te resultará conocida.",
+    },
+    concepts: ["sse", "rest-api"],
+    example: {
+      lang: "python",
+      code: 'from fastapi import FastAPI\nfrom fastapi.responses import StreamingResponse\n\napp = FastAPI()\n\nasync def tokens(question: str):\n    for word in ["Hello", " from", " the", " model"]:\n        yield f"data: {word}\\n\\n"   # Server-Sent Events format\n\n@app.get("/ask")\nasync def ask(q: str):\n    return StreamingResponse(tokens(q), media_type="text/event-stream")\n\n# run: uvicorn main:app --reload',
+    },
+    resources: [
+      { title: "FastAPI Tutorial — User Guide", url: "https://fastapi.tiangolo.com/tutorial/", kind: "docs", lang: "en" },
+      { title: "FastAPI — documentación en español", url: "https://fastapi.tiangolo.com/es/", kind: "docs", lang: "es" },
+    ],
+    practice: {
+      ru: "Сделайте сервис на FastAPI с двумя эндпоинтами: сохранить заметку в PostgreSQL и найти заметки по слову. Добавьте тесты и Dockerfile.",
+      en: "Build a FastAPI service with two endpoints: save a note to PostgreSQL and search notes by keyword. Add tests and a Dockerfile.",
+      es: "Crea un servicio en FastAPI con dos endpoints: guardar una nota en PostgreSQL y buscar notas por palabra. Añade tests y un Dockerfile.",
+    },
+    prereq: ["python-types-tests", "async-python"],
+    related: ["provider-sdks"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "dev-tools", block: "foundation",
+    title: { ru: "Git, терминал, Docker и облако", en: "Git, terminal, Docker and cloud", es: "Git, terminal, Docker y nube" },
+    what: {
+      ru: "Рабочие инструменты любого разработчика: Git и GitHub для версий и совместной работы, командная строка Linux, Docker для упаковки сервиса в контейнер, CI/CD для автоматических проверок и деплоя, и основы одного облака (AWS, GCP или Azure): деплой, секреты, хранилище.",
+      en: "Every developer's working tools: Git and GitHub for versioning and collaboration, the Linux command line, Docker to package a service into a container, CI/CD for automatic checks and deploys, and the basics of one cloud (AWS, GCP or Azure): deployment, secrets, storage.",
+      es: "Las herramientas de trabajo de cualquier desarrollador: Git y GitHub para versiones y colaboración, la línea de comandos de Linux, Docker para empaquetar un servicio en un contenedor, CI/CD para comprobaciones y despliegues automáticos y lo básico de una nube (AWS, GCP o Azure): despliegue, secretos y almacenamiento.",
+    },
+    why: {
+      ru: "Работодатель смотрит ваш GitHub. Проект, который запускается одной командой docker compose up и проверяется в CI, выглядит как работа инженера, а не как учебное упражнение.",
+      en: "Employers look at your GitHub. A project that starts with one docker compose up command and is checked in CI looks like engineering work, not a study exercise.",
+      es: "Las empresas miran tu GitHub. Un proyecto que arranca con un solo docker compose up y se comprueba en CI parece trabajo de ingeniería, no un ejercicio de clase.",
+    },
+    fromSql: {
+      ru: "Git для кода — как журнал изменений схемы с откатом: каждый коммит фиксирует состояние, а ветки похожи на отдельные схемы для экспериментов. Миграции БД (Liquibase, Flyway) тоже обычно лежат в Git.",
+      en: "Git for code is like a schema change log with rollback: each commit records a state, and branches are like separate schemas for experiments. Database migrations (Liquibase, Flyway) usually live in Git too.",
+      es: "Git para el código es como un registro de cambios de esquema con rollback: cada commit fija un estado y las ramas son como esquemas separados para experimentar. Las migraciones de base de datos (Liquibase, Flyway) también suelen vivir en Git.",
+    },
+    concepts: ["docker", "ci-cd"],
+    example: {
+      lang: "bash",
+      code: "git init && git add . && git commit -m \"First version\"\n\n# Dockerfile, three lines are enough for a FastAPI service:\n#   FROM python:3.12-slim\n#   COPY . /app\n#   RUN pip install -r /app/requirements.txt\n\ndocker build -t notes-api .\ndocker run -p 8000:8000 notes-api",
+    },
+    resources: [
+      { title: "The Missing Semester of Your CS Education (MIT)", url: "https://missing.csail.mit.edu/", kind: "course", lang: "en" },
+      { title: "Pro Git (book, free)", url: "https://git-scm.com/book/en/v2", kind: "book", lang: "en" },
+      { title: "Docker: Get started", url: "https://docs.docker.com/get-started/", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Выложите сервис из темы «Веб-бэкенд» на GitHub, добавьте GitHub Actions, который запускает тесты на каждый push, и задеплойте контейнер в облако.",
+      en: "Put the service from the “Web backend” topic on GitHub, add a GitHub Actions workflow that runs the tests on every push, and deploy the container to a cloud.",
+      es: "Sube a GitHub el servicio del tema «Backend web», añade un workflow de GitHub Actions que ejecute los tests en cada push y despliega el contenedor en la nube.",
+    },
+    prereq: [],
+    related: ["web-backend"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "typescript-basics", block: "foundation",
+    title: { ru: "TypeScript на базовом уровне", en: "TypeScript basics", es: "TypeScript básico" },
+    what: {
+      ru: "TypeScript — JavaScript с типами. На нём пишут веб-интерфейсы AI-продуктов, у всех крупных провайдеров моделей есть SDK для TypeScript, и многие MCP-серверы тоже написаны на нём.",
+      en: "TypeScript is JavaScript with types. It is used for the web front ends of AI products, every major model provider ships a TypeScript SDK, and many MCP servers are written in it.",
+      es: "TypeScript es JavaScript con tipos. Se usa en las interfaces web de los productos de IA, todos los grandes proveedores de modelos tienen SDK para TypeScript y muchos servidores MCP están escritos en él.",
+    },
+    why: {
+      ru: "Глубоко знать фронтенд не нужно, но читать и немного писать TypeScript полезно: сделать простой чат-интерфейс к своему сервису, разобраться в чужом MCP-сервере. Это добавляет вакансий, на которые можно откликнуться.",
+      en: "You do not need deep front-end skills, but reading and writing a little TypeScript helps: building a simple chat UI for your service or understanding someone else's MCP server. It widens the range of jobs you can apply for.",
+      es: "No hace falta dominar el frontend, pero leer y escribir algo de TypeScript ayuda: montar una interfaz de chat sencilla para tu servicio o entender un servidor MCP ajeno. Amplía las ofertas a las que puedes optar.",
+    },
+    concepts: [],
+    example: {
+      lang: "typescript",
+      code: 'type Message = { role: "user" | "assistant"; content: string };\n\nasync function ask(question: string): Promise<string> {\n  const response = await fetch(`/ask?q=${encodeURIComponent(question)}`);\n  return response.text();\n}\n\nconst history: Message[] = [{ role: "user", content: "Hi" }];',
+    },
+    resources: [
+      { title: "TypeScript Handbook", url: "https://www.typescriptlang.org/docs/handbook/intro.html", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Сделайте страницу с полем ввода, которая отправляет вопрос в ваш FastAPI-сервис и показывает ответ.",
+      en: "Build a page with an input box that sends a question to your FastAPI service and shows the answer.",
+      es: "Crea una página con un campo de texto que envíe una pregunta a tu servicio FastAPI y muestre la respuesta.",
+    },
+    prereq: ["python-basics"],
+    related: ["web-backend"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "ai-coding-assistants", block: "foundation",
+    title: { ru: "AI-ассистенты в разработке", en: "AI coding assistants", es: "Asistentes de IA para programar" },
+    what: {
+      ru: "Инструменты вроде Claude Code и Cursor пишут, объясняют и исправляют код по запросу на естественном языке, а агентные режимы сами выполняют многошаговые задачи в репозитории. В 2026 году умение работать с ними считается базовой грамотностью.",
+      en: "Tools such as Claude Code and Cursor write, explain and fix code from natural-language requests, and agentic modes carry out multi-step tasks in a repository on their own. In 2026 working with them counts as basic literacy.",
+      es: "Herramientas como Claude Code y Cursor escriben, explican y corrigen código a partir de peticiones en lenguaje natural, y sus modos agénticos ejecutan solos tareas de varios pasos en un repositorio. En 2026 saber usarlas se considera una competencia básica.",
+    },
+    why: {
+      ru: "Это ускоряет обучение (можно попросить объяснить незнакомый код) и работу. Вдобавок такой ассистент — пример продакшн-агента: глядя, как он устроен, проще понять агентов вообще. Но писать код без ассистента тоже нужно уметь: на live coding его обычно нет.",
+      en: "It speeds up both learning (ask it to explain unfamiliar code) and work. Such an assistant is also an example of a production agent, which makes agents in general easier to understand. You still need to code without it: live-coding interviews usually forbid it.",
+      es: "Acelera tanto el aprendizaje (puedes pedirle que explique código desconocido) como el trabajo. Además, es un ejemplo de agente en producción, lo que ayuda a entender los agentes en general. Aun así, hay que saber programar sin él: en el live coding no suele estar permitido.",
+    },
+    concepts: ["agent"],
+    resources: [
+      { title: "Claude Code overview", url: "https://code.claude.com/docs/en/overview", kind: "docs", lang: "en" },
+      { title: "Claude Code: Best practices for agentic coding", url: "https://www.anthropic.com/engineering/claude-code-best-practices", kind: "article", lang: "en" },
+    ],
+    practice: {
+      ru: "Возьмите учебный проект и попросите ассистента добавить новую функцию с тестами. Прочитайте каждую строку результата и запишите, что вы бы сделали иначе.",
+      en: "Take a study project and ask an assistant to add a new feature with tests. Read every line of the result and note what you would have done differently.",
+      es: "Toma un proyecto de práctica y pide a un asistente que añada una función nueva con tests. Lee cada línea del resultado y apunta qué habrías hecho de otra forma.",
+    },
+    prereq: [],
+    related: ["agent-loop"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "llm-how-it-works", block: "llm",
+    title: { ru: "Как устроена LLM", en: "How an LLM works", es: "Cómo funciona un LLM" },
+    what: {
+      ru: "Большая языковая модель (LLM) — нейросеть-трансформер, которая по началу текста предсказывает следующий токен. Механизм внимания (attention) позволяет ей учитывать связи между всеми токенами контекста. Сначала модель предобучают на огромном корпусе текстов, затем дообучают следовать инструкциям (SFT) и по оценкам людей (RLHF).",
+      en: "A large language model (LLM) is a transformer neural network that predicts the next token from the text so far. The attention mechanism lets it weigh relationships between all tokens in the context. The model is first pre-trained on a huge text corpus, then post-trained to follow instructions (SFT) and on human feedback (RLHF).",
+      es: "Un modelo de lenguaje grande (LLM) es una red neuronal transformer que predice el siguiente token a partir del texto anterior. El mecanismo de atención (attention) le permite tener en cuenta las relaciones entre todos los tokens del contexto. Primero se preentrena con un corpus enorme de textos y después se ajusta para seguir instrucciones (SFT) y con valoraciones humanas (RLHF).",
+    },
+    why: {
+      ru: "Интуитивное понимание механики объясняет поведение модели: почему она уверенно ошибается, почему важен порядок информации в промпте, чем base-модель отличается от chat-модели. Без этого сложно отлаживать AI-функции.",
+      en: "An intuitive grasp of the mechanics explains model behaviour: why it is confidently wrong, why the order of information in a prompt matters, how a base model differs from a chat model. Without it, debugging AI features is hard.",
+      es: "Entender la mecánica de forma intuitiva explica el comportamiento del modelo: por qué se equivoca con seguridad, por qué importa el orden de la información en el prompt y en qué se diferencia un modelo base de uno de chat. Sin esto cuesta depurar funciones de IA.",
+    },
+    concepts: ["llm", "transformer", "rlhf"],
+    resources: [
+      { title: "Andrej Karpathy — Deep Dive into LLMs like ChatGPT", url: "https://www.youtube.com/watch?v=7xTGNNLPyMI", kind: "video", lang: "en" },
+      { title: "Jay Alammar — The Illustrated Transformer", url: "https://jalammar.github.io/illustrated-transformer/", kind: "article", lang: "en" },
+      { title: "3Blue1Brown — Neural networks", url: "https://www.3blue1brown.com/topics/neural-networks", kind: "video", lang: "en" },
+    ],
+    practice: {
+      ru: "Посмотрите видео Карпаты и объясните своими словами в заметке к теме, что такое предобучение, SFT и RLHF и зачем нужен каждый этап.",
+      en: "Watch Karpathy's video and explain in your own words, in this topic's notes, what pre-training, SFT and RLHF are and why each stage is needed.",
+      es: "Mira el vídeo de Karpathy y explica con tus palabras, en las notas del tema, qué son el preentrenamiento, el SFT y el RLHF y para qué sirve cada etapa.",
+    },
+    prereq: [],
+    related: ["tokens"],
+    checked: "2026-11-06",
+  },
+  {
     id: "tokens", block: "llm",
     title: { ru: "Токены", en: "Tokens", es: "Tokens" },
     what: {
@@ -625,6 +854,68 @@ const TOPICS = [
     },
     prereq: [],
     related: ["embeddings"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "generation-params", block: "llm",
+    title: { ru: "Параметры генерации и рассуждение", en: "Generation parameters and reasoning", es: "Parámetros de generación y razonamiento" },
+    what: {
+      ru: "Температура (temperature) регулирует случайность выбора следующего токена: низкая делает ответы предсказуемее, высокая разнообразнее. max_tokens ограничивает длину ответа. Режимы рассуждения (extended thinking, reasoning) дают модели «подумать» перед ответом за счёт дополнительных токенов.",
+      en: "Temperature controls how random the choice of the next token is: low makes answers more predictable, high more varied. max_tokens caps the answer length. Reasoning modes (extended thinking) let the model “think” before answering at the cost of extra tokens.",
+      es: "La temperatura (temperature) regula lo aleatoria que es la elección del siguiente token: baja hace las respuestas más predecibles y alta más variadas. max_tokens limita la longitud de la respuesta. Los modos de razonamiento (extended thinking) dejan que el modelo «piense» antes de responder a cambio de tokens adicionales.",
+    },
+    why: {
+      ru: "Для извлечения данных и классификации нужна низкая температура, для генерации идей выше. Рассуждение повышает качество на сложных задачах, но увеличивает цену и задержку. Даже при температуре 0 полная детерминированность не гарантируется.",
+      en: "Data extraction and classification need low temperature, idea generation higher. Reasoning improves quality on hard tasks but raises cost and latency. Even at temperature 0, full determinism is not guaranteed.",
+      es: "Para extraer datos y clasificar conviene una temperatura baja; para generar ideas, más alta. El razonamiento mejora la calidad en tareas difíciles, pero sube el coste y la latencia. Ni siquiera con temperatura 0 se garantiza un resultado totalmente determinista.",
+    },
+    concepts: ["temperature", "reasoning"],
+    example: {
+      lang: "python",
+      code: 'import anthropic\n\nclient = anthropic.Anthropic()\nmessage = client.messages.create(\n    model="claude-sonnet-5-5",\n    max_tokens=500,\n    temperature=0,   # predictable answers for extraction\n    messages=[{"role": "user", "content": "Classify: \'my card was charged twice\'"}],\n)\nprint(message.content[0].text)',
+    },
+    resources: [
+      { title: "Anthropic — Extended thinking", url: "https://platform.claude.com/docs/en/build-with-claude/extended-thinking", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Задайте модели один и тот же вопрос 5 раз с температурой 0 и 5 раз с температурой 1. Сравните разброс ответов.",
+      en: "Ask a model the same question 5 times at temperature 0 and 5 times at temperature 1. Compare how much the answers vary.",
+      es: "Haz al modelo la misma pregunta 5 veces con temperatura 0 y 5 veces con temperatura 1. Compara cuánto varían las respuestas.",
+    },
+    prereq: ["llm-how-it-works"],
+    related: ["context-window"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "context-window", block: "llm",
+    title: { ru: "Контекстное окно", en: "Context window", es: "Ventana de contexto" },
+    what: {
+      ru: "Контекстное окно — сколько токенов модель видит за один запрос: системный промпт, история диалога, документы, результаты инструментов и сам ответ. Когда окно заполняется, историю сжимают (компактификация) или отбирают нужное. Prompt caching позволяет не платить полную цену за повторяющийся префикс.",
+      en: "The context window is how many tokens a model sees in one request: the system prompt, conversation history, documents, tool results and the answer itself. When it fills up, history is compacted or only the relevant parts are kept. Prompt caching avoids paying full price for a repeated prefix.",
+      es: "La ventana de contexto es cuántos tokens ve el modelo en una petición: el prompt de sistema, el historial, los documentos, los resultados de herramientas y la propia respuesta. Cuando se llena, el historial se compacta o se selecciona lo relevante. El prompt caching evita pagar el precio completo por un prefijo que se repite.",
+    },
+    why: {
+      ru: "От содержимого контекста зависят и качество, и цена каждого запроса. Слишком длинный контекст дороже и может ухудшать ответы: модель хуже находит нужное среди лишнего.",
+      en: "Both the quality and the price of every request depend on what is in the context. Too long a context costs more and can hurt answers: the model has a harder time finding what matters among the noise.",
+      es: "Tanto la calidad como el precio de cada petición dependen de lo que hay en el contexto. Un contexto demasiado largo cuesta más y puede empeorar las respuestas: al modelo le cuesta más encontrar lo importante entre lo que sobra.",
+    },
+    fromSql: {
+      ru: "Контекстное окно похоже на ограниченную рабочую память (PGA): всё, что не поместилось, модель просто не видит. Поэтому, как и в запросах, важно выбирать только нужные «строки», а не делать SELECT *.",
+      en: "The context window is like limited working memory (a PGA): whatever does not fit, the model simply does not see. So, as with queries, pick only the rows you need instead of SELECT *.",
+      es: "La ventana de contexto se parece a una memoria de trabajo limitada (la PGA): lo que no cabe, el modelo no lo ve. Por eso, como en las consultas, hay que elegir solo las filas necesarias en vez de hacer SELECT *.",
+    },
+    concepts: ["context-window", "prompt-caching"],
+    resources: [
+      { title: "Anthropic — Context windows", url: "https://platform.claude.com/docs/en/build-with-claude/context-windows", kind: "docs", lang: "en" },
+      { title: "Anthropic — Effective context engineering for AI agents", url: "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents", kind: "article", lang: "en" },
+    ],
+    practice: {
+      ru: "Посчитайте, сколько токенов занимает ваш системный промпт плюс 20 сообщений диалога. Какая доля приходится на неизменную часть, которую можно кэшировать?",
+      en: "Count how many tokens your system prompt plus 20 conversation turns take. What share is the unchanging part that could be cached?",
+      es: "Calcula cuántos tokens ocupan tu prompt de sistema más 20 mensajes de conversación. ¿Qué parte es fija y se podría cachear?",
+    },
+    prereq: ["tokens"],
+    related: ["cost-optimization", "agent-memory"],
     checked: "2026-11-06",
   },
   {
@@ -662,6 +953,1305 @@ const TOPICS = [
     related: [],
     checked: "2026-11-06",
   },
+  {
+    id: "model-landscape", block: "llm",
+    title: { ru: "Ландшафт и выбор модели", en: "Model landscape and choice", es: "Panorama y elección de modelos" },
+    what: {
+      ru: "Есть закрытые модели по API (Anthropic, OpenAI, Google) и открытые веса (Llama, Qwen, Mistral, DeepSeek), которые можно запустить у себя. Модели различаются качеством, скоростью, ценой, размером контекста и мультимодальностью (изображения, аудио, PDF).",
+      en: "There are closed models behind APIs (Anthropic, OpenAI, Google) and open-weight models (Llama, Qwen, Mistral, DeepSeek) you can run yourself. They differ in quality, speed, price, context size and multimodality (images, audio, PDF).",
+      es: "Hay modelos cerrados a través de API (Anthropic, OpenAI, Google) y modelos de pesos abiertos (Llama, Qwen, Mistral, DeepSeek) que puedes ejecutar tú mismo. Se diferencian en calidad, velocidad, precio, tamaño de contexto y multimodalidad (imágenes, audio, PDF).",
+    },
+    why: {
+      ru: "Обоснованный выбор модели — частый вопрос на собеседовании. Практичный подход: начать с сильной модели, собрать evals, затем проверить, справится ли модель дешевле и быстрее. Иногда из-за требований к данным нужна открытая модель на своих серверах. Для потока простых задач можно маршрутизировать запросы между большой и маленькой моделью.",
+      en: "Justifying a model choice is a common interview question. A practical approach: start with a strong model, build evals, then check whether a cheaper, faster model copes. Data requirements sometimes call for an open model on your own servers. For a stream of simple tasks you can route requests between a large and a small model.",
+      es: "Justificar la elección del modelo es una pregunta frecuente en las entrevistas. Un enfoque práctico: empezar con un modelo potente, montar evals y después comprobar si uno más barato y rápido es suficiente. A veces, por requisitos de datos, hace falta un modelo abierto en servidores propios. Para muchas tareas sencillas se pueden enrutar las peticiones entre un modelo grande y uno pequeño.",
+    },
+    concepts: ["open-weights", "multimodal"],
+    resources: [
+      { title: "Anthropic — Choosing the right model", url: "https://platform.claude.com/docs/en/about-claude/models/choosing-a-model", kind: "docs", lang: "en" },
+      { title: "Chip Huyen — AI Engineering (O'Reilly, 2025)", url: "https://www.oreilly.com/library/view/ai-engineering/9781098166298/", kind: "book", lang: "en" },
+    ],
+    practice: {
+      ru: "Дайте одну задачу трём моделям разного размера. Сведите в таблицу качество (по вашей оценке), время ответа и цену. Какую выбрали бы для продакшна и почему?",
+      en: "Give the same task to three models of different sizes. Tabulate quality (your judgement), response time and price. Which would you pick for production, and why?",
+      es: "Da la misma tarea a tres modelos de distinto tamaño. Resume en una tabla la calidad (según tu criterio), el tiempo de respuesta y el precio. ¿Cuál elegirías para producción y por qué?",
+    },
+    prereq: ["llm-how-it-works"],
+    related: ["self-hosting", "eval-metrics"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "llm-limitations", block: "llm",
+    title: { ru: "Ограничения моделей", en: "Model limitations", es: "Limitaciones de los modelos" },
+    what: {
+      ru: "Модели галлюцинируют (уверенно выдают неправду), отвечают недетерминированно, не знают событий после даты отсечения знаний и чувствительны к формулировке запроса. Причина в том, что модель предсказывает правдоподобный текст, а не проверяет факты.",
+      en: "Models hallucinate (confidently state falsehoods), answer non-deterministically, know nothing after their knowledge cutoff and are sensitive to how a request is worded. The root cause is that a model predicts plausible text rather than checking facts.",
+      es: "Los modelos alucinan (afirman falsedades con seguridad), responden de forma no determinista, no conocen hechos posteriores a su fecha de corte y son sensibles a la redacción de la petición. La causa es que el modelo predice texto verosímil, no comprueba hechos.",
+    },
+    why: {
+      ru: "Работа AI-инженера во многом состоит в том, чтобы обходить эти ограничения: RAG с цитатами, разрешение отвечать «не знаю», инструменты для точных данных, проверка второй моделью и evals.",
+      en: "Much of an AI engineer's job is working around these limits: RAG with citations, allowing the model to say “I don't know”, tools for exact data, checking with a second model, and evals.",
+      es: "Gran parte del trabajo de un AI Engineer consiste en sortear estas limitaciones: RAG con citas, permitir al modelo decir «no lo sé», herramientas para datos exactos, revisión con un segundo modelo y evals.",
+    },
+    concepts: ["hallucination", "knowledge-cutoff"],
+    resources: [
+      { title: "Anthropic — Reduce hallucinations", url: "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Найдите вопрос, на который модель уверенно отвечает неверно. Попробуйте три способа исправить это: разрешить ответ «не знаю», дать документ в контекст, попросить процитировать источник.",
+      en: "Find a question a model confidently gets wrong. Try three fixes: allow “I don't know”, put a document in the context, ask it to quote its source.",
+      es: "Busca una pregunta que el modelo responda mal con total seguridad. Prueba tres soluciones: permitir «no lo sé», poner un documento en el contexto y pedir que cite la fuente.",
+    },
+    prereq: ["llm-how-it-works"],
+    related: ["rag-architecture", "llm-as-judge"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "prompt-engineering", block: "api",
+    title: { ru: "Промпт- и контекст-инжиниринг", en: "Prompt and context engineering", es: "Ingeniería de prompts y de contexto" },
+    what: {
+      ru: "Промпт-инжиниринг — составление инструкций: роль и задача, зачем нужен результат, чёткие правила, формат ответа, 2–3 примера (few-shot). Контекст-инжиниринг шире: решить, какие данные, инструменты и история попадают в окно модели на каждом шаге.",
+      en: "Prompt engineering is writing the instructions: role and task, why the result is needed, clear rules, output format, 2–3 examples (few-shot). Context engineering is broader: deciding which data, tools and history go into the model's window at each step.",
+      es: "La ingeniería de prompts consiste en redactar las instrucciones: rol y tarea, para qué se necesita el resultado, reglas claras, formato de respuesta y 2–3 ejemplos (few-shot). La ingeniería de contexto es más amplia: decidir qué datos, herramientas e historial entran en la ventana del modelo en cada paso.",
+    },
+    why: {
+      ru: "Это ежедневный инструмент: от качества промпта и контекста напрямую зависит качество продукта. Хороший промпт проверяют evals, а не «на глаз».",
+      en: "It is an everyday tool: product quality depends directly on the quality of the prompt and context. A good prompt is proven by evals, not by eye.",
+      es: "Es una herramienta diaria: la calidad del producto depende directamente de la del prompt y el contexto. Un buen prompt se demuestra con evals, no a ojo.",
+    },
+    concepts: ["system-prompt", "few-shot"],
+    example: {
+      lang: "text",
+      code: "You are a support assistant for an online bank.\nGoal: classify each customer message so it reaches the right team.\n\nRules:\n- Use exactly one category: cards, transfers, loans, other.\n- If the message mentions fraud, answer \"cards\".\n\nExamples:\n\"I can't log in to the app\" -> other\n\"My transfer to Spain is stuck\" -> transfers\n\nAnswer with the category only.",
+    },
+    resources: [
+      { title: "Anthropic — Prompt engineering overview", url: "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview", kind: "docs", lang: "en" },
+      { title: "Anthropic Courses (notebooks)", url: "https://github.com/anthropics/courses", kind: "course", lang: "en" },
+      { title: "OpenAI — Prompt engineering guide", url: "https://platform.openai.com/docs/guides/prompt-engineering", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Напишите промпт-классификатор обращений клиентов банка и соберите 20 тестовых сообщений. Улучшайте промпт, пока не перестанете находить ошибки.",
+      en: "Write a prompt that classifies bank customer messages and gather 20 test messages. Improve the prompt until you stop finding mistakes.",
+      es: "Escribe un prompt que clasifique mensajes de clientes de un banco y reúne 20 mensajes de prueba. Mejora el prompt hasta que dejes de encontrar errores.",
+    },
+    prereq: ["llm-how-it-works"],
+    related: ["eval-datasets", "context-window"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "provider-sdks", block: "api",
+    title: { ru: "SDK провайдеров: стриминг, ошибки, лимиты", en: "Provider SDKs: streaming, errors, limits", es: "SDK de proveedores: streaming, errores y límites" },
+    what: {
+      ru: "У Anthropic, OpenAI и Google есть официальные SDK для Python и TypeScript. Базовые навыки: отправить сообщение, стримить ответ, обработать ошибки (429 — превышен лимит, 5xx и таймауты), повторять запросы с экспоненциальной задержкой и ограничивать параллелизм.",
+      en: "Anthropic, OpenAI and Google ship official Python and TypeScript SDKs. Core skills: send a message, stream the answer, handle errors (429 rate limit, 5xx, timeouts), retry with exponential backoff and limit concurrency.",
+      es: "Anthropic, OpenAI y Google tienen SDK oficiales para Python y TypeScript. Habilidades básicas: enviar un mensaje, recibir la respuesta en streaming, gestionar errores (429 por límite, 5xx y timeouts), reintentar con espera exponencial y limitar la concurrencia.",
+    },
+    why: {
+      ru: "Внешний API иногда отказывает, и продакшн-код должен это переживать. Вопрос «как обрабатывать 429 и таймауты» регулярно звучит на собеседованиях.",
+      en: "External APIs sometimes fail, and production code must survive that. “How do you handle 429s and timeouts?” comes up regularly in interviews.",
+      es: "Las API externas a veces fallan y el código de producción debe soportarlo. «¿Cómo gestionas los 429 y los timeouts?» es una pregunta habitual en las entrevistas.",
+    },
+    fromSql: {
+      ru: "Повтор при 429 похож на обработку ORA-00054 (ресурс занят): подождать и попробовать снова, но не бесконечно и с растущей паузой.",
+      en: "Retrying on a 429 is like handling ORA-00054 (resource busy): wait and try again, but not forever and with a growing pause.",
+      es: "Reintentar tras un 429 es como gestionar un ORA-00054 (recurso ocupado): esperar y volver a intentarlo, pero no indefinidamente y con pausas cada vez mayores.",
+    },
+    concepts: ["rate-limit", "streaming"],
+    example: {
+      lang: "python",
+      code: 'import anthropic\n\nclient = anthropic.Anthropic(max_retries=3)   # SDK retries 429/5xx with backoff\n\nwith client.messages.stream(\n    model="claude-sonnet-5-5",\n    max_tokens=1024,\n    messages=[{"role": "user", "content": "Explain RAG in two sentences."}],\n) as stream:\n    for text in stream.text_stream:\n        print(text, end="", flush=True)',
+    },
+    resources: [
+      { title: "Anthropic — Streaming messages", url: "https://platform.claude.com/docs/en/build-with-claude/streaming", kind: "docs", lang: "en" },
+      { title: "Anthropic — API errors", url: "https://platform.claude.com/docs/en/api/errors", kind: "docs", lang: "en" },
+      { title: "Anthropic — Rate limits", url: "https://platform.claude.com/docs/en/api/rate-limits", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Напишите обёртку, которая параллельно отправляет 50 запросов, но не больше 5 одновременно (asyncio.Semaphore), и логирует каждую повторную попытку.",
+      en: "Write a wrapper that sends 50 requests in parallel but at most 5 at a time (asyncio.Semaphore) and logs every retry.",
+      es: "Escribe un envoltorio que envíe 50 peticiones en paralelo, pero como máximo 5 a la vez (asyncio.Semaphore), y que registre cada reintento.",
+    },
+    prereq: ["async-python"],
+    related: ["reliability"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "structured-output", block: "api",
+    title: { ru: "Структурированный вывод", en: "Structured output", es: "Salida estructurada" },
+    what: {
+      ru: "Структурированный вывод — когда модель возвращает не свободный текст, а JSON по заданной схеме. Схему удобно описывать в Pydantic; провайдеры умеют гарантировать соответствие схеме (structured outputs) или получать данные через вызов инструмента.",
+      en: "Structured output means the model returns JSON matching a given schema instead of free text. The schema is easy to define in Pydantic; providers can guarantee schema compliance (structured outputs) or deliver the data via a tool call.",
+      es: "La salida estructurada consiste en que el modelo devuelva un JSON según un esquema dado en lugar de texto libre. El esquema se define fácilmente en Pydantic; los proveedores pueden garantizar que se cumple (structured outputs) o entregar los datos mediante una llamada a herramienta.",
+    },
+    why: {
+      ru: "Извлечение данных из документов (счета, резюме, договоры) в JSON — одна из самых частых бизнес-задач. Ответ, который не проходит валидацию, нужно повторно запросить с текстом ошибки.",
+      en: "Extracting data from documents (invoices, CVs, contracts) into JSON is one of the most common business tasks. An answer that fails validation should be re-requested with the error message.",
+      es: "Extraer datos de documentos (facturas, currículums, contratos) a JSON es una de las tareas de negocio más frecuentes. Si la respuesta no supera la validación, hay que volver a pedirla incluyendo el error.",
+    },
+    fromSql: {
+      ru: "Это как загрузить неструктурированный текст в таблицу: схема Pydantic играет роль DDL с ограничениями, а модель — роль очень умного SQL*Loader.",
+      en: "It is like loading unstructured text into a table: the Pydantic schema acts as DDL with constraints, and the model as a very clever SQL*Loader.",
+      es: "Es como cargar texto no estructurado en una tabla: el esquema de Pydantic hace de DDL con restricciones y el modelo de un SQL*Loader muy listo.",
+    },
+    concepts: ["json-schema", "pydantic"],
+    example: {
+      lang: "python",
+      code: 'from pydantic import BaseModel\nimport anthropic\n\nclass Invoice(BaseModel):\n    number: str\n    total: float\n    currency: str\n\nclient = anthropic.Anthropic()\nresponse = client.messages.parse(\n    model="claude-sonnet-5-5",\n    max_tokens=1024,\n    messages=[{"role": "user", "content": "Invoice A-17, total 120.50 EUR"}],\n    output_format=Invoice,\n)\nprint(response.parsed_output)',
+    },
+    resources: [
+      { title: "Anthropic — Structured outputs", url: "https://platform.claude.com/docs/en/build-with-claude/structured-outputs", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Сделайте экстрактор, который получает текст резюме и возвращает JSON: имя, навыки, годы опыта, языки. Проверьте его на 10 разных резюме.",
+      en: "Build an extractor that takes CV text and returns JSON: name, skills, years of experience, languages. Test it on 10 different CVs.",
+      es: "Crea un extractor que reciba el texto de un currículum y devuelva un JSON: nombre, habilidades, años de experiencia e idiomas. Pruébalo con 10 currículums distintos.",
+    },
+    prereq: ["python-types-tests", "prompt-engineering"],
+    related: ["tool-use"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "tool-use", block: "api",
+    title: { ru: "Tool use (вызов функций)", en: "Tool use (function calling)", es: "Tool use (llamada a funciones)" },
+    what: {
+      ru: "Модель получает описания инструментов (имя, назначение, JSON Schema аргументов) и в ответ может вернуть вызов инструмента с аргументами. Ваш код выполняет его и возвращает результат в контекст, после чего модель продолжает. Сама модель ничего не выполняет.",
+      en: "The model receives tool descriptions (name, purpose, JSON Schema for arguments) and may answer with a tool call and its arguments. Your code runs it and returns the result into the context, then the model continues. The model itself executes nothing.",
+      es: "El modelo recibe descripciones de herramientas (nombre, propósito, JSON Schema de los argumentos) y puede responder con una llamada a una herramienta con sus argumentos. Tu código la ejecuta y devuelve el resultado al contexto, y el modelo continúa. El modelo por sí mismo no ejecuta nada.",
+    },
+    why: {
+      ru: "Через инструменты модель получает точные данные (курс валют, запись в БД) и совершает действия. Это основа агентов. Описание инструмента — тоже промпт: от его ясности зависит, правильно ли модель его вызовет.",
+      en: "Tools give the model exact data (an exchange rate, a database record) and let it take actions. They are the foundation of agents. A tool description is also a prompt: how clear it is decides whether the model calls it correctly.",
+      es: "Con las herramientas el modelo obtiene datos exactos (un tipo de cambio, un registro de la base de datos) y realiza acciones. Son la base de los agentes. La descripción de una herramienta también es un prompt: de su claridad depende que el modelo la llame bien.",
+    },
+    fromSql: {
+      ru: "Инструмент похож на хранимую процедуру, которую модель «просит» вызвать, указав параметры. Вы решаете, выполнять ли её, и с какими правами, так же как раздаёте GRANT EXECUTE.",
+      en: "A tool is like a stored procedure the model asks you to call with given parameters. You decide whether to run it, and with what privileges, just as you hand out GRANT EXECUTE.",
+      es: "Una herramienta se parece a un procedimiento almacenado que el modelo «pide» ejecutar con ciertos parámetros. Tú decides si se ejecuta y con qué permisos, igual que cuando das un GRANT EXECUTE.",
+    },
+    concepts: ["tool-use", "json-schema"],
+    example: {
+      lang: "python",
+      code: 'tools = [{\n    "name": "get_exchange_rate",\n    "description": "Returns today\'s exchange rate between two currencies.",\n    "input_schema": {\n        "type": "object",\n        "properties": {"base": {"type": "string"}, "quote": {"type": "string"}},\n        "required": ["base", "quote"],\n    },\n}]\n\nresponse = client.messages.create(model="claude-sonnet-5-5", max_tokens=1024,\n    tools=tools, messages=[{"role": "user", "content": "How many euros is 100 dollars?"}])\n# response.stop_reason == "tool_use" -> run the function, send back a tool_result',
+    },
+    resources: [
+      { title: "Anthropic — Tool use with Claude", url: "https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview", kind: "docs", lang: "en" },
+      { title: "Anthropic — Writing effective tools for agents", url: "https://www.anthropic.com/engineering/writing-tools-for-agents", kind: "article", lang: "en" },
+    ],
+    practice: {
+      ru: "Дайте модели инструмент, который выполняет SELECT к вашей учебной базе (только чтение!), и задайте вопросы на естественном языке. Посмотрите, какие запросы она строит.",
+      en: "Give the model a tool that runs a SELECT against your practice database (read-only!) and ask it questions in plain language. See which queries it writes.",
+      es: "Da al modelo una herramienta que ejecute un SELECT en tu base de datos de prácticas (¡solo lectura!) y hazle preguntas en lenguaje natural. Observa qué consultas construye.",
+    },
+    prereq: ["structured-output"],
+    related: ["agent-loop", "mcp"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "multimodal-api", block: "api",
+    title: { ru: "Изображения, документы, речь", en: "Images, documents, speech", es: "Imágenes, documentos y voz" },
+    what: {
+      ru: "Современные модели принимают изображения и PDF напрямую: распознают текст, таблицы, графики. Для голосовых сценариев используют отдельные модели распознавания (speech-to-text) и синтеза речи (text-to-speech).",
+      en: "Modern models accept images and PDFs directly: they read text, tables and charts. Voice scenarios use separate speech-to-text and text-to-speech models.",
+      es: "Los modelos actuales aceptan imágenes y PDF directamente: leen texto, tablas y gráficos. Para la voz se usan modelos aparte de reconocimiento (speech-to-text) y síntesis (text-to-speech).",
+    },
+    why: {
+      ru: "Корпоративные данные — это сканы, PDF-отчёты, фотографии документов. Умение передать их модели без сложного OCR-конвейера сильно упрощает многие проекты.",
+      en: "Company data means scans, PDF reports and photos of documents. Being able to hand them to a model without a complex OCR pipeline simplifies many projects.",
+      es: "Los datos de empresa son escaneos, informes en PDF y fotos de documentos. Poder pasárselos al modelo sin una cadena de OCR compleja simplifica muchos proyectos.",
+    },
+    concepts: ["multimodal"],
+    resources: [
+      { title: "Anthropic — Vision", url: "https://platform.claude.com/docs/en/build-with-claude/vision", kind: "docs", lang: "en" },
+      { title: "Anthropic — PDF support", url: "https://platform.claude.com/docs/en/build-with-claude/pdf-support", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Сфотографируйте чек и попросите модель извлечь позиции и сумму в JSON. Сравните с результатом на PDF-счёте.",
+      en: "Take a photo of a receipt and ask the model to extract the items and total as JSON. Compare with the result on a PDF invoice.",
+      es: "Haz una foto de un ticket y pide al modelo que extraiga los artículos y el total en JSON. Compáralo con el resultado de una factura en PDF.",
+    },
+    prereq: ["structured-output"],
+    related: ["chunking"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "cost-optimization", block: "api",
+    title: { ru: "Кэширование, batch и экономия токенов", en: "Caching, batch and saving tokens", es: "Caché, batch y ahorro de tokens" },
+    what: {
+      ru: "Три главных рычага экономии: prompt caching (неизменный префикс в начале промпта, изменчивое в конце), batch API для задач, которые могут подождать (обычно вдвое дешевле), и сокращение лишних токенов в контексте и ответе.",
+      en: "Three main cost levers: prompt caching (stable prefix first, changing parts last), the batch API for jobs that can wait (usually half price), and trimming unnecessary tokens from the context and the answer.",
+      es: "Tres palancas principales de ahorro: el prompt caching (prefijo fijo al principio y lo variable al final), la batch API para tareas que pueden esperar (normalmente a mitad de precio) y recortar tokens innecesarios en el contexto y la respuesta.",
+    },
+    why: {
+      ru: "Стоимость AI-функции растёт с каждым пользователем. Инженер, который снизил счёт за модели в несколько раз без потери качества, ценится очень высоко.",
+      en: "An AI feature's cost grows with every user. An engineer who cut the model bill several times over without losing quality is highly valued.",
+      es: "El coste de una función de IA crece con cada usuario. Un ingeniero que reduce varias veces la factura de modelos sin perder calidad está muy valorado.",
+    },
+    fromSql: {
+      ru: "Prompt caching похож на кэш разобранных запросов (shared pool): одинаковое начало не нужно обрабатывать заново. Batch API — как ночные пакетные задания вместо онлайн-обработки.",
+      en: "Prompt caching is like the parsed-statement cache (shared pool): an identical beginning does not have to be processed again. The batch API is like nightly batch jobs instead of online processing.",
+      es: "El prompt caching se parece a la caché de sentencias analizadas (shared pool): un inicio idéntico no hay que procesarlo de nuevo. La batch API es como los procesos nocturnos por lotes en lugar del procesamiento en línea.",
+    },
+    concepts: ["prompt-caching", "batch-api"],
+    resources: [
+      { title: "Anthropic — Prompt caching", url: "https://platform.claude.com/docs/en/build-with-claude/prompt-caching", kind: "docs", lang: "en" },
+      { title: "Anthropic — Batch processing", url: "https://platform.claude.com/docs/en/build-with-claude/batch-processing", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Включите prompt caching в проекте с длинным системным промптом и сравните стоимость и время ответа до и после на 20 запросах.",
+      en: "Turn on prompt caching in a project with a long system prompt and compare cost and response time before and after over 20 requests.",
+      es: "Activa el prompt caching en un proyecto con un prompt de sistema largo y compara el coste y el tiempo de respuesta antes y después en 20 peticiones.",
+    },
+    prereq: ["context-window"],
+    related: ["cost-latency"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "rag-architecture", block: "rag",
+    title: { ru: "Архитектура RAG", en: "RAG architecture", es: "Arquitectura RAG" },
+    what: {
+      ru: "RAG (retrieval-augmented generation) — модель отвечает, опираясь на найденные фрагменты документов. Индексация: загрузка, парсинг, разбиение на чанки, эмбеддинги, индекс. Запрос: переформулировка вопроса, поиск, реранкинг, сборка контекста, генерация ответа с цитатами. Плюс обновление индекса и права доступа к документам.",
+      en: "RAG (retrieval-augmented generation) means the model answers based on retrieved document fragments. Indexing: load, parse, chunk, embed, index. Query: rewrite the question, retrieve, rerank, assemble the context, generate an answer with citations. Plus index updates and document access rights.",
+      es: "RAG (retrieval-augmented generation) consiste en que el modelo responda basándose en fragmentos de documentos recuperados. Indexación: cargar, analizar, dividir en chunks, calcular embeddings e indexar. Consulta: reformular la pregunta, buscar, reordenar (reranking), montar el contexto y generar la respuesta con citas. Además, actualizar el índice y respetar los permisos de acceso.",
+    },
+    why: {
+      ru: "RAG остаётся одной из самых частых задач на рынке: чат по базе знаний, поиск по документации, ассистент для поддержки. «Нарисуйте архитектуру RAG» — классический вопрос на собеседовании. Но RAG нужен не всегда: если данные помещаются в контекст или доступны через инструмент, проще обойтись без него.",
+      en: "RAG remains one of the most common tasks on the market: knowledge-base chat, documentation search, support assistants. “Draw a RAG architecture” is a classic interview question. But RAG is not always needed: if the data fits in the context or is available through a tool, skip it.",
+      es: "RAG sigue siendo una de las tareas más habituales del mercado: chat sobre una base de conocimiento, búsqueda en documentación, asistentes de soporte. «Dibuja una arquitectura RAG» es una pregunta clásica de entrevista. Pero no siempre hace falta: si los datos caben en el contexto o están disponibles mediante una herramienta, es mejor prescindir de él.",
+    },
+    fromSql: {
+      ru: "RAG похож на запрос с подзапросом: сначала выбрать подходящие строки (retrieval), затем построить по ним отчёт (generation). Качество отчёта упирается в качество выборки, как и в SQL.",
+      en: "RAG is like a query with a subquery: first select the relevant rows (retrieval), then build a report from them (generation). As in SQL, the report is only as good as the selection.",
+      es: "RAG se parece a una consulta con subconsulta: primero se seleccionan las filas relevantes (retrieval) y después se construye un informe con ellas (generation). Como en SQL, el informe solo es tan bueno como la selección.",
+    },
+    concepts: ["rag", "embedding", "reranking"],
+    resources: [
+      { title: "Anthropic — Introducing Contextual Retrieval", url: "https://www.anthropic.com/news/contextual-retrieval", kind: "article", lang: "en" },
+      { title: "Chip Huyen — AI Engineering, chapter 6", url: "https://www.oreilly.com/library/view/ai-engineering/9781098166298/", kind: "book", lang: "en" },
+    ],
+    practice: {
+      ru: "Нарисуйте схему RAG для чата по внутренней документации компании и проговорите вслух каждый шаг, как на собеседовании. Отдельно укажите, где учитываются права доступа.",
+      en: "Draw a RAG diagram for a chat over internal company documentation and talk through each step aloud, as in an interview. Mark where access rights are enforced.",
+      es: "Dibuja un esquema RAG para un chat sobre la documentación interna de una empresa y explica cada paso en voz alta, como en una entrevista. Señala dónde se aplican los permisos de acceso.",
+    },
+    prereq: ["embeddings"],
+    related: ["chunking", "vector-search"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "chunking", block: "rag",
+    title: { ru: "Подготовка данных и чанкинг", en: "Data preparation and chunking", es: "Preparación de datos y chunking" },
+    what: {
+      ru: "Документы нужно извлечь из PDF, HTML, Word, очистить и разбить на фрагменты (чанки) по несколько сотен токенов, часто с перекрытием. К каждому чанку добавляют метаданные: источник, раздел, дату, права доступа.",
+      en: "Documents must be extracted from PDF, HTML or Word, cleaned and split into fragments (chunks) of a few hundred tokens, often with overlap. Each chunk gets metadata: source, section, date, access rights.",
+      es: "Hay que extraer los documentos de PDF, HTML o Word, limpiarlos y dividirlos en fragmentos (chunks) de unos cientos de tokens, a menudo con solapamiento. Cada chunk lleva metadatos: fuente, sección, fecha y permisos.",
+    },
+    why: {
+      ru: "Плохой чанкинг — самая частая причина плохого RAG: ответ разрезан между двумя чанками или чанк потерял контекст («в прошлом квартале выручка выросла», но какой компании?).",
+      en: "Bad chunking is the most common cause of bad RAG: the answer is split across two chunks, or a chunk loses its context (“revenue grew last quarter”, but whose?).",
+      es: "Un mal chunking es la causa más frecuente de un mal RAG: la respuesta queda partida entre dos chunks o un chunk pierde su contexto («los ingresos crecieron el trimestre pasado», pero ¿de qué empresa?).",
+    },
+    fromSql: {
+      ru: "Это классический ETL: извлечь, преобразовать, загрузить. Метаданные чанка — обычные столбцы, по которым потом удобно фильтровать (WHERE department = …) до векторного поиска.",
+      en: "This is classic ETL: extract, transform, load. Chunk metadata are ordinary columns you can filter on (WHERE department = …) before the vector search.",
+      es: "Es un ETL clásico: extraer, transformar y cargar. Los metadatos del chunk son columnas normales por las que se puede filtrar (WHERE department = …) antes de la búsqueda vectorial.",
+    },
+    concepts: ["chunk"],
+    resources: [
+      { title: "Pinecone — Chunking strategies for LLM applications", url: "https://www.pinecone.io/learn/chunking-strategies/", kind: "article", lang: "en" },
+    ],
+    practice: {
+      ru: "Разбейте один длинный документ тремя способами: по фиксированной длине, по абзацам и по заголовкам. Задайте 10 вопросов и посмотрите, при каком способе нужный фрагмент находится чаще.",
+      en: "Split one long document three ways: fixed length, by paragraph and by heading. Ask 10 questions and see which method finds the right fragment most often.",
+      es: "Divide un documento largo de tres formas: por longitud fija, por párrafos y por títulos. Haz 10 preguntas y comprueba con qué método se encuentra más a menudo el fragmento correcto.",
+    },
+    prereq: ["rag-architecture"],
+    related: ["advanced-retrieval"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "vector-search", block: "rag",
+    title: { ru: "Векторные базы данных", en: "Vector databases", es: "Bases de datos vectoriales" },
+    what: {
+      ru: "Векторная БД хранит эмбеддинги и быстро находит ближайшие к вектору запроса с помощью приближённых индексов (HNSW, IVF). Варианты: расширение pgvector для PostgreSQL, специализированные Qdrant, Pinecone, Weaviate, а также встроенные векторные типы в Oracle Database 23ai.",
+      en: "A vector database stores embeddings and quickly finds those nearest to a query vector using approximate indexes (HNSW, IVF). Options: the pgvector extension for PostgreSQL, dedicated engines such as Qdrant, Pinecone and Weaviate, and the built-in vector type in Oracle Database 23ai.",
+      es: "Una base de datos vectorial guarda embeddings y encuentra rápido los más cercanos al vector de la consulta mediante índices aproximados (HNSW, IVF). Opciones: la extensión pgvector para PostgreSQL, motores dedicados como Qdrant, Pinecone y Weaviate, y el tipo vectorial integrado de Oracle Database 23ai.",
+    },
+    why: {
+      ru: "Это хранилище для RAG и семантического поиска. Для большинства проектов pgvector достаточно, и отдельная система не нужна.",
+      en: "It is the storage layer for RAG and semantic search. For most projects pgvector is enough and no separate system is needed.",
+      es: "Es la capa de almacenamiento para RAG y la búsqueda semántica. En la mayoría de los proyectos basta con pgvector y no hace falta otro sistema.",
+    },
+    fromSql: {
+      ru: "Ваша сильная сторона. Индексы, планы выполнения, фильтрация по столбцам, транзакции, бэкапы — всё это в векторном поиске работает так же. Новое только одно: индекс приближённый, поэтому есть компромисс между скоростью и полнотой.",
+      en: "This is your strong suit. Indexes, execution plans, column filters, transactions and backups all work the same way in vector search. The only new thing is that the index is approximate, so there is a trade-off between speed and recall.",
+      es: "Aquí juegas con ventaja. Índices, planes de ejecución, filtros por columna, transacciones y copias de seguridad funcionan igual en la búsqueda vectorial. Lo único nuevo es que el índice es aproximado, así que hay un compromiso entre velocidad y exhaustividad.",
+    },
+    concepts: ["vector-db", "hnsw", "cosine-similarity"],
+    example: {
+      lang: "sql",
+      code: "CREATE INDEX ON chunks USING hnsw (embedding vector_cosine_ops);\n\n-- filter by metadata first, then rank by meaning\nSELECT id, content\nFROM chunks\nWHERE department = 'legal'\nORDER BY embedding <=> :query_embedding\nLIMIT 10;",
+    },
+    resources: [
+      { title: "pgvector", url: "https://github.com/pgvector/pgvector", kind: "repo", lang: "en" },
+      { title: "Qdrant documentation", url: "https://qdrant.tech/documentation/", kind: "docs", lang: "en" },
+      { title: "Pinecone Learn", url: "https://www.pinecone.io/learn/", kind: "article", lang: "en" },
+    ],
+    practice: {
+      ru: "Загрузите в PostgreSQL с pgvector 1000 чанков, постройте HNSW-индекс и сравните время и результаты поиска с индексом и без него (EXPLAIN ANALYZE).",
+      en: "Load 1,000 chunks into PostgreSQL with pgvector, build an HNSW index and compare search time and results with and without it (EXPLAIN ANALYZE).",
+      es: "Carga 1000 chunks en PostgreSQL con pgvector, crea un índice HNSW y compara el tiempo y los resultados de búsqueda con y sin índice (EXPLAIN ANALYZE).",
+    },
+    prereq: ["embeddings"],
+    related: ["hybrid-search"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "hybrid-search", block: "rag",
+    title: { ru: "Гибридный поиск и реранкинг", en: "Hybrid search and reranking", es: "Búsqueda híbrida y reranking" },
+    what: {
+      ru: "Векторный поиск хорошо ловит смысл, но плохо находит точные термины, коды и имена. Ключевой поиск (BM25) наоборот. Гибридный поиск объединяет оба списка результатов, а реранкер — отдельная модель — заново упорядочивает лучшие кандидаты по релевантности вопросу.",
+      en: "Vector search captures meaning well but struggles with exact terms, codes and names. Keyword search (BM25) is the opposite. Hybrid search merges both result lists, and a reranker, a separate model, reorders the top candidates by relevance to the question.",
+      es: "La búsqueda vectorial capta bien el significado, pero falla con términos exactos, códigos y nombres. La búsqueda por palabras clave (BM25) es justo lo contrario. La búsqueda híbrida combina ambas listas de resultados y un reranker, un modelo aparte, reordena los mejores candidatos según su relevancia para la pregunta.",
+    },
+    why: {
+      ru: "Именно эти два приёма дают самый заметный прирост качества RAG по сравнению с простым векторным поиском.",
+      en: "These two techniques give the most noticeable quality gain over plain vector search.",
+      es: "Estas dos técnicas son las que más mejoran la calidad del RAG frente a la búsqueda vectorial simple.",
+    },
+    fromSql: {
+      ru: "BM25 — родственник полнотекстового поиска Oracle Text или to_tsvector в PostgreSQL. Объединение результатов похоже на UNION двух запросов с последующей сортировкой по общей оценке.",
+      en: "BM25 is a relative of Oracle Text or PostgreSQL to_tsvector full-text search. Merging results is like a UNION of two queries followed by sorting on a combined score.",
+      es: "BM25 es pariente de la búsqueda de texto completo de Oracle Text o de to_tsvector en PostgreSQL. Combinar resultados es como un UNION de dos consultas ordenado después por una puntuación conjunta.",
+    },
+    concepts: ["bm25", "reranking"],
+    resources: [
+      { title: "Anthropic — Introducing Contextual Retrieval", url: "https://www.anthropic.com/news/contextual-retrieval", kind: "article", lang: "en" },
+    ],
+    practice: {
+      ru: "На 50 вопросах с известными правильными документами сравните векторный, BM25 и гибридный поиск по доле вопросов, где нужный документ попал в топ-5.",
+      en: "On 50 questions with known correct documents, compare vector, BM25 and hybrid search by the share of questions whose correct document lands in the top 5.",
+      es: "Con 50 preguntas cuyo documento correcto conoces, compara la búsqueda vectorial, BM25 e híbrida según el porcentaje de preguntas en las que el documento correcto queda entre los 5 primeros.",
+    },
+    prereq: ["vector-search"],
+    related: ["rag-evaluation"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "advanced-retrieval", block: "rag",
+    title: { ru: "Продвинутые паттерны поиска", en: "Advanced retrieval patterns", es: "Patrones avanzados de recuperación" },
+    what: {
+      ru: "Переформулировка запроса: модель переписывает вопрос пользователя в один или несколько поисковых запросов. Контекстуальный retrieval: перед индексацией к каждому чанку добавляют короткое пояснение, о чём документ. Agentic search: модель сама решает, что, где и сколько раз искать, используя поиск как инструмент.",
+      en: "Query rewriting: the model rewrites the user's question into one or more search queries. Contextual retrieval: before indexing, each chunk gets a short note on what the document is about. Agentic search: the model decides what, where and how many times to search, using search as a tool.",
+      es: "Reformulación de la consulta: el modelo reescribe la pregunta del usuario en una o varias búsquedas. Contextual retrieval: antes de indexar, se añade a cada chunk una breve nota sobre de qué trata el documento. Agentic search: el modelo decide qué, dónde y cuántas veces buscar, usando la búsqueda como herramienta.",
+    },
+    why: {
+      ru: "Пользователи задают короткие и неточные вопросы. Эти приёмы закрывают разрыв между формулировкой вопроса и текстом документов, а agentic search всё чаще заменяет жёсткий конвейер RAG.",
+      en: "Users ask short, vague questions. These techniques bridge the gap between how a question is phrased and how documents are written, and agentic search increasingly replaces a fixed RAG pipeline.",
+      es: "Los usuarios hacen preguntas cortas e imprecisas. Estas técnicas acortan la distancia entre cómo se formula la pregunta y cómo están escritos los documentos, y el agentic search sustituye cada vez más a una cadena RAG fija.",
+    },
+    concepts: ["rag", "agent"],
+    resources: [
+      { title: "Anthropic — Introducing Contextual Retrieval", url: "https://www.anthropic.com/news/contextual-retrieval", kind: "article", lang: "en" },
+      { title: "Anthropic — Effective context engineering for AI agents", url: "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents", kind: "article", lang: "en" },
+    ],
+    practice: {
+      ru: "Добавьте в свой RAG шаг переформулировки запроса и сравните долю правильно найденных документов до и после на тех же 50 вопросах.",
+      en: "Add a query-rewriting step to your RAG and compare the share of correctly retrieved documents before and after on the same 50 questions.",
+      es: "Añade a tu RAG un paso de reformulación de la consulta y compara el porcentaje de documentos bien recuperados antes y después con las mismas 50 preguntas.",
+    },
+    prereq: ["hybrid-search"],
+    related: ["agent-loop"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "rag-evaluation", block: "rag",
+    title: { ru: "Качество RAG и цитирование", en: "RAG quality and citations", es: "Calidad del RAG y citas" },
+    what: {
+      ru: "Качество RAG меряют отдельно для поиска и для ответа. Поиск: нашёлся ли нужный фрагмент (recall@k, MRR). Ответ: обоснован ли он найденным текстом (faithfulness), отвечает ли на вопрос, есть ли ссылки на источники. Инструменты вроде Ragas автоматизируют эти метрики.",
+      en: "RAG quality is measured separately for retrieval and for the answer. Retrieval: was the right fragment found (recall@k, MRR). Answer: is it grounded in the retrieved text (faithfulness), does it answer the question, does it cite sources. Tools such as Ragas automate these metrics.",
+      es: "La calidad del RAG se mide por separado para la búsqueda y para la respuesta. Búsqueda: ¿se encontró el fragmento correcto? (recall@k, MRR). Respuesta: ¿se apoya en el texto recuperado (faithfulness), responde a la pregunta, cita las fuentes? Herramientas como Ragas automatizan estas métricas.",
+    },
+    why: {
+      ru: "Без раздельных метрик непонятно, что чинить: поиск или генерацию. «Поиск по документам с цитатами и метриками» — именно то, что работодатель хочет увидеть в портфолио.",
+      en: "Without separate metrics you cannot tell whether to fix retrieval or generation. “Document search with citations and metrics” is exactly what employers want to see in a portfolio.",
+      es: "Sin métricas separadas no se sabe qué arreglar: la búsqueda o la generación. «Búsqueda en documentos con citas y métricas» es justo lo que las empresas quieren ver en un portfolio.",
+    },
+    concepts: ["recall-at-k", "faithfulness", "hallucination"],
+    resources: [
+      { title: "Ragas documentation", url: "https://docs.ragas.io/", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Соберите 30 вопросов с эталонными ответами и источниками для своего RAG. Посчитайте recall@5 для поиска и попросите модель-судью оценить обоснованность ответов.",
+      en: "Collect 30 questions with reference answers and sources for your RAG. Compute recall@5 for retrieval and have a judge model rate how grounded the answers are.",
+      es: "Reúne 30 preguntas con respuestas de referencia y fuentes para tu RAG. Calcula el recall@5 de la búsqueda y pide a un modelo juez que valore si las respuestas están fundamentadas.",
+    },
+    prereq: ["rag-architecture"],
+    related: ["llm-as-judge", "eval-metrics"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "agent-loop", block: "agents",
+    title: { ru: "Агентный цикл", en: "The agent loop", es: "El bucle del agente" },
+    what: {
+      ru: "Агент — модель, которая в цикле сама выбирает следующий шаг: вызывает инструмент, смотрит на результат, решает, что делать дальше, пока задача не решена или не исчерпан лимит шагов. Технически это цикл вокруг tool use на несколько десятков строк.",
+      en: "An agent is a model that chooses its own next step in a loop: it calls a tool, looks at the result and decides what to do next until the task is done or the step limit runs out. Technically it is a loop around tool use, a few dozen lines long.",
+      es: "Un agente es un modelo que elige su siguiente paso dentro de un bucle: llama a una herramienta, mira el resultado y decide qué hacer después hasta terminar la tarea o agotar el límite de pasos. Técnicamente es un bucle de unas decenas de líneas alrededor del tool use.",
+    },
+    why: {
+      ru: "В 2026 году агенты — центральная тема профессии. Если один раз написать цикл без фреймворка, любой фреймворк потом читается легко.",
+      en: "In 2026 agents are the central topic of the profession. Once you have written the loop without a framework, any framework becomes easy to read.",
+      es: "En 2026 los agentes son el tema central de la profesión. Si escribes el bucle una vez sin framework, después cualquier framework se entiende con facilidad.",
+    },
+    fromSql: {
+      ru: "Агентный цикл похож на LOOP в PL/SQL с EXIT WHEN: на каждой итерации — вызов процедуры, анализ результата, решение о следующем шаге. Разница в том, что решение принимает модель, а не ваш IF.",
+      en: "The agent loop is like a PL/SQL LOOP with EXIT WHEN: on each iteration, call a procedure, inspect the result, decide the next step. The difference is that the model makes the decision instead of your IF.",
+      es: "El bucle del agente se parece a un LOOP de PL/SQL con EXIT WHEN: en cada iteración se llama a un procedimiento, se analiza el resultado y se decide el siguiente paso. La diferencia es que decide el modelo, no tu IF.",
+    },
+    concepts: ["agent", "tool-use"],
+    example: {
+      lang: "python",
+      code: 'messages = [{"role": "user", "content": task}]\nfor step in range(10):                       # hard step limit\n    response = client.messages.create(model=MODEL, max_tokens=2048,\n                                      tools=TOOLS, messages=messages)\n    messages.append({"role": "assistant", "content": response.content})\n    if response.stop_reason != "tool_use":\n        break                                # the model has finished\n    results = [\n        {"type": "tool_result", "tool_use_id": block.id, "content": run_tool(block.name, block.input)}\n        for block in response.content if block.type == "tool_use"\n    ]\n    messages.append({"role": "user", "content": results})',
+    },
+    resources: [
+      { title: "Anthropic — Building effective agents", url: "https://www.anthropic.com/engineering/building-effective-agents", kind: "article", lang: "en" },
+    ],
+    practice: {
+      ru: "Напишите агентный цикл без фреймворка (около 100 строк) с двумя инструментами: поиск по файлам в папке и чтение файла. Попросите агента ответить на вопрос по этим файлам.",
+      en: "Write an agent loop without a framework (about 100 lines) with two tools: search files in a folder and read a file. Ask the agent a question about those files.",
+      es: "Escribe un bucle de agente sin framework (unas 100 líneas) con dos herramientas: buscar archivos en una carpeta y leer un archivo. Hazle al agente una pregunta sobre esos archivos.",
+    },
+    prereq: ["tool-use"],
+    related: ["agent-patterns", "mcp"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "agent-patterns", block: "agents",
+    title: { ru: "Workflow или агент: паттерны", en: "Workflow or agent: patterns", es: "Workflow o agente: patrones" },
+    what: {
+      ru: "Workflow — заранее заданная последовательность вызовов модели; агент — модель сама решает порядок шагов. Основные паттерны: цепочка шагов, маршрутизация по типу запроса, параллельные вызовы, оркестратор с субагентами, генерация с проверкой и исправлением.",
+      en: "A workflow is a predefined sequence of model calls; an agent lets the model decide the order of steps. Core patterns: prompt chaining, routing by request type, parallel calls, an orchestrator with subagents, and generate-evaluate-fix loops.",
+      es: "Un workflow es una secuencia predefinida de llamadas al modelo; en un agente, el modelo decide el orden de los pasos. Patrones principales: cadena de pasos, enrutamiento según el tipo de petición, llamadas en paralelo, orquestador con subagentes y bucles de generar, evaluar y corregir.",
+    },
+    why: {
+      ru: "Агент гибче, но дороже, медленнее и менее предсказуем. Хороший инженер выбирает самое простое решение, которое работает. Статью Anthropic об этом часто цитируют на собеседованиях.",
+      en: "An agent is more flexible but costlier, slower and less predictable. A good engineer picks the simplest thing that works. Anthropic's article on this is often quoted in interviews.",
+      es: "Un agente es más flexible, pero más caro, más lento y menos predecible. Un buen ingeniero elige la solución más sencilla que funcione. El artículo de Anthropic sobre este tema se cita a menudo en las entrevistas.",
+    },
+    concepts: ["agent", "workflow"],
+    resources: [
+      { title: "Anthropic — Building effective agents", url: "https://www.anthropic.com/engineering/building-effective-agents", kind: "article", lang: "en" },
+    ],
+    practice: {
+      ru: "Возьмите задачу «ответить на письмо клиента» и спроектируйте её дважды: как workflow из 3 шагов и как агента с инструментами. Запишите плюсы и минусы каждого варианта.",
+      en: "Take the task “reply to a customer email” and design it twice: as a 3-step workflow and as an agent with tools. Write down the pros and cons of each.",
+      es: "Toma la tarea «responder al correo de un cliente» y diséñala dos veces: como workflow de 3 pasos y como agente con herramientas. Anota los pros y contras de cada opción.",
+    },
+    prereq: ["agent-loop"],
+    related: ["agent-frameworks"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "mcp", block: "agents",
+    title: { ru: "MCP (Model Context Protocol)", en: "MCP (Model Context Protocol)", es: "MCP (Model Context Protocol)" },
+    what: {
+      ru: "MCP — открытый стандарт подключения инструментов и данных к AI-приложениям. MCP-сервер описывает свои инструменты, ресурсы и промпты, а любое совместимое приложение (Claude, IDE, ваш агент) может ими пользоваться без отдельной интеграции.",
+      en: "MCP is an open standard for connecting tools and data to AI applications. An MCP server describes its tools, resources and prompts, and any compatible application (Claude, an IDE, your own agent) can use them without a custom integration.",
+      es: "MCP es un estándar abierto para conectar herramientas y datos a aplicaciones de IA. Un servidor MCP describe sus herramientas, recursos y prompts, y cualquier aplicación compatible (Claude, un IDE o tu propio agente) puede usarlos sin una integración a medida.",
+    },
+    why: {
+      ru: "MCP стал стандартом интеграции агентов с корпоративными системами. «Агент со своим MCP-сервером» — один из лучших проектов для портфолио.",
+      en: "MCP has become the standard way to connect agents to company systems. “An agent with its own MCP server” is one of the best portfolio projects.",
+      es: "MCP se ha convertido en el estándar para conectar agentes con los sistemas de una empresa. «Un agente con su propio servidor MCP» es uno de los mejores proyectos de portfolio.",
+    },
+    fromSql: {
+      ru: "Хорошая первая цель для вас — MCP-сервер к базе данных: инструменты «список таблиц», «описание таблицы», «выполнить SELECT только на чтение». Так вы соединяете свой опыт с новой профессией.",
+      en: "A good first target for you is an MCP server for a database: tools for “list tables”, “describe table” and “run a read-only SELECT”. It connects your experience with the new profession.",
+      es: "Un buen primer objetivo para ti es un servidor MCP para una base de datos: herramientas para «listar tablas», «describir tabla» y «ejecutar un SELECT de solo lectura». Así unes tu experiencia con la nueva profesión.",
+    },
+    concepts: ["mcp", "tool-use"],
+    example: {
+      lang: "python",
+      code: 'from mcp.server.fastmcp import FastMCP\n\nmcp = FastMCP("notes")\n\n@mcp.tool()\ndef search_notes(query: str) -> list[str]:\n    """Find notes whose text contains the query."""\n    return [n for n in NOTES if query.lower() in n.lower()]\n\nif __name__ == "__main__":\n    mcp.run()',
+    },
+    resources: [
+      { title: "Model Context Protocol", url: "https://modelcontextprotocol.io/", kind: "docs", lang: "en" },
+      { title: "MCP — Build a server", url: "https://modelcontextprotocol.io/docs/develop/build-server", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Напишите MCP-сервер к учебной базе PostgreSQL с тремя инструментами только на чтение и подключите его к Claude Desktop или своему агенту.",
+      en: "Write an MCP server for a practice PostgreSQL database with three read-only tools and connect it to Claude Desktop or your own agent.",
+      es: "Escribe un servidor MCP para una base de datos PostgreSQL de prácticas con tres herramientas de solo lectura y conéctalo a Claude Desktop o a tu propio agente.",
+    },
+    prereq: ["tool-use"],
+    related: ["agent-loop", "agent-safety"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "agent-frameworks", block: "agents",
+    title: { ru: "Фреймворки и SDK для агентов", en: "Agent frameworks and SDKs", es: "Frameworks y SDK de agentes" },
+    what: {
+      ru: "Claude Agent SDK, OpenAI Agents SDK, LangGraph и другие берут на себя цикл, вызовы инструментов, память, субагентов и трейсинг. Важнее понимать принципы, чем знать конкретный инструмент: один фреймворк стоит изучить глубоко, остальные обзорно.",
+      en: "Claude Agent SDK, OpenAI Agents SDK, LangGraph and others handle the loop, tool calls, memory, subagents and tracing. Understanding the principles matters more than any specific tool: learn one framework in depth and skim the rest.",
+      es: "Claude Agent SDK, OpenAI Agents SDK, LangGraph y otros se encargan del bucle, las llamadas a herramientas, la memoria, los subagentes y el trazado. Importa más entender los principios que conocer una herramienta concreta: conviene estudiar un framework a fondo y los demás por encima.",
+    },
+    why: {
+      ru: "В вакансиях часто упоминают конкретные фреймворки. Но они быстро меняются, поэтому работодатели ценят понимание того, что происходит внутри.",
+      en: "Job ads often name specific frameworks. But frameworks change quickly, so employers value understanding what happens inside.",
+      es: "Las ofertas suelen mencionar frameworks concretos. Pero cambian rápido, así que las empresas valoran entender lo que pasa por dentro.",
+    },
+    concepts: ["agent"],
+    resources: [
+      { title: "Claude Agent SDK overview", url: "https://platform.claude.com/docs/en/agent-sdk/overview", kind: "docs", lang: "en" },
+      { title: "OpenAI Agents SDK", url: "https://openai.github.io/openai-agents-python/", kind: "docs", lang: "en" },
+      { title: "LangGraph", url: "https://github.com/langchain-ai/langgraph", kind: "repo", lang: "en" },
+    ],
+    practice: {
+      ru: "Перепишите своего агента из темы «Агентный цикл» на одном из SDK. Сравните: сколько кода ушло и что стало сложнее отлаживать?",
+      en: "Rewrite your agent from “The agent loop” using one of the SDKs. Compare: how much code went away, and what became harder to debug?",
+      es: "Reescribe el agente del tema «El bucle del agente» con uno de los SDK. Compara: ¿cuánto código ha desaparecido y qué se ha vuelto más difícil de depurar?",
+    },
+    prereq: ["agent-loop"],
+    related: ["observability"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "agent-memory", block: "agents",
+    title: { ru: "Память и состояние агента", en: "Agent memory and state", es: "Memoria y estado del agente" },
+    what: {
+      ru: "Контекст агента растёт с каждым шагом. Приёмы управления: сжимать старую историю (компактификация), выносить заметки во внешнюю память (файлы, БД), передавать подзадачи субагентам с чистым контекстом и подтягивать только нужное по запросу.",
+      en: "An agent's context grows with every step. Ways to manage it: compact old history, keep notes in external memory (files, a database), hand subtasks to subagents with a clean context, and load only what is needed on demand.",
+      es: "El contexto del agente crece con cada paso. Formas de gestionarlo: compactar el historial antiguo, guardar notas en una memoria externa (archivos, base de datos), pasar subtareas a subagentes con un contexto limpio y cargar solo lo necesario cuando haga falta.",
+    },
+    why: {
+      ru: "Длинные задачи ломаются не из-за ума модели, а из-за переполненного или замусоренного контекста. Умение проектировать память отличает рабочего агента от демо.",
+      en: "Long tasks fail not because the model is not smart enough but because the context is full or cluttered. Designing memory well separates a working agent from a demo.",
+      es: "Las tareas largas fallan no porque el modelo no sea lo bastante listo, sino porque el contexto está lleno o desordenado. Saber diseñar la memoria distingue un agente que funciona de una demo.",
+    },
+    fromSql: {
+      ru: "Долгосрочная память агента — обычная таблица или документ: что сохранить, как найти потом, когда удалить устаревшее. Здесь пригодится ваш опыт моделирования данных.",
+      en: "An agent's long-term memory is an ordinary table or document: what to store, how to find it later, when to delete stale entries. Your data-modelling experience applies directly.",
+      es: "La memoria a largo plazo de un agente es una tabla o un documento normal: qué guardar, cómo encontrarlo después y cuándo borrar lo obsoleto. Aquí sirve directamente tu experiencia en modelado de datos.",
+    },
+    concepts: ["context-window", "subagent"],
+    resources: [
+      { title: "Anthropic — Effective context engineering for AI agents", url: "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents", kind: "article", lang: "en" },
+    ],
+    practice: {
+      ru: "Добавьте своему агенту инструмент «записать заметку» и «прочитать заметки», чтобы он сохранял промежуточные выводы между сессиями.",
+      en: "Give your agent “write a note” and “read notes” tools so it keeps intermediate findings between sessions.",
+      es: "Añade a tu agente las herramientas «escribir nota» y «leer notas» para que conserve sus conclusiones intermedias entre sesiones.",
+    },
+    prereq: ["agent-loop", "context-window"],
+    related: ["agent-frameworks"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "agent-safety", block: "agents",
+    title: { ru: "Человек в цикле и права агента", en: "Human in the loop and agent permissions", es: "Humano en el bucle y permisos del agente" },
+    what: {
+      ru: "Рискованные действия (оплата, удаление, отправка писем) агент выполняет только после подтверждения человеком. Права агента ограничивают минимально необходимыми, опасный код запускают в песочнице. Агенты, управляющие компьютером или браузером (computer use), требуют особой осторожности.",
+      en: "An agent performs risky actions (payments, deletions, sending emails) only after a human confirms. Its permissions are cut to the minimum needed, and dangerous code runs in a sandbox. Agents that control a computer or browser (computer use) need extra care.",
+      es: "Un agente solo realiza acciones arriesgadas (pagos, borrados, envío de correos) tras la confirmación de una persona. Sus permisos se limitan al mínimo necesario y el código peligroso se ejecuta en un sandbox. Los agentes que controlan un ordenador o un navegador (computer use) requieren especial cuidado.",
+    },
+    why: {
+      ru: "Агент, который может действовать, может и навредить, в том числе из-за prompt injection во внешних данных. На system design собеседовании обязательно спросят, как вы ограничите агента.",
+      en: "An agent that can act can also do harm, including through prompt injection hidden in external data. In a system-design interview you will be asked how you would constrain the agent.",
+      es: "Un agente que puede actuar también puede causar daño, incluso por un prompt injection oculto en datos externos. En una entrevista de system design te preguntarán cómo limitarías al agente.",
+    },
+    fromSql: {
+      ru: "Это принцип наименьших привилегий, знакомый вам по ролям и GRANT: отдельный пользователь БД только на чтение для агента — первая и самая надёжная защита.",
+      en: "This is the principle of least privilege you know from roles and GRANTs: a separate read-only database user for the agent is the first and most reliable defence.",
+      es: "Es el principio de mínimo privilegio que ya conoces por los roles y los GRANT: un usuario de base de datos aparte y de solo lectura para el agente es la primera y más fiable defensa.",
+    },
+    concepts: ["human-in-the-loop", "prompt-injection"],
+    resources: [
+      { title: "OWASP Top 10 for LLM Applications", url: "https://genai.owasp.org/llm-top-10/", kind: "docs", lang: "en" },
+      { title: "Anthropic — Building effective agents", url: "https://www.anthropic.com/engineering/building-effective-agents", kind: "article", lang: "en" },
+    ],
+    practice: {
+      ru: "Добавьте своему агенту инструмент, который что-то меняет (например, создаёт запись), и требуйте подтверждения в консоли перед каждым его вызовом.",
+      en: "Give your agent a tool that changes something (for example, creates a record) and require a console confirmation before every call to it.",
+      es: "Añade a tu agente una herramienta que modifique algo (por ejemplo, que cree un registro) y exige una confirmación en la consola antes de cada llamada.",
+    },
+    prereq: ["agent-loop"],
+    related: ["prompt-injection-security", "mcp"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "eval-datasets", block: "evals",
+    title: { ru: "Тестовые наборы для evals", en: "Eval datasets", es: "Conjuntos de prueba para evals" },
+    what: {
+      ru: "Eval — автоматическая проверка качества AI-системы на наборе примеров. Набор собирают из реальных запросов пользователей, добавляют эталонные ответы или критерии и отдельно пограничные случаи: пустой ввод, другой язык, провокации, редкие сценарии.",
+      en: "An eval is an automatic quality check of an AI system on a set of examples. The set is built from real user requests, with reference answers or criteria added, plus edge cases: empty input, another language, provocations, rare scenarios.",
+      es: "Un eval es una comprobación automática de la calidad de un sistema de IA sobre un conjunto de ejemplos. El conjunto se forma con peticiones reales de usuarios, añadiendo respuestas de referencia o criterios y casos límite: entrada vacía, otro idioma, provocaciones, escenarios poco frecuentes.",
+    },
+    why: {
+      ru: "Умение доказать цифрами, что система работает, сильнее всего отличает инженера от «автора промптов». Набор из 30–100 примеров в каждом проекте портфолио — сильный сигнал для работодателя.",
+      en: "Being able to prove with numbers that a system works is what most separates an engineer from a “prompt writer”. A set of 30–100 examples in every portfolio project is a strong signal to employers.",
+      es: "Poder demostrar con datos que un sistema funciona es lo que más distingue a un ingeniero de un «escritor de prompts». Un conjunto de 30–100 ejemplos en cada proyecto del portfolio es una señal fuerte para las empresas.",
+    },
+    fromSql: {
+      ru: "Набор evals — как регрессионный набор тестовых данных для отчёта: фиксированные входы и ожидаемые результаты. Хранить его удобно в таблице или CSV рядом с кодом.",
+      en: "An eval set is like a regression dataset for a report: fixed inputs and expected outputs. It is convenient to keep it in a table or CSV next to the code.",
+      es: "Un conjunto de evals es como un conjunto de datos de regresión para un informe: entradas fijas y resultados esperados. Conviene guardarlo en una tabla o un CSV junto al código.",
+    },
+    concepts: ["eval", "golden-dataset"],
+    resources: [
+      { title: "Hamel Husain — Your AI Product Needs Evals", url: "https://hamel.dev/blog/posts/evals/", kind: "article", lang: "en" },
+      { title: "Anthropic — Define success criteria and build evaluations", url: "https://platform.claude.com/docs/en/test-and-evaluate/define-success", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Для своего классификатора или экстрактора соберите 50 примеров: 35 типичных и 15 пограничных. Для каждого запишите ожидаемый результат.",
+      en: "For your classifier or extractor, collect 50 examples: 35 typical and 15 edge cases. Record the expected result for each.",
+      es: "Para tu clasificador o extractor, reúne 50 ejemplos: 35 típicos y 15 casos límite. Anota el resultado esperado de cada uno.",
+    },
+    prereq: ["prompt-engineering"],
+    related: ["eval-metrics", "synthetic-data"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "llm-as-judge", block: "evals",
+    title: { ru: "Методы оценки и LLM-as-a-judge", en: "Grading methods and LLM-as-a-judge", es: "Métodos de evaluación y LLM-as-a-judge" },
+    what: {
+      ru: "Три способа оценки: программные проверки (совпадение, валидный JSON, регулярное выражение), LLM-as-a-judge (другая модель оценивает ответ по чётким критериям) и оценка людьми. Судью калибруют: сравнивают его оценки с оценками человека на одних и тех же примерах.",
+      en: "Three ways to grade: code-based checks (exact match, valid JSON, a regular expression), LLM-as-a-judge (another model grades the answer against clear criteria) and human review. The judge is calibrated by comparing its grades with a human's on the same examples.",
+      es: "Tres formas de evaluar: comprobaciones por código (coincidencia exacta, JSON válido, una expresión regular), LLM-as-a-judge (otro modelo puntúa la respuesta con criterios claros) y evaluación humana. El juez se calibra comparando sus notas con las de una persona en los mismos ejemplos.",
+    },
+    why: {
+      ru: "Свободный текст программой не проверишь, а люди дороги и медленны. Откалиброванный судья позволяет оценивать тысячи ответов, но ему нельзя доверять без проверки.",
+      en: "Free text cannot be checked by code, and people are slow and expensive. A calibrated judge lets you grade thousands of answers, but it must not be trusted unchecked.",
+      es: "El texto libre no se puede comprobar con código y las personas son lentas y caras. Un juez calibrado permite evaluar miles de respuestas, pero no hay que fiarse de él sin comprobarlo.",
+    },
+    concepts: ["llm-as-judge", "eval"],
+    resources: [
+      { title: "Hamel Husain — Using LLM-as-a-Judge", url: "https://hamel.dev/blog/posts/llm-judge/", kind: "article", lang: "en" },
+      { title: "Anthropic — Create strong empirical evaluations", url: "https://platform.claude.com/docs/en/test-and-evaluate/develop-tests", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Оцените 20 ответов своей системы сами по шкале «годится / не годится». Затем напишите промпт судьи и посчитайте, в скольких случаях он согласен с вами.",
+      en: "Grade 20 of your system's answers yourself as pass or fail. Then write a judge prompt and count how often it agrees with you.",
+      es: "Evalúa tú mismo 20 respuestas de tu sistema como válidas o no válidas. Después escribe un prompt de juez y cuenta en cuántos casos coincide contigo.",
+    },
+    prereq: ["eval-datasets"],
+    related: ["rag-evaluation"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "eval-metrics", block: "evals",
+    title: { ru: "Метрики качества, скорости и цены", en: "Quality, speed and cost metrics", es: "Métricas de calidad, velocidad y coste" },
+    what: {
+      ru: "Метрики качества: точность (accuracy), precision и recall для классификации, доля успешно выполненных задач для агентов. Операционные метрики: задержка (latency, особенно время до первого токена), стоимость на запрос, доля ошибок.",
+      en: "Quality metrics: accuracy, precision and recall for classification, task success rate for agents. Operational metrics: latency (especially time to first token), cost per request, error rate.",
+      es: "Métricas de calidad: exactitud (accuracy), precision y recall en clasificación, tasa de tareas completadas en agentes. Métricas operativas: latencia (sobre todo el tiempo hasta el primer token), coste por petición y tasa de errores.",
+    },
+    why: {
+      ru: "Выбор модели и промпта — всегда компромисс между качеством, скоростью и ценой. Без метрик этот выбор делается наугад, а на собеседовании вас попросят назвать цифры.",
+      en: "Choosing a model and prompt is always a trade-off between quality, speed and cost. Without metrics it is guesswork, and in an interview you will be asked for numbers.",
+      es: "Elegir modelo y prompt siempre es un equilibrio entre calidad, velocidad y coste. Sin métricas es adivinar, y en la entrevista te pedirán cifras.",
+    },
+    fromSql: {
+      ru: "Все эти метрики — обычные агрегаты: COUNT, AVG, PERCENTILE_CONT по таблице с результатами прогонов. Сохраняйте каждый прогон в БД, и сравнение версий станет одним SQL-запросом.",
+      en: "All these metrics are ordinary aggregates: COUNT, AVG, PERCENTILE_CONT over a table of run results. Store every run in a database and comparing versions becomes one SQL query.",
+      es: "Todas estas métricas son agregados corrientes: COUNT, AVG, PERCENTILE_CONT sobre una tabla de resultados. Guarda cada ejecución en la base de datos y comparar versiones será una sola consulta SQL.",
+    },
+    concepts: ["precision-recall", "latency"],
+    resources: [
+      { title: "Eugene Yan — Patterns for Building LLM-based Systems & Products", url: "https://eugeneyan.com/writing/llm-patterns/", kind: "article", lang: "en" },
+    ],
+    practice: {
+      ru: "Прогоните свой набор evals на двух моделях и сведите в таблицу: точность, p50 и p95 задержки, средняя стоимость запроса.",
+      en: "Run your eval set on two models and tabulate accuracy, p50 and p95 latency, and average cost per request.",
+      es: "Ejecuta tu conjunto de evals con dos modelos y resume en una tabla la exactitud, la latencia p50 y p95 y el coste medio por petición.",
+    },
+    prereq: ["eval-datasets"],
+    related: ["cost-latency", "model-landscape"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "error-analysis", block: "evals",
+    title: { ru: "Анализ ошибок", en: "Error analysis", es: "Análisis de errores" },
+    what: {
+      ru: "Анализ ошибок — читать реальные трейсы и ответы системы, записывать, что пошло не так, и группировать сбои по типам: не нашёлся документ, неверный формат, модель проигнорировала правило. Чинить начинают с самой частой категории.",
+      en: "Error analysis means reading real traces and answers, noting what went wrong and grouping failures by type: document not found, wrong format, model ignored a rule. You start fixing the most frequent category.",
+      es: "El análisis de errores consiste en leer trazas y respuestas reales, anotar qué falló y agrupar los fallos por tipo: documento no encontrado, formato incorrecto, el modelo ignoró una regla. Se empieza por arreglar la categoría más frecuente.",
+    },
+    why: {
+      ru: "Это самый недооценённый и самый эффективный способ улучшать AI-систему: он показывает, какие evals действительно нужны, вместо абстрактных метрик.",
+      en: "It is the most underrated and most effective way to improve an AI system: it shows which evals you actually need instead of abstract metrics.",
+      es: "Es la forma más infravalorada y más eficaz de mejorar un sistema de IA: muestra qué evals hacen falta de verdad en lugar de métricas abstractas.",
+    },
+    concepts: ["trace"],
+    resources: [
+      { title: "Hamel Husain — Your AI Product Needs Evals", url: "https://hamel.dev/blog/posts/evals/", kind: "article", lang: "en" },
+      { title: "What We've Learned From A Year of Building with LLMs", url: "https://applied-llms.org/", kind: "article", lang: "en" },
+    ],
+    practice: {
+      ru: "Прочитайте 30 трейсов своей системы, выпишите каждую проблему одной строкой и сгруппируйте в 3–5 категорий. Какая встречается чаще всего?",
+      en: "Read 30 traces from your system, write each problem down in one line and group them into 3–5 categories. Which is the most common?",
+      es: "Lee 30 trazas de tu sistema, apunta cada problema en una línea y agrúpalos en 3–5 categorías. ¿Cuál es la más frecuente?",
+    },
+    prereq: ["eval-datasets"],
+    related: ["observability"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "regression-evals", block: "evals",
+    title: { ru: "Регрессионные evals и CI", en: "Regression evals and CI", es: "Evals de regresión y CI" },
+    what: {
+      ru: "Набор evals запускают автоматически при каждом изменении промпта, модели или кода, как обычные тесты в CI. Если метрики упали ниже порога, изменение не попадает в продакшн.",
+      en: "The eval set runs automatically on every change to the prompt, model or code, like ordinary tests in CI. If metrics fall below a threshold, the change does not reach production.",
+      es: "El conjunto de evals se ejecuta automáticamente con cada cambio de prompt, modelo o código, como los tests normales en CI. Si las métricas bajan de un umbral, el cambio no llega a producción.",
+    },
+    why: {
+      ru: "Улучшение одного случая часто ломает другие. Без регрессионных evals каждая правка промпта — лотерея, а переход на новую модель превращается в долгую ручную проверку.",
+      en: "Fixing one case often breaks others. Without regression evals every prompt edit is a gamble, and switching to a new model becomes a long manual check.",
+      es: "Arreglar un caso a menudo rompe otros. Sin evals de regresión cada cambio de prompt es una lotería, y pasar a un modelo nuevo se convierte en una larga revisión manual.",
+    },
+    concepts: ["eval", "ci-cd"],
+    resources: [
+      { title: "Anthropic — Create strong empirical evaluations", url: "https://platform.claude.com/docs/en/test-and-evaluate/develop-tests", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Добавьте в GitHub Actions своего проекта шаг, который запускает evals и падает, если точность ниже 90%. В README покажите, как смена промпта меняет метрики.",
+      en: "Add a GitHub Actions step to your project that runs the evals and fails if accuracy drops below 90%. Show in the README how a prompt change shifts the metrics.",
+      es: "Añade a GitHub Actions de tu proyecto un paso que ejecute los evals y falle si la exactitud baja del 90%. Muestra en el README cómo un cambio de prompt modifica las métricas.",
+    },
+    prereq: ["eval-metrics", "dev-tools"],
+    related: ["portfolio"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "eval-statistics", block: "evals",
+    title: { ru: "Базовая статистика для evals", en: "Basic statistics for evals", es: "Estadística básica para evals" },
+    what: {
+      ru: "Разница в 2% на 50 примерах может быть случайной. Нужно понимать размер выборки, доверительные интервалы и как устроен A/B-тест, чтобы отличать настоящее улучшение от шума.",
+      en: "A 2% difference on 50 examples may be chance. You need to understand sample size, confidence intervals and how an A/B test works to tell real improvement from noise.",
+      es: "Una diferencia del 2% en 50 ejemplos puede ser casualidad. Hay que entender el tamaño de la muestra, los intervalos de confianza y cómo funciona un test A/B para distinguir una mejora real del ruido.",
+    },
+    why: {
+      ru: "Без этого легко «улучшить» систему, которая на деле не изменилась, и потратить недели на ложный след. Вопросы о статистической значимости встречаются на собеседованиях.",
+      en: "Without it, it is easy to “improve” a system that has not actually changed and spend weeks on a false trail. Questions about statistical significance come up in interviews.",
+      es: "Sin esto es fácil «mejorar» un sistema que en realidad no ha cambiado y perder semanas siguiendo una pista falsa. Las preguntas sobre significación estadística aparecen en las entrevistas.",
+    },
+    concepts: ["confidence-interval"],
+    resources: [
+      { title: "Anthropic — A statistical approach to model evaluations", url: "https://www.anthropic.com/research/statistical-approach-to-model-evals", kind: "article", lang: "en" },
+    ],
+    practice: {
+      ru: "Прогоните один и тот же набор evals 5 раз на одной модели. Насколько меняется точность от прогона к прогону? Какой прирост тогда можно считать настоящим?",
+      en: "Run the same eval set 5 times on one model. How much does accuracy vary between runs? What gain can you then treat as real?",
+      es: "Ejecuta el mismo conjunto de evals 5 veces con un modelo. ¿Cuánto varía la exactitud entre ejecuciones? ¿Qué mejora puedes considerar real entonces?",
+    },
+    prereq: ["eval-metrics"],
+    related: ["ml-basics"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "observability", block: "production",
+    title: { ru: "Наблюдаемость: логи и трейсинг", en: "Observability: logs and tracing", es: "Observabilidad: logs y trazas" },
+    what: {
+      ru: "Каждый вызов модели и инструмента записывают в трейс: промпт, ответ, токены, время, стоимость, ошибки. Инструменты: Langfuse, LangSmith, OpenTelemetry. Поверх трейсов строят дашборды качества и алерты.",
+      en: "Every model and tool call is recorded in a trace: prompt, answer, tokens, time, cost, errors. Tools: Langfuse, LangSmith, OpenTelemetry. Quality dashboards and alerts are built on top of the traces.",
+      es: "Cada llamada a un modelo o herramienta se registra en una traza: prompt, respuesta, tokens, tiempo, coste y errores. Herramientas: Langfuse, LangSmith, OpenTelemetry. Sobre las trazas se montan paneles de calidad y alertas.",
+    },
+    why: {
+      ru: "Без трейсов невозможно понять, почему агент ошибся на 12-м шаге или откуда взялся счёт за модели. Это источник данных для анализа ошибок и evals.",
+      en: "Without traces you cannot tell why an agent failed at step 12 or where the model bill came from. They are the data source for error analysis and evals.",
+      es: "Sin trazas no se puede saber por qué un agente falló en el paso 12 ni de dónde sale la factura de modelos. Son la fuente de datos para el análisis de errores y los evals.",
+    },
+    fromSql: {
+      ru: "Трейс — это как AWR-отчёт или SQL trace (10046) для одного запроса: где потрачено время и ресурсы. Привычка смотреть план выполнения здесь превращается в привычку читать трейсы.",
+      en: "A trace is like an AWR report or SQL trace (10046) for a single request: where time and resources went. The habit of reading execution plans becomes the habit of reading traces.",
+      es: "Una traza es como un informe AWR o un SQL trace (10046) de una sola petición: dónde se fue el tiempo y los recursos. La costumbre de mirar planes de ejecución se convierte en la de leer trazas.",
+    },
+    concepts: ["trace"],
+    resources: [
+      { title: "Langfuse documentation", url: "https://langfuse.com/docs", kind: "docs", lang: "en" },
+      { title: "OpenTelemetry documentation", url: "https://opentelemetry.io/docs/", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Подключите Langfuse к своему проекту и найдите самый медленный и самый дорогой запрос за день.",
+      en: "Connect Langfuse to your project and find the slowest and the most expensive request of the day.",
+      es: "Conecta Langfuse a tu proyecto y encuentra la petición más lenta y la más cara del día.",
+    },
+    prereq: ["provider-sdks"],
+    related: ["error-analysis"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "cost-latency", block: "production",
+    title: { ru: "Стоимость и скорость", en: "Cost and speed", es: "Coste y velocidad" },
+    what: {
+      ru: "Стоимость складывается из входных и выходных токенов, умноженных на цену модели. Снижают её кэшированием, выбором модели под задачу, маршрутизацией и сокращением контекста. Воспринимаемую задержку снижает стриминг: пользователь видит первые слова сразу.",
+      en: "Cost is input plus output tokens times the model's price. It is reduced by caching, choosing the right model for the task, routing and trimming the context. Streaming reduces perceived latency: the user sees the first words right away.",
+      es: "El coste son los tokens de entrada y salida multiplicados por el precio del modelo. Se reduce con caché, eligiendo el modelo adecuado para cada tarea, enrutando y recortando el contexto. El streaming reduce la latencia percibida: el usuario ve las primeras palabras al instante.",
+    },
+    why: {
+      ru: "Демо может стоить копейки, а тот же сценарий на тысячах пользователей — тысячи евро в месяц. Работодатели ищут людей, которые считают юнит-экономику AI-функции.",
+      en: "A demo may cost pennies, but the same scenario across thousands of users can cost thousands of euros a month. Employers look for people who work out an AI feature's unit economics.",
+      es: "Una demo puede costar céntimos, pero el mismo escenario con miles de usuarios puede costar miles de euros al mes. Las empresas buscan a quien sepa calcular la economía unitaria de una función de IA.",
+    },
+    concepts: ["latency", "prompt-caching"],
+    resources: [
+      { title: "Anthropic — Prompt caching", url: "https://platform.claude.com/docs/en/build-with-claude/prompt-caching", kind: "docs", lang: "en" },
+      { title: "Anthropic — Models overview (pricing and context)", url: "https://platform.claude.com/docs/en/about-claude/models/overview", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Посчитайте, сколько будет стоить ваш проект в месяц при 1000 активных пользователей по 10 запросов в день, и найдите два способа уменьшить эту сумму вдвое.",
+      en: "Work out what your project would cost per month with 1,000 active users making 10 requests a day, and find two ways to halve that amount.",
+      es: "Calcula cuánto costaría tu proyecto al mes con 1000 usuarios activos que hacen 10 peticiones al día y encuentra dos formas de reducir esa cifra a la mitad.",
+    },
+    prereq: ["cost-optimization"],
+    related: ["eval-metrics"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "reliability", block: "production",
+    title: { ru: "Надёжность и фолбэки", en: "Reliability and fallbacks", es: "Fiabilidad y alternativas (fallbacks)" },
+    what: {
+      ru: "Внешний API модели может тормозить или падать. Защита: таймауты, повторные попытки, переключение на другую модель или провайдера (фолбэк), очередь для долгих задач и грациозная деградация, когда без модели продукт продолжает работать в упрощённом режиме.",
+      en: "An external model API can slow down or fail. Defences: timeouts, retries, switching to another model or provider (fallback), a queue for long jobs and graceful degradation, where the product keeps working in a simpler mode without the model.",
+      es: "Una API externa de modelos puede ralentizarse o caerse. Defensas: timeouts, reintentos, cambiar a otro modelo o proveedor (fallback), una cola para tareas largas y degradación elegante, en la que el producto sigue funcionando de forma simplificada sin el modelo.",
+    },
+    why: {
+      ru: "Пользователь не должен видеть ошибку провайдера. Вопрос «что будет, если API модели недоступен?» почти обязателен на system design собеседовании.",
+      en: "Users should never see a provider error. “What happens if the model API is down?” is almost guaranteed in a system-design interview.",
+      es: "El usuario nunca debería ver un error del proveedor. «¿Qué pasa si la API del modelo no está disponible?» es casi obligatoria en una entrevista de system design.",
+    },
+    fromSql: {
+      ru: "Это та же логика, что standby-база и переключение при сбое: заранее решить, куда идти, если основной ресурс недоступен, и регулярно проверять, что резерв работает.",
+      en: "It is the same logic as a standby database and failover: decide in advance where to go if the primary is unavailable, and regularly check that the standby works.",
+      es: "Es la misma lógica que una base de datos standby y la conmutación por error: decidir de antemano adónde ir si el recurso principal no está disponible y comprobar a menudo que la reserva funciona.",
+    },
+    concepts: ["fallback", "rate-limit"],
+    resources: [
+      { title: "Anthropic — API errors", url: "https://platform.claude.com/docs/en/api/errors", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Добавьте в свой сервис фолбэк на вторую модель при таймауте и проверьте его, искусственно сделав основной вызов медленным.",
+      en: "Add a fallback to a second model on timeout in your service and test it by artificially slowing down the primary call.",
+      es: "Añade a tu servicio un fallback a un segundo modelo en caso de timeout y pruébalo haciendo lenta a propósito la llamada principal.",
+    },
+    prereq: ["provider-sdks"],
+    related: ["observability"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "prompt-injection-security", block: "production",
+    title: { ru: "Безопасность и prompt injection", en: "Security and prompt injection", es: "Seguridad y prompt injection" },
+    what: {
+      ru: "Главная уязвимость LLM-приложений — prompt injection: вредоносные инструкции в письме, документе или веб-странице, которые модель воспринимает как команды. Сюда же относятся утечки данных, избыточные права агентов и другие риски из OWASP Top 10 для LLM.",
+      en: "The main vulnerability of LLM applications is prompt injection: malicious instructions in an email, document or web page that the model treats as commands. Related risks include data leaks, excessive agent permissions and the rest of the OWASP Top 10 for LLMs.",
+      es: "La principal vulnerabilidad de las aplicaciones con LLM es el prompt injection: instrucciones maliciosas en un correo, un documento o una web que el modelo interpreta como órdenes. Relacionados están las fugas de datos, los permisos excesivos de los agentes y el resto del OWASP Top 10 para LLM.",
+    },
+    why: {
+      ru: "Надёжной защиты от prompt injection пока нет, поэтому систему проектируют так, чтобы последствия атаки были ограничены: минимальные права, подтверждения, изоляция недоверенных данных. По OWASP Top 10 для LLM часто спрашивают на собеседованиях.",
+      en: "There is still no reliable defence against prompt injection, so systems are designed to limit the damage: minimal permissions, confirmations, isolation of untrusted data. Interviewers often ask about the OWASP Top 10 for LLMs.",
+      es: "Todavía no existe una defensa fiable contra el prompt injection, así que los sistemas se diseñan para limitar el daño: permisos mínimos, confirmaciones y aislamiento de los datos no fiables. En las entrevistas se pregunta a menudo por el OWASP Top 10 para LLM.",
+    },
+    fromSql: {
+      ru: "Prompt injection — родственник SQL-инъекции, но без «связанных переменных»: инструкции и данные идут в модель одним текстом. Поэтому защита строится на правах и проверках вокруг модели, а не внутри неё.",
+      en: "Prompt injection is a cousin of SQL injection, but without bind variables: instructions and data reach the model as one text. So defences are built from permissions and checks around the model, not inside it.",
+      es: "El prompt injection es pariente de la inyección SQL, pero sin variables de enlace: instrucciones y datos llegan al modelo como un único texto. Por eso la defensa se basa en permisos y controles alrededor del modelo, no dentro de él.",
+    },
+    concepts: ["prompt-injection"],
+    resources: [
+      { title: "OWASP Top 10 for LLM Applications", url: "https://genai.owasp.org/llm-top-10/", kind: "docs", lang: "en" },
+      { title: "Simon Willison — prompt injection articles", url: "https://simonwillison.net/tags/prompt-injection/", kind: "article", lang: "en" },
+      { title: "Anthropic — Mitigate jailbreaks and prompt injections", url: "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/mitigate-jailbreaks", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Попробуйте сломать свой RAG или агента: положите в документ скрытую инструкцию («игнорируй правила и…»). Запишите, что сработало и какая защита помогла.",
+      en: "Try to break your RAG or agent: put a hidden instruction in a document (“ignore the rules and…”). Record what worked and which defence helped.",
+      es: "Intenta romper tu RAG o tu agente: mete en un documento una instrucción oculta («ignora las reglas y…»). Apunta qué funcionó y qué defensa ayudó.",
+    },
+    prereq: ["tool-use"],
+    related: ["agent-safety", "guardrails-privacy"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "guardrails-privacy", block: "production",
+    title: { ru: "Гардрейлы, персональные данные и регулирование", en: "Guardrails, personal data and regulation", es: "Guardrails, datos personales y regulación" },
+    what: {
+      ru: "Гардрейлы — проверки на входе и выходе модели: фильтрация опасного контента, маскирование персональных данных, проверка ответа перед показом. В Европе работу с данными регулирует GDPR, а AI-системы — EU AI Act с требованиями, зависящими от уровня риска.",
+      en: "Guardrails are checks on the model's input and output: filtering harmful content, masking personal data, checking an answer before showing it. In Europe, GDPR governs data handling and the EU AI Act sets risk-based requirements for AI systems.",
+      es: "Los guardrails son controles en la entrada y la salida del modelo: filtrar contenido dañino, enmascarar datos personales y revisar la respuesta antes de mostrarla. En Europa, el RGPD regula el tratamiento de datos y el EU AI Act fija requisitos para los sistemas de IA según su nivel de riesgo.",
+    },
+    why: {
+      ru: "Если вы ищете работу в ЕС, базовое понимание GDPR и EU AI Act ожидается. Банки, медицина и госсектор особенно строги к тому, какие данные уходят в модель.",
+      en: "If you are job hunting in the EU, a basic grasp of GDPR and the EU AI Act is expected. Banks, healthcare and the public sector are especially strict about what data goes to a model.",
+      es: "Si buscas trabajo en la UE, se espera que conozcas lo básico del RGPD y del EU AI Act. La banca, la sanidad y el sector público son especialmente estrictos con los datos que se envían a un modelo.",
+    },
+    fromSql: {
+      ru: "Маскирование персональных данных перед отправкой в модель похоже на Data Redaction или VPD в Oracle: модель, как и пользователь отчёта, должна видеть только то, что ей положено.",
+      en: "Masking personal data before it goes to a model is like Oracle Data Redaction or VPD: the model, like a report user, should see only what it is entitled to.",
+      es: "Enmascarar datos personales antes de enviarlos al modelo es como Data Redaction o VPD en Oracle: el modelo, igual que el usuario de un informe, solo debe ver lo que le corresponde.",
+    },
+    concepts: ["guardrails", "pii"],
+    resources: [
+      { title: "EU Artificial Intelligence Act", url: "https://artificialintelligenceact.eu/", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Добавьте в свой сервис шаг, который находит и маскирует email и телефоны во входном тексте до отправки модели. Проверьте его на 20 примерах.",
+      en: "Add a step to your service that finds and masks emails and phone numbers in the input before it is sent to the model. Test it on 20 examples.",
+      es: "Añade a tu servicio un paso que detecte y enmascare emails y teléfonos en el texto de entrada antes de enviarlo al modelo. Pruébalo con 20 ejemplos.",
+    },
+    prereq: ["prompt-injection-security"],
+    related: ["ai-ux"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "self-hosting", block: "production",
+    title: { ru: "Свой хостинг моделей", en: "Self-hosting models", es: "Alojar modelos propios" },
+    what: {
+      ru: "Открытые модели можно запускать на своих серверах: vLLM для продакшн-инференса, Ollama для локальных экспериментов. Квантизация уменьшает модель, чтобы она поместилась на более дешёвую видеокарту, ценой небольшой потери качества.",
+      en: "Open models can run on your own servers: vLLM for production inference, Ollama for local experiments. Quantisation shrinks a model to fit a cheaper GPU at the cost of a small quality loss.",
+      es: "Los modelos abiertos se pueden ejecutar en servidores propios: vLLM para inferencia en producción y Ollama para experimentos locales. La cuantización reduce el modelo para que quepa en una GPU más barata, a cambio de una pequeña pérdida de calidad.",
+    },
+    why: {
+      ru: "Свой хостинг выгоден при строгих требованиях к данным или при очень большом и стабильном объёме запросов. В остальных случаях API обычно дешевле и проще. Понимать этот компромисс нужно на уровне основ.",
+      en: "Self-hosting pays off under strict data requirements or very large, steady request volumes. Otherwise an API is usually cheaper and simpler. You need to understand this trade-off at a basic level.",
+      es: "Alojar modelos propios compensa con requisitos de datos estrictos o con un volumen de peticiones muy grande y estable. En los demás casos una API suele ser más barata y sencilla. Hay que entender este equilibrio a nivel básico.",
+    },
+    concepts: ["open-weights", "quantization"],
+    example: {
+      lang: "bash",
+      code: "# run a small open model locally\nollama run llama3.2\n\n# Ollama also exposes an HTTP API on localhost:11434\ncurl http://localhost:11434/api/generate -d '{\"model\": \"llama3.2\", \"prompt\": \"Hello\"}'",
+    },
+    resources: [
+      { title: "vLLM documentation", url: "https://docs.vllm.ai/", kind: "docs", lang: "en" },
+      { title: "Ollama", url: "https://ollama.com/", kind: "tool", lang: "en" },
+    ],
+    practice: {
+      ru: "Запустите маленькую открытую модель через Ollama на своём Mac и прогоните на ней набор evals из своего проекта. Насколько она хуже облачной модели и насколько быстрее или медленнее?",
+      en: "Run a small open model with Ollama on your Mac and put your project's eval set through it. How much worse is it than a cloud model, and how much faster or slower?",
+      es: "Ejecuta un modelo abierto pequeño con Ollama en tu Mac y pásale el conjunto de evals de tu proyecto. ¿Cuánto peor es que un modelo en la nube y cuánto más rápido o lento?",
+    },
+    prereq: ["model-landscape"],
+    related: ["fine-tuning"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "ml-basics", block: "ml",
+    title: { ru: "Основы машинного обучения", en: "Machine learning basics", es: "Fundamentos de machine learning" },
+    what: {
+      ru: "Обучение с учителем: модель учится на примерах «вход → правильный ответ». Данные делят на обучающую и тестовую выборки, чтобы проверить, что модель обобщает, а не запоминает (переобучение). Качество классификации меряют точностью, precision, recall и F1.",
+      en: "Supervised learning: a model learns from “input → correct answer” examples. Data is split into training and test sets to check that the model generalises instead of memorising (overfitting). Classification quality is measured with accuracy, precision, recall and F1.",
+      es: "Aprendizaje supervisado: el modelo aprende de ejemplos «entrada → respuesta correcta». Los datos se dividen en conjunto de entrenamiento y de prueba para comprobar que el modelo generaliza en vez de memorizar (sobreajuste). La calidad de la clasificación se mide con accuracy, precision, recall y F1.",
+    },
+    why: {
+      ru: "Глубокая математика для старта не нужна, но базовые понятия ML спрашивают на собеседовании, и они же лежат в основе evals и fine-tuning.",
+      en: "You do not need deep maths to start, but basic ML concepts come up in interviews and underpin evals and fine-tuning.",
+      es: "No hace falta matemática avanzada para empezar, pero los conceptos básicos de ML salen en las entrevistas y son la base de los evals y del fine-tuning.",
+    },
+    fromSql: {
+      ru: "Разделение на обучающую и тестовую выборки — это просто два непересекающихся подмножества строк, например по хэшу id. Главное правило: тестовые строки никогда не участвуют в обучении.",
+      en: "A train/test split is just two non-overlapping row subsets, for example by hashing the id. The key rule: test rows never take part in training.",
+      es: "La división en entrenamiento y prueba son simplemente dos subconjuntos de filas sin solapamiento, por ejemplo según el hash del id. La regla clave: las filas de prueba nunca participan en el entrenamiento.",
+    },
+    concepts: ["overfitting", "precision-recall"],
+    resources: [
+      { title: "Machine Learning Specialization (Andrew Ng, Coursera)", url: "https://www.coursera.org/specializations/machine-learning-introduction", kind: "course", lang: "en" },
+      { title: "Practical Deep Learning for Coders (fast.ai)", url: "https://course.fast.ai/", kind: "course", lang: "en" },
+    ],
+    practice: {
+      ru: "Обучите простой классификатор (логистическая регрессия в scikit-learn) на открытом датасете, посчитайте precision и recall на тестовой выборке и сравните с LLM на тех же данных.",
+      en: "Train a simple classifier (logistic regression in scikit-learn) on an open dataset, compute precision and recall on the test set and compare with an LLM on the same data.",
+      es: "Entrena un clasificador sencillo (regresión logística en scikit-learn) con un dataset abierto, calcula precision y recall en el conjunto de prueba y compáralo con un LLM con los mismos datos.",
+    },
+    prereq: ["python-basics"],
+    related: ["eval-statistics", "data-tools"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "math-intuition", block: "ml",
+    title: { ru: "Математика на уровне интуиции", en: "Maths for intuition", es: "Matemáticas a nivel intuitivo" },
+    what: {
+      ru: "Достаточно понимать три вещи: векторы и матрицы (как устроены эмбеддинги и слои нейросети), вероятности (модель выдаёт распределение по токенам) и градиентный спуск (как модель обучается, понемногу уменьшая ошибку).",
+      en: "Three ideas are enough: vectors and matrices (how embeddings and network layers work), probability (the model outputs a distribution over tokens) and gradient descent (how a model learns by reducing its error step by step).",
+      es: "Basta con entender tres ideas: vectores y matrices (cómo funcionan los embeddings y las capas de una red), probabilidad (el modelo produce una distribución sobre los tokens) y descenso de gradiente (cómo aprende el modelo reduciendo el error poco a poco).",
+    },
+    why: {
+      ru: "Интуиция помогает понимать статьи, документацию и разговоры коллег из ML. Формулы выводить не придётся, но объяснить, что такое косинусное сходство или градиент, стоит уметь.",
+      en: "Intuition helps you follow papers, docs and ML colleagues. You will not derive formulas, but you should be able to explain cosine similarity or a gradient.",
+      es: "La intuición ayuda a entender artículos, documentación y a colegas de ML. No tendrás que deducir fórmulas, pero sí saber explicar qué es la similitud coseno o un gradiente.",
+    },
+    concepts: ["gradient-descent", "cosine-similarity"],
+    resources: [
+      { title: "3Blue1Brown — Essence of linear algebra", url: "https://www.3blue1brown.com/topics/linear-algebra", kind: "video", lang: "en" },
+      { title: "3Blue1Brown — Neural networks", url: "https://www.3blue1brown.com/topics/neural-networks", kind: "video", lang: "en" },
+    ],
+    practice: {
+      ru: "Посчитайте вручную на NumPy косинусное сходство трёх небольших векторов и объясните результат своими словами.",
+      en: "Compute by hand with NumPy the cosine similarity of three small vectors and explain the result in your own words.",
+      es: "Calcula a mano con NumPy la similitud coseno de tres vectores pequeños y explica el resultado con tus palabras.",
+    },
+    prereq: [],
+    related: ["embeddings"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "data-tools", block: "ml",
+    title: { ru: "NumPy, pandas и Jupyter", en: "NumPy, pandas and Jupyter", es: "NumPy, pandas y Jupyter" },
+    what: {
+      ru: "NumPy — быстрые массивы и математика над ними. pandas — таблицы (DataFrame) с фильтрацией, группировкой и соединениями. Jupyter — ноутбуки, где код, результаты и заметки идут вперемешку. PyTorch и Hugging Face достаточно знать на уровне знакомства.",
+      en: "NumPy provides fast arrays and maths over them. pandas provides tables (DataFrames) with filtering, grouping and joins. Jupyter notebooks mix code, results and notes. PyTorch and Hugging Face only need a passing acquaintance.",
+      es: "NumPy ofrece arrays rápidos y operaciones matemáticas sobre ellos. pandas ofrece tablas (DataFrame) con filtrado, agrupación y uniones. Jupyter son cuadernos en los que se mezclan código, resultados y notas. De PyTorch y Hugging Face basta con una primera toma de contacto.",
+    },
+    why: {
+      ru: "На этих инструментах готовят данные для evals и fine-tuning, анализируют результаты прогонов и делают быстрые эксперименты.",
+      en: "These tools are used to prepare data for evals and fine-tuning, analyse run results and run quick experiments.",
+      es: "Con estas herramientas se preparan datos para evals y fine-tuning, se analizan resultados y se hacen experimentos rápidos.",
+    },
+    fromSql: {
+      ru: "pandas — это SQL внутри Python: df[df.salary > 4000] — WHERE, groupby — GROUP BY, merge — JOIN. Вы быстро освоитесь, а для сложных выборок можно даже писать SQL прямо по DataFrame через DuckDB.",
+      en: "pandas is SQL inside Python: df[df.salary > 4000] is WHERE, groupby is GROUP BY, merge is JOIN. You will pick it up quickly, and for complex queries you can even run SQL over a DataFrame with DuckDB.",
+      es: "pandas es SQL dentro de Python: df[df.salary > 4000] es WHERE, groupby es GROUP BY y merge es JOIN. Te harás con él enseguida, y para consultas complejas puedes incluso escribir SQL sobre un DataFrame con DuckDB.",
+    },
+    concepts: [],
+    example: {
+      lang: "python",
+      code: 'import pandas as pd\n\ndf = pd.read_csv("employees.csv")\n\n# SELECT dept, AVG(salary) FROM employees WHERE salary > 2000 GROUP BY dept\nresult = df[df["salary"] > 2000].groupby("dept")["salary"].mean()\nprint(result)',
+    },
+    resources: [
+      { title: "pandas — Getting started", url: "https://pandas.pydata.org/docs/getting_started/index.html", kind: "docs", lang: "en" },
+      { title: "NumPy: the absolute basics for beginners", url: "https://numpy.org/doc/stable/user/absolute_beginners.html", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Перепишите пять своих типовых SQL-запросов (фильтр, группировка, соединение, оконная функция, сортировка) на pandas.",
+      en: "Rewrite five of your typical SQL queries (filter, group by, join, window function, order by) in pandas.",
+      es: "Reescribe en pandas cinco de tus consultas SQL habituales (filtro, agrupación, unión, función de ventana y ordenación).",
+    },
+    prereq: ["python-basics"],
+    related: ["ml-basics"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "fine-tuning", block: "ml",
+    title: { ru: "Fine-tuning и LoRA", en: "Fine-tuning and LoRA", es: "Fine-tuning y LoRA" },
+    what: {
+      ru: "Fine-tuning — дообучение готовой модели на своих примерах. LoRA и QLoRA обучают лишь небольшое число дополнительных параметров, поэтому это возможно на одной видеокарте. Дистилляция — обучение маленькой модели повторять ответы большой на узкой задаче.",
+      en: "Fine-tuning is further training of an existing model on your own examples. LoRA and QLoRA train only a small number of extra parameters, so a single GPU is enough. Distillation trains a small model to reproduce a large model's answers on a narrow task.",
+      es: "El fine-tuning consiste en seguir entrenando un modelo existente con tus propios ejemplos. LoRA y QLoRA entrenan solo un pequeño número de parámetros adicionales, así que basta con una GPU. La destilación entrena un modelo pequeño para imitar las respuestas de uno grande en una tarea concreta.",
+    },
+    why: {
+      ru: "Чаще всего промпт и RAG решают задачу дешевле. Fine-tuning оправдан, когда нужен стабильный формат или стиль, ниже цена и задержка на большом потоке, или модель должна работать локально. Один эксперимент с LoRA — хороший плюс в портфолио.",
+      en: "Most of the time prompting and RAG solve the problem more cheaply. Fine-tuning is justified when you need a stable format or style, lower cost and latency at high volume, or a model that runs locally. One LoRA experiment is a nice plus in a portfolio.",
+      es: "La mayoría de las veces el prompt y el RAG resuelven el problema más barato. El fine-tuning se justifica cuando se necesita un formato o estilo estable, menor coste y latencia con mucho volumen o un modelo que funcione en local. Un experimento con LoRA es un buen extra en el portfolio.",
+    },
+    concepts: ["fine-tuning", "lora"],
+    resources: [
+      { title: "Hugging Face PEFT", url: "https://huggingface.co/docs/peft/index", kind: "docs", lang: "en" },
+      { title: "Chip Huyen — AI Engineering, chapters 7–8", url: "https://www.oreilly.com/library/view/ai-engineering/9781098166298/", kind: "book", lang: "en" },
+    ],
+    practice: {
+      ru: "Дообучите маленькую открытую модель через LoRA в Google Colab на узкой задаче (например, классификация обращений) и сравните её с большой моделью с хорошим промптом по качеству и цене.",
+      en: "Fine-tune a small open model with LoRA in Google Colab on a narrow task (for example ticket classification) and compare it with a large model and a good prompt on quality and cost.",
+      es: "Ajusta con LoRA un modelo abierto pequeño en Google Colab para una tarea concreta (por ejemplo, clasificar incidencias) y compáralo en calidad y coste con un modelo grande con un buen prompt.",
+    },
+    prereq: ["ml-basics", "eval-datasets"],
+    related: ["self-hosting", "synthetic-data"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "synthetic-data", block: "ml",
+    title: { ru: "Синтетические данные", en: "Synthetic data", es: "Datos sintéticos" },
+    what: {
+      ru: "Синтетические данные — примеры, сгенерированные моделью: вопросы к документам, варианты обращений клиентов, пары «вход → ответ». Их используют, когда реальных данных мало, для evals и для fine-tuning.",
+      en: "Synthetic data are examples generated by a model: questions about documents, variants of customer messages, “input → answer” pairs. They are used when real data is scarce, for evals and for fine-tuning.",
+      es: "Los datos sintéticos son ejemplos generados por un modelo: preguntas sobre documentos, variantes de mensajes de clientes, pares «entrada → respuesta». Se usan cuando faltan datos reales, para evals y para fine-tuning.",
+    },
+    why: {
+      ru: "В начале проекта реальных примеров обычно нет. Синтетика позволяет быстро собрать первый набор evals, но её нужно проверять: модель склонна генерировать однообразные и слишком лёгкие примеры.",
+      en: "At the start of a project there are usually no real examples. Synthetic data lets you build a first eval set quickly, but it must be checked: models tend to produce repetitive, overly easy examples.",
+      es: "Al principio de un proyecto no suele haber ejemplos reales. Los datos sintéticos permiten montar rápido un primer conjunto de evals, pero hay que revisarlos: los modelos tienden a generar ejemplos repetitivos y demasiado fáciles.",
+    },
+    fromSql: {
+      ru: "Похоже на генерацию тестовых данных для нагрузочного тестирования: важно не количество строк, а то, насколько они похожи на реальное распределение, включая редкие и «грязные» случаи.",
+      en: "It is like generating test data for load testing: what matters is not the row count but how closely the rows match the real distribution, including rare and messy cases.",
+      es: "Se parece a generar datos de prueba para pruebas de carga: lo que importa no es el número de filas, sino cuánto se parecen a la distribución real, incluidos los casos raros y «sucios».",
+    },
+    concepts: ["synthetic-data", "golden-dataset"],
+    resources: [
+      { title: "Chip Huyen — AI Engineering, chapter 8", url: "https://www.oreilly.com/library/view/ai-engineering/9781098166298/", kind: "book", lang: "en" },
+    ],
+    practice: {
+      ru: "Сгенерируйте моделью 50 вопросов к своей документации, отберите вручную 30 лучших и используйте их как набор evals для RAG.",
+      en: "Have a model generate 50 questions about your documentation, hand-pick the best 30 and use them as the eval set for your RAG.",
+      es: "Haz que un modelo genere 50 preguntas sobre tu documentación, elige a mano las 30 mejores y úsalas como conjunto de evals para tu RAG.",
+    },
+    prereq: ["eval-datasets"],
+    related: ["fine-tuning"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "product-thinking", block: "product",
+    title: { ru: "Продуктовое мышление", en: "Product thinking", es: "Pensamiento de producto" },
+    what: {
+      ru: "Найти задачу, где AI даёт реальную ценность: экономит время, снижает ошибки, открывает новую возможность. И честно сказать, где он не нужен и обычный код или SQL справится лучше, дешевле и надёжнее.",
+      en: "Find problems where AI adds real value: saves time, reduces errors, opens a new capability. And be honest about where it is not needed and ordinary code or SQL would do better, cheaper and more reliably.",
+      es: "Encontrar problemas en los que la IA aporta valor real: ahorra tiempo, reduce errores o abre una posibilidad nueva. Y decir con honestidad dónde no hace falta y el código normal o el SQL lo harían mejor, más barato y de forma más fiable.",
+    },
+    why: {
+      ru: "AI-инженер часто работает на стыке с бизнесом. AI-проект для знакомой отрасли ценится выше абстрактного демо, поэтому ваш опыт в данных и предметной области — преимущество.",
+      en: "AI engineers often work at the boundary with the business. An AI project for an industry you know is worth more than an abstract demo, so your data and domain experience is an advantage.",
+      es: "Un AI Engineer suele trabajar en la frontera con el negocio. Un proyecto de IA para un sector que conoces vale más que una demo abstracta, así que tu experiencia en datos y en tu dominio es una ventaja.",
+    },
+    fromSql: {
+      ru: "Подумайте, какие задачи вокруг баз данных вы видели годами: разбор неструктурированных полей, ответы пользователям на вопросы «где мои данные», генерация отчётов по запросу на естественном языке. Это готовые идеи для портфолио.",
+      en: "Think about the database problems you have seen for years: parsing unstructured fields, answering users' “where is my data” questions, generating reports from natural-language requests. These are ready-made portfolio ideas.",
+      es: "Piensa en los problemas con bases de datos que llevas años viendo: analizar campos no estructurados, responder a usuarios que preguntan «dónde están mis datos», generar informes a partir de peticiones en lenguaje natural. Son ideas de portfolio listas para usar.",
+    },
+    concepts: [],
+    resources: [
+      { title: "Google PAIR — People + AI Guidebook", url: "https://pair.withgoogle.com/guidebook/", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Выпишите пять задач из своей текущей работы, где AI мог бы помочь, и для каждой ответьте: какую метрику он улучшит и можно ли обойтись без AI?",
+      en: "List five tasks from your current job where AI could help, and for each answer: which metric would it improve, and could you do without AI?",
+      es: "Apunta cinco tareas de tu trabajo actual en las que la IA podría ayudar y responde para cada una: ¿qué métrica mejoraría y se podría prescindir de la IA?",
+    },
+    prereq: [],
+    related: ["portfolio", "prototyping"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "ai-ux", block: "product",
+    title: { ru: "UX AI-функций", en: "UX of AI features", es: "UX de funciones de IA" },
+    what: {
+      ru: "AI-функция ошибается, отвечает не мгновенно и не всегда одинаково. Хороший интерфейс показывает прогресс и шаги агента, источники ответа, неуверенность модели, позволяет легко исправить результат и оставить отзыв.",
+      en: "An AI feature makes mistakes, is not instant and does not always answer the same way. A good interface shows progress and agent steps, the sources of an answer and the model's uncertainty, and makes it easy to correct the result and give feedback.",
+      es: "Una función de IA se equivoca, no responde al instante y no siempre igual. Una buena interfaz muestra el progreso y los pasos del agente, las fuentes de la respuesta y la incertidumbre del modelo, y permite corregir el resultado y opinar con facilidad.",
+    },
+    why: {
+      ru: "Пользователи доверяют системе, если понимают, откуда ответ и что делать при ошибке. Отзывы пользователей — ещё и источник данных для evals.",
+      en: "Users trust a system when they understand where an answer comes from and what to do when it is wrong. User feedback is also a source of data for evals.",
+      es: "Los usuarios confían en un sistema cuando entienden de dónde sale la respuesta y qué hacer si está mal. Sus valoraciones son además una fuente de datos para los evals.",
+    },
+    concepts: ["streaming"],
+    resources: [
+      { title: "Google PAIR — People + AI Guidebook", url: "https://pair.withgoogle.com/guidebook/", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Добавьте в свой чат-интерфейс ссылки на источники ответа и кнопки «полезно / не полезно» с сохранением в БД.",
+      en: "Add source links and “helpful / not helpful” buttons, saved to a database, to your chat interface.",
+      es: "Añade a tu interfaz de chat enlaces a las fuentes de la respuesta y botones «útil / no útil» que se guarden en la base de datos.",
+    },
+    prereq: ["product-thinking"],
+    related: ["rag-evaluation", "guardrails-privacy"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "prototyping", block: "product",
+    title: { ru: "Быстрое прототипирование", en: "Rapid prototyping", es: "Prototipado rápido" },
+    what: {
+      ru: "Довести идею до работающего демо за дни, а не недели: взять готовую модель через API, простой интерфейс (Streamlit, Gradio или страница на HTML), десяток тестовых примеров и показать результат людям.",
+      en: "Take an idea to a working demo in days, not weeks: a ready model through an API, a simple interface (Streamlit, Gradio or a plain HTML page), a dozen test examples, and show the result to people.",
+      es: "Llevar una idea a una demo funcional en días, no en semanas: un modelo ya hecho a través de una API, una interfaz sencilla (Streamlit, Gradio o una página HTML), una docena de ejemplos de prueba y enseñar el resultado a la gente.",
+    },
+    why: {
+      ru: "Ценность AI-идеи становится понятна, только когда её можно потрогать. Скорость прототипирования — одно из главных умений, которые ищут в AI-командах.",
+      en: "An AI idea's value only becomes clear once people can try it. Prototyping speed is one of the main skills AI teams look for.",
+      es: "El valor de una idea de IA solo se ve cuando se puede probar. La rapidez para prototipar es una de las habilidades que más buscan los equipos de IA.",
+    },
+    concepts: [],
+    resources: [
+      { title: "DeepLearning.AI — Short courses", url: "https://www.deeplearning.ai/short-courses/", kind: "course", lang: "en" },
+    ],
+    practice: {
+      ru: "Выберите одну идею из темы «Продуктовое мышление» и за выходные сделайте работающий прототип. Покажите его коллеге и запишите три замечания.",
+      en: "Pick one idea from “Product thinking” and build a working prototype over a weekend. Show it to a colleague and write down three pieces of feedback.",
+      es: "Elige una idea del tema «Pensamiento de producto» y construye un prototipo funcional en un fin de semana. Enséñaselo a un compañero y anota tres comentarios.",
+    },
+    prereq: ["product-thinking"],
+    related: ["ai-coding-assistants"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "communication", block: "product",
+    title: { ru: "Коммуникация и дизайн-документы", en: "Communication and design docs", es: "Comunicación y documentos de diseño" },
+    what: {
+      ru: "Объяснять возможности и риски AI нетехническим коллегам, писать дизайн-документы (цель, варианты решения, компромиссы, метрики успеха) и рассказывать о проектах по структуре: задача, решение, как мерили качество, что не сработало, что сделали бы иначе.",
+      en: "Explain AI's capabilities and risks to non-technical colleagues, write design docs (goal, options, trade-offs, success metrics) and present projects in a clear structure: problem, solution, how quality was measured, what did not work, what you would do differently.",
+      es: "Explicar las posibilidades y los riesgos de la IA a compañeros no técnicos, escribir documentos de diseño (objetivo, alternativas, compromisos, métricas de éxito) y presentar proyectos con una estructura clara: problema, solución, cómo se midió la calidad, qué no funcionó y qué harías de otra forma.",
+    },
+    why: {
+      ru: "Вопрос «расскажите про свой AI-проект» звучит почти на каждом собеседовании, и цифры в ответе обязательны. Умение ясно писать на английском и испанском расширяет круг вакансий.",
+      en: "“Tell us about your AI project” comes up in almost every interview, and numbers are a must. Writing clearly in English and Spanish widens the range of jobs open to you.",
+      es: "«Háblanos de tu proyecto de IA» aparece en casi todas las entrevistas, y las cifras son obligatorias. Escribir con claridad en inglés y español amplía las ofertas a las que puedes optar.",
+    },
+    concepts: [],
+    resources: [
+      { title: "Design Docs at Google", url: "https://www.industrialempathy.com/posts/design-docs-at-google/", kind: "article", lang: "en" },
+    ],
+    practice: {
+      ru: "Напишите одностраничный дизайн-документ для своего проекта на английском. Затем расскажите о проекте за 3 минуты по структуре «задача, решение, метрики, ошибки, выводы» на испанском.",
+      en: "Write a one-page design doc for your project in English. Then present the project in 3 minutes in Spanish using the structure “problem, solution, metrics, mistakes, lessons”.",
+      es: "Escribe en inglés un documento de diseño de una página para tu proyecto. Después preséntalo en español en 3 minutos con la estructura «problema, solución, métricas, errores y conclusiones».",
+    },
+    prereq: [],
+    related: ["portfolio"],
+    checked: "2026-11-06",
+  },
+  {
+    id: "continuous-learning", block: "product",
+    title: { ru: "Как не отстать от индустрии", en: "Keeping up with the field", es: "Mantenerse al día" },
+    what: {
+      ru: "Область меняется каждые несколько месяцев. Нужна привычка: читать документацию и инженерные блоги вендоров, пару авторитетных авторов и рассылок, сразу пробовать новое на своих проектах и записывать выводы.",
+      en: "The field changes every few months. You need a habit: read vendor docs and engineering blogs, follow a couple of trusted authors and newsletters, try new things in your own projects right away and write down what you learn.",
+      es: "El campo cambia cada pocos meses. Hace falta un hábito: leer la documentación y los blogs de ingeniería de los proveedores, seguir a un par de autores y boletines de confianza, probar lo nuevo enseguida en tus proyectos y apuntar las conclusiones.",
+    },
+    why: {
+      ru: "Знания годичной давности частично устаревают. Этот справочник с метками свежести и лентой изменений — и есть ваш инструмент для такой привычки.",
+      en: "Knowledge from a year ago is partly out of date. This handbook, with its freshness badges and change log, is your tool for that habit.",
+      es: "Lo que sabías hace un año está en parte desfasado. Este manual, con sus marcas de vigencia y su registro de novedades, es tu herramienta para ese hábito.",
+    },
+    concepts: [],
+    resources: [
+      { title: "Simon Willison's Weblog", url: "https://simonwillison.net/", kind: "article", lang: "en" },
+      { title: "Latent Space (podcast and newsletter)", url: "https://www.latent.space/", kind: "article", lang: "en" },
+      { title: "Anthropic Engineering blog", url: "https://www.anthropic.com/engineering", kind: "article", lang: "en" },
+    ],
+    practice: {
+      ru: "Раз в неделю добавляйте в «Входящие» одну новость или статью, а раз в месяц разбирайте их: что-то в ленту изменений, что-то в заметки к темам.",
+      en: "Once a week add one news item or article to the Inbox, and once a month sort them: some into the change log, some into topic notes.",
+      es: "Una vez por semana añade una noticia o un artículo a la bandeja de entrada y una vez al mes clasifícalos: unos al registro de novedades y otros a las notas de los temas.",
+    },
+    prereq: [],
+    related: [],
+    checked: "2026-11-06",
+  },
+  {
+    id: "portfolio", block: "product",
+    title: { ru: "Публичное портфолио", en: "Public portfolio", es: "Portfolio público" },
+    what: {
+      ru: "2–3 проекта на GitHub, которые закрывают блоки 1–6: аккуратный код с тестами, обоснованный выбор модели, структурированный вывод и tool use, RAG с цитатами и метриками, агент со своим MCP-сервером, набор evals. У каждого README с целью, архитектурой, метриками и компромиссами.",
+      en: "Two or three GitHub projects that cover blocks 1–6: clean code with tests, a justified model choice, structured output and tool use, RAG with citations and metrics, an agent with its own MCP server, an eval set. Each with a README covering the goal, architecture, metrics and trade-offs.",
+      es: "Dos o tres proyectos en GitHub que cubran los bloques 1–6: código limpio con tests, elección de modelo justificada, salida estructurada y tool use, RAG con citas y métricas, un agente con su propio servidor MCP y un conjunto de evals. Cada uno con un README que explique el objetivo, la arquitectura, las métricas y los compromisos.",
+    },
+    why: {
+      ru: "Для смены профессии портфолио — главный аргумент для работодателя: оно заменяет отсутствующий опыт в должности AI-инженера. Короткие разборы проектов в блоге или на LinkedIn усиливают его.",
+      en: "When switching careers, the portfolio is your main argument to employers: it stands in for the AI engineering job experience you do not yet have. Short project write-ups on a blog or LinkedIn strengthen it.",
+      es: "Al cambiar de profesión, el portfolio es tu principal argumento ante las empresas: sustituye a la experiencia como AI Engineer que aún no tienes. Publicar análisis breves de los proyectos en un blog o en LinkedIn lo refuerza.",
+    },
+    fromSql: {
+      ru: "Хорошая стратегия — проекты на стыке с данными: NL-to-SQL ассистент с evals, MCP-сервер к базе данных, RAG по технической документации БД. Так вы продаёте не «новичка в AI», а «инженера данных, который умеет AI».",
+      en: "A good strategy is projects that sit next to data: a natural-language-to-SQL assistant with evals, an MCP server for a database, RAG over database documentation. That way you sell yourself not as an “AI beginner” but as a “data engineer who knows AI”.",
+      es: "Una buena estrategia son proyectos cercanos a los datos: un asistente de lenguaje natural a SQL con evals, un servidor MCP para una base de datos o un RAG sobre documentación técnica de bases de datos. Así no te vendes como «principiante en IA», sino como «ingeniero de datos que domina la IA».",
+    },
+    concepts: [],
+    resources: [
+      { title: "GitHub Docs — Get started", url: "https://docs.github.com/en/get-started", kind: "docs", lang: "en" },
+    ],
+    practice: {
+      ru: "Составьте план из трёх проектов портфолио и отметьте, какие темы этого справочника закрывает каждый. Добавьте план в заметки к этой теме.",
+      en: "Draft a plan for three portfolio projects and mark which topics in this handbook each one covers. Add the plan to this topic's notes.",
+      es: "Haz un plan de tres proyectos de portfolio y marca qué temas de este manual cubre cada uno. Añade el plan a las notas de este tema.",
+    },
+    prereq: ["product-thinking"],
+    related: ["regression-evals", "mcp", "rag-evaluation"],
+    checked: "2026-11-06",
+  },
 ];
 
 const GLOSSARY = [
@@ -683,7 +2273,7 @@ const GLOSSARY = [
       en: "A vector of numbers describing the meaning of a text; texts with similar meaning give similar vectors.",
       es: "Vector de números que describe el significado de un texto; textos de significado parecido dan vectores cercanos.",
     },
-    topics: ["embeddings"],
+    topics: ["embeddings", "rag-architecture"],
   },
   {
     id: "cosine-similarity",
@@ -693,11 +2283,574 @@ const GLOSSARY = [
       en: "A measure of how close two vectors are by the angle between them: 1 means the same direction, 0 means unrelated.",
       es: "Medida de cercanía entre dos vectores según el ángulo que forman: 1 es la misma dirección, 0 indica que no están relacionados.",
     },
-    topics: ["embeddings"],
+    topics: ["embeddings", "vector-search", "math-intuition"],
+  },
+  {
+    id: "pydantic",
+    term: { ru: "Pydantic", en: "Pydantic", es: "Pydantic" },
+    definition: {
+      ru: "Библиотека Python для описания схем данных через классы с типами: проверка, преобразование и сериализация в JSON.",
+      en: "A Python library for defining data schemas as typed classes: validation, conversion and JSON serialisation.",
+      es: "Librería de Python para definir esquemas de datos como clases con tipos: validación, conversión y serialización a JSON.",
+    },
+    topics: ["python-types-tests", "structured-output"],
+  },
+  {
+    id: "json-schema",
+    term: { ru: "JSON Schema", en: "JSON Schema", es: "JSON Schema" },
+    definition: {
+      ru: "Стандарт описания структуры JSON: какие поля есть, каких они типов, какие обязательны. По нему модели выдают структурированный ответ.",
+      en: "A standard for describing the structure of JSON: which fields exist, their types and which are required. Models use it to produce structured output.",
+      es: "Estándar para describir la estructura de un JSON: qué campos hay, de qué tipo y cuáles son obligatorios. Los modelos lo usan para dar salida estructurada.",
+    },
+    topics: ["python-types-tests", "structured-output", "tool-use"],
+  },
+  {
+    id: "async",
+    term: { ru: "асинхронность (async/await)", en: "async/await", es: "asincronía (async/await)" },
+    definition: {
+      ru: "Способ писать код, который ждёт много операций ввода-вывода одновременно в одном потоке.",
+      en: "A way of writing code that waits on many I/O operations at once in a single thread.",
+      es: "Forma de escribir código que espera muchas operaciones de entrada/salida a la vez en un solo hilo.",
+    },
+    topics: ["async-python"],
+  },
+  {
+    id: "sse",
+    term: { ru: "SSE (Server-Sent Events)", en: "SSE (Server-Sent Events)", es: "SSE (Server-Sent Events)" },
+    definition: {
+      ru: "Простой протокол, по которому сервер отправляет браузеру поток событий по одному HTTP-соединению. Обычно так стримят ответ модели.",
+      en: "A simple protocol in which the server sends a stream of events to the browser over one HTTP connection. The usual way to stream a model's answer.",
+      es: "Protocolo sencillo con el que el servidor envía al navegador un flujo de eventos por una sola conexión HTTP. Es la forma habitual de enviar la respuesta de un modelo en streaming.",
+    },
+    topics: ["web-backend"],
+  },
+  {
+    id: "rest-api",
+    term: { ru: "REST API", en: "REST API", es: "API REST" },
+    definition: {
+      ru: "Стиль HTTP-интерфейса: ресурсы по адресам (URL) и действия методами GET, POST, PUT, DELETE.",
+      en: "A style of HTTP interface: resources at URLs and actions via GET, POST, PUT and DELETE methods.",
+      es: "Estilo de interfaz HTTP: recursos en direcciones (URL) y acciones con los métodos GET, POST, PUT y DELETE.",
+    },
+    topics: ["web-backend"],
+  },
+  {
+    id: "docker",
+    term: { ru: "Docker, контейнер", en: "Docker, container", es: "Docker, contenedor" },
+    definition: {
+      ru: "Упаковка приложения со всеми зависимостями в образ, который одинаково запускается на любой машине.",
+      en: "Packaging an application with all its dependencies into an image that runs the same way on any machine.",
+      es: "Empaquetar una aplicación con todas sus dependencias en una imagen que se ejecuta igual en cualquier máquina.",
+    },
+    topics: ["dev-tools"],
+  },
+  {
+    id: "ci-cd",
+    term: { ru: "CI/CD", en: "CI/CD", es: "CI/CD" },
+    definition: {
+      ru: "Непрерывная интеграция и доставка: автоматический запуск тестов на каждое изменение и автоматический деплой.",
+      en: "Continuous integration and delivery: tests run automatically on every change and deployment is automated.",
+      es: "Integración y entrega continuas: los tests se ejecutan solos en cada cambio y el despliegue es automático.",
+    },
+    topics: ["dev-tools", "regression-evals"],
+  },
+  {
+    id: "llm",
+    term: { ru: "LLM (большая языковая модель)", en: "LLM (large language model)", es: "LLM (modelo de lenguaje grande)" },
+    definition: {
+      ru: "Нейросеть, обученная на огромном объёме текста предсказывать следующий токен; основа чат-ботов и AI-агентов.",
+      en: "A neural network trained on huge amounts of text to predict the next token; the basis of chatbots and AI agents.",
+      es: "Red neuronal entrenada con enormes cantidades de texto para predecir el siguiente token; la base de chatbots y agentes de IA.",
+    },
+    topics: ["llm-how-it-works"],
+  },
+  {
+    id: "transformer",
+    term: { ru: "трансформер", en: "transformer", es: "transformer" },
+    definition: {
+      ru: "Архитектура нейросети на механизме внимания (attention), на которой построены современные языковые модели.",
+      en: "A neural network architecture built on the attention mechanism; the basis of modern language models.",
+      es: "Arquitectura de red neuronal basada en el mecanismo de atención (attention); la base de los modelos de lenguaje actuales.",
+    },
+    topics: ["llm-how-it-works"],
+  },
+  {
+    id: "rlhf",
+    term: { ru: "RLHF", en: "RLHF (reinforcement learning from human feedback)", es: "RLHF" },
+    definition: {
+      ru: "Обучение с подкреплением на оценках людей: модель учат давать ответы, которые люди считают лучшими.",
+      en: "Reinforcement learning from human feedback: the model learns to give the answers people rate as better.",
+      es: "Aprendizaje por refuerzo con valoraciones humanas: el modelo aprende a dar las respuestas que las personas consideran mejores.",
+    },
+    topics: ["llm-how-it-works"],
+  },
+  {
+    id: "temperature",
+    term: { ru: "температура", en: "temperature", es: "temperatura" },
+    definition: {
+      ru: "Параметр генерации, который регулирует случайность выбора следующего токена.",
+      en: "A generation parameter that controls how random the choice of the next token is.",
+      es: "Parámetro de generación que regula lo aleatoria que es la elección del siguiente token.",
+    },
+    topics: ["generation-params"],
+  },
+  {
+    id: "reasoning",
+    term: { ru: "рассуждение (extended thinking)", en: "reasoning (extended thinking)", es: "razonamiento (extended thinking)" },
+    definition: {
+      ru: "Режим, в котором модель пишет промежуточные рассуждения перед ответом; точнее на сложных задачах, но дороже и медленнее.",
+      en: "A mode in which the model writes intermediate reasoning before answering; more accurate on hard tasks but slower and costlier.",
+      es: "Modo en el que el modelo escribe un razonamiento intermedio antes de responder; más preciso en tareas difíciles, pero más lento y caro.",
+    },
+    topics: ["generation-params"],
+  },
+  {
+    id: "context-window",
+    term: { ru: "контекстное окно", en: "context window", es: "ventana de contexto" },
+    definition: {
+      ru: "Максимальное число токенов, которое модель обрабатывает за один запрос, включая ответ.",
+      en: "The maximum number of tokens a model processes in one request, including the answer.",
+      es: "Número máximo de tokens que el modelo procesa en una petición, respuesta incluida.",
+    },
+    topics: ["context-window", "agent-memory"],
+  },
+  {
+    id: "prompt-caching",
+    term: { ru: "кэширование промпта", en: "prompt caching", es: "caché de prompts" },
+    definition: {
+      ru: "Провайдер запоминает неизменный префикс промпта, и повторные запросы с ним стоят дешевле и отвечают быстрее.",
+      en: "The provider stores an unchanging prompt prefix so repeated requests with it are cheaper and faster.",
+      es: "El proveedor guarda un prefijo de prompt que no cambia, de modo que las peticiones que lo repiten son más baratas y rápidas.",
+    },
+    topics: ["context-window", "cost-optimization", "cost-latency"],
+  },
+  {
+    id: "open-weights",
+    term: { ru: "открытые веса", en: "open weights", es: "pesos abiertos" },
+    definition: {
+      ru: "Модели, веса которых опубликованы: их можно скачать, запустить у себя и дообучить.",
+      en: "Models whose weights are published, so you can download, run and fine-tune them yourself.",
+      es: "Modelos cuyos pesos están publicados, de modo que se pueden descargar, ejecutar y ajustar por cuenta propia.",
+    },
+    topics: ["model-landscape", "self-hosting"],
+  },
+  {
+    id: "multimodal",
+    term: { ru: "мультимодальность", en: "multimodality", es: "multimodalidad" },
+    definition: {
+      ru: "Способность модели работать не только с текстом, но и с изображениями, аудио, PDF.",
+      en: "A model's ability to work with images, audio and PDFs, not just text.",
+      es: "Capacidad de un modelo para trabajar no solo con texto, sino también con imágenes, audio y PDF.",
+    },
+    topics: ["model-landscape", "multimodal-api"],
+  },
+  {
+    id: "hallucination",
+    term: { ru: "галлюцинация", en: "hallucination", es: "alucinación" },
+    definition: {
+      ru: "Уверенный, но неверный или выдуманный ответ модели.",
+      en: "A confident but false or made-up answer from a model.",
+      es: "Respuesta del modelo segura pero falsa o inventada.",
+    },
+    topics: ["llm-limitations", "rag-evaluation"],
+  },
+  {
+    id: "knowledge-cutoff",
+    term: { ru: "дата отсечения знаний", en: "knowledge cutoff", es: "fecha de corte" },
+    definition: {
+      ru: "Дата, после которой в обучающих данных модели нет информации.",
+      en: "The date after which a model's training data contains no information.",
+      es: "Fecha a partir de la cual los datos de entrenamiento del modelo no contienen información.",
+    },
+    topics: ["llm-limitations"],
+  },
+  {
+    id: "system-prompt",
+    term: { ru: "системный промпт", en: "system prompt", es: "prompt de sistema" },
+    definition: {
+      ru: "Инструкция, задающая роль, правила и формат работы модели на весь диалог.",
+      en: "An instruction that sets the model's role, rules and output format for the whole conversation.",
+      es: "Instrucción que fija el rol, las reglas y el formato del modelo para toda la conversación.",
+    },
+    topics: ["prompt-engineering"],
+  },
+  {
+    id: "few-shot",
+    term: { ru: "few-shot (примеры в промпте)", en: "few-shot prompting", es: "few-shot (ejemplos en el prompt)" },
+    definition: {
+      ru: "Приём, когда в промпт добавляют несколько примеров «вход → нужный ответ».",
+      en: "Adding a few “input → desired answer” examples to the prompt.",
+      es: "Técnica que consiste en añadir al prompt varios ejemplos de «entrada → respuesta deseada».",
+    },
+    topics: ["prompt-engineering"],
+  },
+  {
+    id: "rate-limit",
+    term: { ru: "лимит запросов (rate limit)", en: "rate limit", es: "límite de peticiones (rate limit)" },
+    definition: {
+      ru: "Ограничение провайдера на число запросов или токенов в минуту; при превышении API отвечает ошибкой 429.",
+      en: "A provider's cap on requests or tokens per minute; when exceeded, the API returns a 429 error.",
+      es: "Límite del proveedor de peticiones o tokens por minuto; al superarlo, la API devuelve un error 429.",
+    },
+    topics: ["provider-sdks", "reliability"],
+  },
+  {
+    id: "streaming",
+    term: { ru: "стриминг", en: "streaming", es: "streaming" },
+    definition: {
+      ru: "Получение ответа модели по частям по мере генерации, а не целиком в конце.",
+      en: "Receiving the model's answer in pieces as it is generated rather than all at the end.",
+      es: "Recibir la respuesta del modelo por partes a medida que se genera, en lugar de entera al final.",
+    },
+    topics: ["provider-sdks", "web-backend", "ai-ux"],
+  },
+  {
+    id: "tool-use",
+    term: { ru: "вызов инструментов (tool use)", en: "tool use / function calling", es: "uso de herramientas (tool use)" },
+    definition: {
+      ru: "Механизм, при котором модель просит вызвать описанную функцию с аргументами, а код приложения выполняет её.",
+      en: "A mechanism in which the model asks for a described function to be called with arguments and the application code runs it.",
+      es: "Mecanismo en el que el modelo pide llamar a una función descrita con ciertos argumentos y el código de la aplicación la ejecuta.",
+    },
+    topics: ["tool-use", "agent-loop", "mcp"],
+  },
+  {
+    id: "batch-api",
+    term: { ru: "пакетная обработка (batch API)", en: "batch API", es: "procesamiento por lotes (batch API)" },
+    definition: {
+      ru: "Отправка большого набора запросов на асинхронную обработку дешевле, но с ответом в течение часов.",
+      en: "Submitting a large set of requests for asynchronous processing at a lower price, with results within hours.",
+      es: "Enviar un gran conjunto de peticiones para procesarlas de forma asíncrona a menor precio, con resultados en horas.",
+    },
+    topics: ["cost-optimization"],
+  },
+  {
+    id: "rag",
+    term: { ru: "RAG (генерация с поиском)", en: "RAG (retrieval-augmented generation)", es: "RAG (generación aumentada con recuperación)" },
+    definition: {
+      ru: "Подход, при котором модель отвечает, опираясь на найденные фрагменты документов, переданные в контекст.",
+      en: "An approach in which the model answers based on retrieved document fragments placed in its context.",
+      es: "Enfoque en el que el modelo responde a partir de fragmentos de documentos recuperados y colocados en su contexto.",
+    },
+    topics: ["rag-architecture", "advanced-retrieval"],
+  },
+  {
+    id: "chunk",
+    term: { ru: "чанк", en: "chunk", es: "chunk (fragmento)" },
+    definition: {
+      ru: "Фрагмент документа, который индексируется и ищется как единое целое.",
+      en: "A document fragment that is indexed and retrieved as one unit.",
+      es: "Fragmento de un documento que se indexa y se recupera como una unidad.",
+    },
+    topics: ["chunking"],
+  },
+  {
+    id: "vector-db",
+    term: { ru: "векторная база данных", en: "vector database", es: "base de datos vectorial" },
+    definition: {
+      ru: "Хранилище эмбеддингов с индексом для быстрого поиска ближайших векторов.",
+      en: "A store of embeddings with an index for fast nearest-vector search.",
+      es: "Almacén de embeddings con un índice para buscar rápidamente los vectores más cercanos.",
+    },
+    topics: ["vector-search"],
+  },
+  {
+    id: "hnsw",
+    term: { ru: "HNSW", en: "HNSW (hierarchical navigable small world)", es: "HNSW" },
+    definition: {
+      ru: "Популярный приближённый индекс для поиска ближайших векторов: очень быстрый, но может пропустить часть совпадений.",
+      en: "A popular approximate index for nearest-vector search: very fast, but may miss some matches.",
+      es: "Índice aproximado muy usado para buscar vectores cercanos: muy rápido, aunque puede omitir algunas coincidencias.",
+    },
+    topics: ["vector-search"],
+  },
+  {
+    id: "bm25",
+    term: { ru: "BM25", en: "BM25", es: "BM25" },
+    definition: {
+      ru: "Классический алгоритм ранжирования для поиска по ключевым словам.",
+      en: "A classic ranking algorithm for keyword search.",
+      es: "Algoritmo clásico de ordenación para la búsqueda por palabras clave.",
+    },
+    topics: ["hybrid-search"],
+  },
+  {
+    id: "reranking",
+    term: { ru: "реранкинг", en: "reranking", es: "reranking (reordenación)" },
+    definition: {
+      ru: "Повторное упорядочивание найденных кандидатов более точной моделью перед передачей в контекст.",
+      en: "Reordering retrieved candidates with a more accurate model before they go into the context.",
+      es: "Volver a ordenar los candidatos recuperados con un modelo más preciso antes de pasarlos al contexto.",
+    },
+    topics: ["hybrid-search", "rag-architecture"],
+  },
+  {
+    id: "recall-at-k",
+    term: { ru: "recall@k", en: "recall@k", es: "recall@k" },
+    definition: {
+      ru: "Доля вопросов, для которых нужный документ оказался среди первых k результатов поиска.",
+      en: "The share of questions for which the correct document appears among the top k search results.",
+      es: "Porcentaje de preguntas en las que el documento correcto aparece entre los k primeros resultados.",
+    },
+    topics: ["rag-evaluation"],
+  },
+  {
+    id: "faithfulness",
+    term: { ru: "обоснованность (faithfulness)", en: "faithfulness (groundedness)", es: "fidelidad (faithfulness)" },
+    definition: {
+      ru: "Насколько ответ опирается на переданные источники и не добавляет выдуманного.",
+      en: "How far an answer is supported by the provided sources without adding made-up content.",
+      es: "En qué medida la respuesta se apoya en las fuentes proporcionadas sin añadir nada inventado.",
+    },
+    topics: ["rag-evaluation"],
+  },
+  {
+    id: "agent",
+    term: { ru: "агент", en: "agent", es: "agente" },
+    definition: {
+      ru: "Система, в которой модель в цикле сама выбирает шаги и вызывает инструменты, пока не решит задачу.",
+      en: "A system in which the model chooses its own steps in a loop and calls tools until the task is done.",
+      es: "Sistema en el que el modelo elige sus propios pasos en un bucle y llama a herramientas hasta resolver la tarea.",
+    },
+    topics: ["agent-loop", "agent-patterns", "agent-frameworks", "ai-coding-assistants", "advanced-retrieval"],
+  },
+  {
+    id: "workflow",
+    term: { ru: "workflow (фиксированный сценарий)", en: "workflow", es: "workflow (flujo fijo)" },
+    definition: {
+      ru: "Заранее заданная последовательность вызовов модели и кода, в отличие от агента, который выбирает шаги сам.",
+      en: "A predefined sequence of model and code calls, unlike an agent that picks its own steps.",
+      es: "Secuencia predefinida de llamadas al modelo y al código, a diferencia de un agente que elige sus pasos.",
+    },
+    topics: ["agent-patterns"],
+  },
+  {
+    id: "mcp",
+    term: { ru: "MCP (Model Context Protocol)", en: "MCP (Model Context Protocol)", es: "MCP (Model Context Protocol)" },
+    definition: {
+      ru: "Открытый протокол подключения инструментов и данных к AI-приложениям через MCP-серверы.",
+      en: "An open protocol for connecting tools and data to AI applications through MCP servers.",
+      es: "Protocolo abierto para conectar herramientas y datos a aplicaciones de IA mediante servidores MCP.",
+    },
+    topics: ["mcp"],
+  },
+  {
+    id: "subagent",
+    term: { ru: "субагент", en: "subagent", es: "subagente" },
+    definition: {
+      ru: "Агент, которому основной агент поручает подзадачу с отдельным, чистым контекстом.",
+      en: "An agent that the main agent hands a subtask to, with its own clean context.",
+      es: "Agente al que el agente principal encarga una subtarea con un contexto propio y limpio.",
+    },
+    topics: ["agent-memory"],
+  },
+  {
+    id: "human-in-the-loop",
+    term: { ru: "человек в цикле", en: "human in the loop", es: "humano en el bucle" },
+    definition: {
+      ru: "Схема, в которой человек подтверждает или корректирует действия AI-системы в ключевых точках.",
+      en: "A setup in which a person approves or corrects an AI system's actions at key points.",
+      es: "Esquema en el que una persona aprueba o corrige las acciones del sistema de IA en puntos clave.",
+    },
+    topics: ["agent-safety"],
+  },
+  {
+    id: "prompt-injection",
+    term: { ru: "prompt injection", en: "prompt injection", es: "prompt injection (inyección de prompt)" },
+    definition: {
+      ru: "Атака, при которой инструкции злоумышленника попадают в контекст модели (через письмо, веб-страницу, документ) и меняют её поведение.",
+      en: "An attack in which an attacker's instructions reach the model's context (via an email, web page or document) and change its behaviour.",
+      es: "Ataque en el que las instrucciones de un atacante llegan al contexto del modelo (por un correo, una web o un documento) y cambian su comportamiento.",
+    },
+    topics: ["agent-safety", "prompt-injection-security"],
+  },
+  {
+    id: "eval",
+    term: { ru: "eval (оценка)", en: "eval", es: "eval (evaluación)" },
+    definition: {
+      ru: "Автоматическая проверка качества AI-системы на наборе примеров с ожидаемыми результатами или критериями.",
+      en: "An automatic quality check of an AI system on a set of examples with expected results or criteria.",
+      es: "Comprobación automática de la calidad de un sistema de IA sobre ejemplos con resultados o criterios esperados.",
+    },
+    topics: ["eval-datasets", "llm-as-judge", "regression-evals"],
+  },
+  {
+    id: "golden-dataset",
+    term: { ru: "эталонный набор", en: "golden dataset", es: "conjunto de referencia (golden dataset)" },
+    definition: {
+      ru: "Набор примеров с проверенными правильными ответами, по которому сравнивают версии системы.",
+      en: "A set of examples with verified correct answers used to compare system versions.",
+      es: "Conjunto de ejemplos con respuestas correctas verificadas que sirve para comparar versiones del sistema.",
+    },
+    topics: ["eval-datasets", "synthetic-data"],
+  },
+  {
+    id: "llm-as-judge",
+    term: { ru: "LLM-судья", en: "LLM-as-a-judge", es: "LLM como juez" },
+    definition: {
+      ru: "Использование языковой модели для оценки ответов другой модели по заданным критериям.",
+      en: "Using a language model to grade another model's answers against given criteria.",
+      es: "Usar un modelo de lenguaje para evaluar las respuestas de otro modelo según criterios dados.",
+    },
+    topics: ["llm-as-judge"],
+  },
+  {
+    id: "precision-recall",
+    term: { ru: "точность и полнота (precision, recall)", en: "precision and recall", es: "precisión y exhaustividad (precision, recall)" },
+    definition: {
+      ru: "Precision — доля верных среди найденных; recall — доля найденных среди всех верных.",
+      en: "Precision is the share of correct items among those found; recall is the share of correct items that were found.",
+      es: "Precision es la proporción de aciertos entre lo encontrado; recall, la proporción de aciertos encontrados sobre el total.",
+    },
+    topics: ["eval-metrics", "ml-basics"],
+  },
+  {
+    id: "latency",
+    term: { ru: "задержка (latency)", en: "latency", es: "latencia" },
+    definition: {
+      ru: "Время ответа системы; для LLM важно и время до первого токена, и полное время генерации.",
+      en: "System response time; for LLMs both time to first token and total generation time matter.",
+      es: "Tiempo de respuesta del sistema; en los LLM importan tanto el tiempo hasta el primer token como el tiempo total.",
+    },
+    topics: ["eval-metrics", "cost-latency"],
+  },
+  {
+    id: "trace",
+    term: { ru: "трейс", en: "trace", es: "traza" },
+    definition: {
+      ru: "Полная запись одного запроса через систему: промпты, вызовы моделей и инструментов, ответы, время и стоимость.",
+      en: "A full record of one request through the system: prompts, model and tool calls, answers, timing and cost.",
+      es: "Registro completo de una petición a través del sistema: prompts, llamadas a modelos y herramientas, respuestas, tiempos y coste.",
+    },
+    topics: ["error-analysis", "observability"],
+  },
+  {
+    id: "confidence-interval",
+    term: { ru: "доверительный интервал", en: "confidence interval", es: "intervalo de confianza" },
+    definition: {
+      ru: "Диапазон, в котором с заданной вероятностью лежит настоящее значение метрики.",
+      en: "A range that contains the true value of a metric with a given probability.",
+      es: "Rango que contiene el valor real de una métrica con una probabilidad dada.",
+    },
+    topics: ["eval-statistics"],
+  },
+  {
+    id: "fallback",
+    term: { ru: "фолбэк", en: "fallback", es: "fallback (alternativa)" },
+    definition: {
+      ru: "Запасной вариант, на который система переключается при сбое основного, например другая модель или провайдер.",
+      en: "A backup option the system switches to when the primary fails, such as another model or provider.",
+      es: "Opción de reserva a la que cambia el sistema si falla la principal, por ejemplo otro modelo o proveedor.",
+    },
+    topics: ["reliability"],
+  },
+  {
+    id: "guardrails",
+    term: { ru: "гардрейлы", en: "guardrails", es: "guardrails (salvaguardas)" },
+    definition: {
+      ru: "Проверки и ограничения на входе и выходе модели, которые не дают системе сделать или сказать недопустимое.",
+      en: "Checks and limits on a model's input and output that stop the system from doing or saying something unacceptable.",
+      es: "Controles y límites en la entrada y salida del modelo que impiden que el sistema haga o diga algo inaceptable.",
+    },
+    topics: ["guardrails-privacy"],
+  },
+  {
+    id: "pii",
+    term: { ru: "персональные данные (PII)", en: "PII (personally identifiable information)", es: "datos personales (PII)" },
+    definition: {
+      ru: "Сведения, по которым можно определить человека: имя, email, телефон, номер документа.",
+      en: "Information that can identify a person: name, email, phone number, ID number.",
+      es: "Información que permite identificar a una persona: nombre, email, teléfono, número de documento.",
+    },
+    topics: ["guardrails-privacy"],
+  },
+  {
+    id: "quantization",
+    term: { ru: "квантизация", en: "quantization", es: "cuantización" },
+    definition: {
+      ru: "Хранение весов модели с меньшей точностью (например, 4 бита вместо 16), чтобы она занимала меньше памяти.",
+      en: "Storing model weights at lower precision (say 4 bits instead of 16) so the model needs less memory.",
+      es: "Guardar los pesos del modelo con menos precisión (por ejemplo, 4 bits en vez de 16) para que ocupe menos memoria.",
+    },
+    topics: ["self-hosting"],
+  },
+  {
+    id: "overfitting",
+    term: { ru: "переобучение", en: "overfitting", es: "sobreajuste (overfitting)" },
+    definition: {
+      ru: "Ситуация, когда модель запомнила обучающие примеры и плохо работает на новых данных.",
+      en: "When a model memorises its training examples and performs poorly on new data.",
+      es: "Cuando un modelo memoriza los ejemplos de entrenamiento y funciona mal con datos nuevos.",
+    },
+    topics: ["ml-basics"],
+  },
+  {
+    id: "gradient-descent",
+    term: { ru: "градиентный спуск", en: "gradient descent", es: "descenso de gradiente" },
+    definition: {
+      ru: "Метод обучения: параметры модели понемногу сдвигают в сторону, где ошибка уменьшается.",
+      en: "A training method that nudges model parameters step by step in the direction that reduces the error.",
+      es: "Método de entrenamiento que ajusta los parámetros del modelo poco a poco en la dirección que reduce el error.",
+    },
+    topics: ["math-intuition"],
+  },
+  {
+    id: "fine-tuning",
+    term: { ru: "дообучение (fine-tuning)", en: "fine-tuning", es: "ajuste fino (fine-tuning)" },
+    definition: {
+      ru: "Дополнительное обучение готовой модели на своих примерах, чтобы она лучше решала конкретную задачу.",
+      en: "Further training of an existing model on your own examples so it handles a specific task better.",
+      es: "Entrenamiento adicional de un modelo existente con ejemplos propios para que resuelva mejor una tarea concreta.",
+    },
+    topics: ["fine-tuning"],
+  },
+  {
+    id: "lora",
+    term: { ru: "LoRA", en: "LoRA (low-rank adaptation)", es: "LoRA" },
+    definition: {
+      ru: "Способ дообучения, при котором обучают небольшие добавочные матрицы, а исходные веса модели не меняют.",
+      en: "A fine-tuning method that trains small add-on matrices while leaving the model's original weights unchanged.",
+      es: "Método de ajuste fino que entrena pequeñas matrices adicionales sin modificar los pesos originales del modelo.",
+    },
+    topics: ["fine-tuning"],
+  },
+  {
+    id: "synthetic-data",
+    term: { ru: "синтетические данные", en: "synthetic data", es: "datos sintéticos" },
+    definition: {
+      ru: "Примеры, сгенерированные моделью для обучения или оценки вместо реальных данных или в дополнение к ним.",
+      en: "Model-generated examples used for training or evaluation instead of, or alongside, real data.",
+      es: "Ejemplos generados por un modelo para entrenar o evaluar, en lugar de datos reales o junto a ellos.",
+    },
+    topics: ["synthetic-data"],
   },
 ];
 
-const CHANGELOG = [];
+const CHANGELOG = [
+  {
+    date: "2026-10-22",
+    title: { ru: "Agent Skills переданы в Agentic AI Foundation", en: "Agent Skills donated to the Agentic AI Foundation", es: "Agent Skills, donado a la Agentic AI Foundation" },
+    text: {
+      ru: "Anthropic передала открытый стандарт Agent Skills (пакеты знаний и инструкций для агентов) в Agentic AI Foundation. По данным Anthropic, стандарт уже поддерживают более 70 агентных платформ, включая ChatGPT, Cursor, GitHub Copilot и VS Code. Для AI-инженера это ещё один общий формат, наряду с MCP, который стоит знать.",
+      en: "Anthropic donated the open Agent Skills standard (packages of knowledge and instructions for agents) to the Agentic AI Foundation. According to Anthropic, more than 70 agent platforms already support it, including ChatGPT, Cursor, GitHub Copilot and VS Code. For an AI engineer it is another shared format worth knowing, alongside MCP.",
+      es: "Anthropic donó el estándar abierto Agent Skills (paquetes de conocimiento e instrucciones para agentes) a la Agentic AI Foundation. Según Anthropic, ya lo admiten más de 70 plataformas de agentes, entre ellas ChatGPT, Cursor, GitHub Copilot y VS Code. Para un AI Engineer es otro formato común que conviene conocer, junto a MCP.",
+    },
+    topics: ["agent-frameworks", "mcp"],
+    source: "https://www.anthropic.com/news/donating-agent-skills-to-the-agentic-ai-foundation",
+  },
+  {
+    date: "2025-12-09",
+    title: { ru: "MCP передан в Linux Foundation", en: "MCP moves to the Linux Foundation", es: "MCP pasa a la Linux Foundation" },
+    text: {
+      ru: "Anthropic передала Model Context Protocol в новую Agentic AI Foundation при Linux Foundation, основанную вместе с Block и OpenAI. MCP окончательно стал нейтральным отраслевым стандартом, а не протоколом одной компании.",
+      en: "Anthropic donated the Model Context Protocol to the Linux Foundation's new Agentic AI Foundation, co-founded with Block and OpenAI. MCP is now a neutral industry standard rather than one company's protocol.",
+      es: "Anthropic donó el Model Context Protocol a la nueva Agentic AI Foundation de la Linux Foundation, cofundada con Block y OpenAI. MCP pasa a ser un estándar neutral del sector y no el protocolo de una sola empresa.",
+    },
+    topics: ["mcp"],
+    source: "https://www.anthropic.com/news/donating-the-model-context-protocol-and-establishing-of-the-agentic-ai-foundation",
+  },
+];
 
 // ═══════ 3. Проверка данных (validateData) ═══════
 function isLocalized(value) {
@@ -803,6 +2956,15 @@ function validateData(data = { UI, BLOCKS, TOPICS, GLOSSARY, CHANGELOG }) {
     done.add(id);
   };
   for (const id of prereqOf.keys()) visit(id, []);
+
+  for (const topic of data.TOPICS) {
+    for (const termId of Array.isArray(topic.concepts) ? topic.concepts : []) {
+      const term = data.GLOSSARY.find((item) => item.id === termId);
+      if (term && Array.isArray(term.topics) && !term.topics.includes(topic.id)) {
+        add(`GLOSSARY.${termId}.topics`, `нет обратной ссылки на тему «${topic.id}», где термин указан в concepts`);
+      }
+    }
+  }
 
   for (const term of data.GLOSSARY) {
     const where = `GLOSSARY.${term.id}`;
@@ -1135,7 +3297,7 @@ function renderNav(route) {
       href: `#block-${block.id}`,
       "aria-current": route.view === "block" && route.id === block.id ? "page" : undefined,
     }, h("span", { class: "nav-num" }, block.order), loc(block.title, lang)),
-    currentBlock === block.id || topicsOfBlock(block.id).length <= 6
+    currentBlock === block.id
       ? h("ul", {}, topicsOfBlock(block.id).map((topic) => h("li", {}, h("a", {
         href: `#topic-${topic.id}`,
         "aria-current": currentTopic?.id === topic.id ? "page" : undefined,
