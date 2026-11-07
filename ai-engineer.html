@@ -487,8 +487,8 @@ details > p, details > .code { margin: 6px 0 0; }
 <div class="sr-only" id="live" role="status" aria-live="polite"></div>
 </div>
 <footer class="app-footer">
-  <span data-i18n="footerVersion"></span> MVP 1.7 ·
-  <span data-i18n="footerUpdated"></span> 2026-11-07 00:42 (Madrid)
+  <span data-i18n="footerVersion"></span> MVP 1.8 ·
+  <span data-i18n="footerUpdated"></span> 2026-11-07 13:48 (Madrid)
 </footer>
 <script>
 // ════════════════════════════════════════════════════════════════════
@@ -1524,7 +1524,7 @@ if __name__ == "__main__":
       en: "A Pydantic model is like a table with constraints: column types, NOT NULL, CHECK. The difference is that validation happens when the object is created, not on INSERT.",
       es: "Un modelo de Pydantic se parece a una tabla con restricciones: tipos de columna, NOT NULL, CHECK. La diferencia es que la validación ocurre al crear el objeto, no en el INSERT.",
     },
-    concepts: ["pydantic", "json-schema"],
+    concepts: ["type-hints", "pydantic", "json-schema", "unit-test", "mock"],
     example: {
       lang: "python",
       code: 'from pydantic import BaseModel, Field\n\nclass Invoice(BaseModel):\n    number: str\n    total: float = Field(gt=0)\n    currency: str = "EUR"\n\ninvoice = Invoice.model_validate_json(\'{"number": "A-17", "total": 120.5}\')\nprint(invoice.total)                 # 120.5\nprint(Invoice.model_json_schema())  # JSON Schema for the model\n\ndef test_total_must_be_positive():\n    import pytest\n    with pytest.raises(ValueError):\n        Invoice(number="A-18", total=-1)',
@@ -1540,7 +1540,868 @@ if __name__ == "__main__":
     },
     prereq: ["python-basics"],
     related: ["structured-output"],
-    checked: "2026-11-06",
+    checked: "2026-11-07",
+    lesson: {
+      minutes: 120,
+      sections: [
+        {
+          id: "tt-hints",
+          title: { ru: "Аннотации типов (type hints)", en: "Type hints", es: "Anotaciones de tipo (type hints)" },
+          blocks: [
+            { type: "p", text: {
+              ru: "В PL/SQL тип есть у каждой переменной и параметра, и компилятор проверяет его до запуска. В Python тип по умолчанию не пишут вовсе. Аннотации типов (type hints) добавляют это описание: `имя: тип` у переменной и параметра и `-> тип` у результата функции.",
+              en: "In PL/SQL every variable and parameter has a type, and the compiler checks it before anything runs. In Python you write no type at all by default. Type hints add that description: `name: type` on a variable or parameter and `-> type` on a function's result.",
+              es: "En PL/SQL cada variable y parámetro tiene un tipo, y el compilador lo comprueba antes de ejecutar. En Python, por defecto, no se escribe ningún tipo. Las anotaciones de tipo (type hints) añaden esa descripción: `nombre: tipo` en variables y parámetros y `-> tipo` en el resultado de una función.",
+            } },
+            { type: "compare",
+              sql: `FUNCTION find_email(
+  p_emp_id IN NUMBER
+) RETURN VARCHAR2;      -- may return NULL
+
+TYPE t_names IS TABLE OF VARCHAR2(100);
+v_names t_names := t_names('Ana', 'Luis');
+v_rate  NUMBER  := 0.2;`,
+              python: `def find_email(emp_id: int) -> str | None:
+    ...
+
+names: list[str] = ["Ana", "Luis"]
+rate: float = 0.2`,
+              note: {
+                ru: "`str | None` читается как «строка или None»: это столбец без `NOT NULL`. В старом коде то же самое пишут как `Optional[str]`. `...` (многоточие) — заглушка вместо тела функции.",
+                en: "`str | None` reads as “a string or None”: a column without `NOT NULL`. Older code writes the same thing as `Optional[str]`. `...` (an ellipsis) is a placeholder for the function body.",
+                es: "`str | None` se lee «una cadena o None»: una columna sin `NOT NULL`. En código antiguo se escribe `Optional[str]`. `...` (puntos suspensivos) es un marcador en lugar del cuerpo de la función.",
+              } },
+            { type: "table",
+              head: [
+                { ru: "Аннотация", en: "Hint", es: "Anotación" },
+                { ru: "Что значит", en: "Meaning", es: "Significado" },
+                { ru: "Похоже в Oracle", en: "Oracle counterpart", es: "Parecido en Oracle" },
+              ],
+              rows: [
+                ["int, float, str, bool", { ru: "базовые типы", en: "basic types", es: "tipos básicos" }, "NUMBER, BINARY_DOUBLE, VARCHAR2, BOOLEAN"],
+                ["list[str]", { ru: "список строк", en: "a list of strings", es: "una lista de cadenas" }, "TABLE OF VARCHAR2"],
+                ["dict[str, float]", { ru: "словарь: ключ-строка, значение-число", en: "a dict: string keys, number values", es: "un diccionario: claves de texto, valores numéricos" }, "TABLE OF NUMBER INDEX BY VARCHAR2"],
+                ["tuple[int, str]", { ru: "кортеж из двух значений фиксированных типов", en: "a tuple of two values with fixed types", es: "una tupla de dos valores de tipos fijos" }, "RECORD (id NUMBER, name VARCHAR2)"],
+                ["str | None", { ru: "строка или None", en: "a string or None", es: "una cadena o None" }, { ru: "столбец без `NOT NULL`", en: "a column without `NOT NULL`", es: "una columna sin `NOT NULL`" }],
+                ["Any", { ru: "что угодно, проверка выключена", en: "anything, checking switched off", es: "cualquier cosa, sin comprobación" }, "ANYDATA"],
+              ] },
+            { type: "code", lang: "python", caption: { ru: "Python не проверяет аннотации при запуске", en: "Python does not check hints at run time", es: "Python no comprueba las anotaciones al ejecutar" },
+              code: `def net(gross: float, rate: float = 0.2) -> float:
+    return gross * (1 - rate)
+
+print(net(4000))         # 3200.0
+print(net("4000", 0))    # wrong type, but Python runs it anyway
+print(net.__annotations__)`,
+              output: `3200.0
+4000
+{'gross': <class 'float'>, 'rate': <class 'float'>, 'return': <class 'float'>}` },
+            { type: "p", text: {
+              ru: "Второй вызов передал строку вместо числа, и Python молча вернул строку `\"4000\"` (строка, умноженная на 1). Аннотации — это не ограничения, а данные: функция хранит их в `__annotations__`. Их читают три вида инструментов: редактор (подсказки и автодополнение), статический анализатор mypy (следующая часть) и библиотеки вроде Pydantic, которые строят по ним проверку данных.",
+              en: "The second call passed a string instead of a number, and Python quietly returned the string `\"4000\"` (a string multiplied by 1). Hints are not constraints but data: the function keeps them in `__annotations__`. Three kinds of tools read them: the editor (hints and autocompletion), the static checker mypy (next part) and libraries such as Pydantic that build data validation from them.",
+              es: "La segunda llamada pasó una cadena en lugar de un número, y Python devolvió sin avisar la cadena `\"4000\"` (una cadena multiplicada por 1). Las anotaciones no son restricciones sino datos: la función las guarda en `__annotations__`. Las leen tres tipos de herramientas: el editor (sugerencias y autocompletado), el analizador estático mypy (siguiente parte) y librerías como Pydantic, que construyen a partir de ellas la validación de datos.",
+            } },
+            { type: "tip", text: {
+              ru: "В AI-коде аннотации работают и при выполнении: SDK моделей и фреймворки агентов читают сигнатуру функции и по ней описывают модели инструмент (tool). Функция с аннотациями и docstring — уже почти готовое описание инструмента.",
+              en: "In AI code hints also matter at run time: model SDKs and agent frameworks read a function's signature to describe a tool to the model. A function with hints and a docstring is almost a finished tool definition.",
+              es: "En el código de IA las anotaciones también cuentan al ejecutar: los SDK de modelos y los frameworks de agentes leen la firma de la función para describir al modelo una herramienta (tool). Una función con anotaciones y docstring ya es casi una definición de herramienta.",
+            } },
+          ],
+        },
+        {
+          id: "tt-mypy",
+          title: { ru: "Проверка типов: mypy", en: "Type checking with mypy", es: "Comprobación de tipos con mypy" },
+          blocks: [
+            { type: "p", text: {
+              ru: "mypy — статический анализатор: он читает код, не запуская его, и сверяет вызовы с аннотациями. Это ближайший аналог компиляции `CREATE OR REPLACE` с её `SHOW ERRORS`. Установка: `pip install mypy`, запуск: `mypy app.py` или `mypy src/` для всей папки.",
+              en: "mypy is a static checker: it reads the code without running it and compares the calls with the hints. It is the closest thing to compiling with `CREATE OR REPLACE` and `SHOW ERRORS`. Install with `pip install mypy`, run with `mypy app.py`, or `mypy src/` for a whole folder.",
+              es: "mypy es un analizador estático: lee el código sin ejecutarlo y compara las llamadas con las anotaciones. Es lo más parecido a compilar con `CREATE OR REPLACE` y `SHOW ERRORS`. Se instala con `pip install mypy` y se ejecuta con `mypy app.py`, o `mypy src/` para una carpeta entera.",
+            } },
+            { type: "code", lang: "python", caption: { ru: "app.py: две ошибки, которые Python заметит только при запуске", en: "app.py: two bugs Python only notices at run time", es: "app.py: dos errores que Python solo ve al ejecutar" },
+              code: `def find_email(emp_id: int) -> str | None:
+    emails = {1: "ana@example.com"}
+    return emails.get(emp_id)
+
+email = find_email("1")
+print(email.upper())` },
+            { type: "code", lang: "bash",
+              code: `mypy app.py`,
+              output: `app.py:5: error: Argument 1 to "find_email" has incompatible type "str"; expected "int"  [arg-type]
+app.py:6: error: Item "None" of "str | None" has no attribute "upper"  [union-attr]
+Found 2 errors in 1 file (checked 1 source file)` },
+            { type: "p", text: {
+              ru: "Вторая ошибка ценнее первой. Функция может вернуть `None`, а код сразу вызывает у результата `.upper()`. Это как забыть обработать `NO_DATA_FOUND` или `NULL`: в тесте всё работает, а в проде падает на первом сотруднике без почты. mypy заставляет обработать этот случай заранее.",
+              en: "The second error is the more valuable one. The function may return `None`, yet the code calls `.upper()` on the result straight away. It is like forgetting to handle `NO_DATA_FOUND` or `NULL`: it works in testing and crashes in production on the first employee without an email. mypy makes you handle the case up front.",
+              es: "El segundo error es el más valioso. La función puede devolver `None` y el código llama a `.upper()` sobre el resultado sin más. Es como olvidar tratar `NO_DATA_FOUND` o `NULL`: en pruebas funciona y en producción falla con el primer empleado sin email. mypy te obliga a tratar ese caso de antemano.",
+            } },
+            { type: "code", lang: "python", caption: { ru: "Исправление: проверка на None сужает тип", en: "The fix: a None check narrows the type", es: "La corrección: comprobar None estrecha el tipo" },
+              code: `def find_email(emp_id: int) -> str | None:
+    emails = {1: "ana@example.com"}
+    return emails.get(emp_id)
+
+email = find_email(1)
+if email is not None:        # after this check mypy knows: str
+    print(email.upper())
+else:
+    print("no email")`,
+              output: "ANA@EXAMPLE.COM" },
+            { type: "p", text: {
+              ru: "`Literal` ограничивает значение списком констант, как `CHECK (role IN ('user', 'assistant'))`. В LLM-коде так описывают роли сообщений, категории классификации и статусы.",
+              en: "`Literal` restricts a value to a list of constants, like `CHECK (role IN ('user', 'assistant'))`. LLM code uses it for message roles, classification categories and statuses.",
+              es: "`Literal` limita un valor a una lista de constantes, como `CHECK (role IN ('user', 'assistant'))`. En el código con LLM se usa para los roles de los mensajes, las categorías de clasificación y los estados.",
+            } },
+            { type: "code", lang: "python", caption: { ru: "lit.py", en: "lit.py", es: "lit.py" },
+              code: `from typing import Literal
+
+Role = Literal["user", "assistant"]
+
+def message(role: Role, text: str) -> dict[str, str]:
+    return {"role": role, "content": text}
+
+print(message("user", "Hi"))
+print(message("admin", "Hi"))   # runs, but mypy reports an error`,
+              output: `{'role': 'user', 'content': 'Hi'}
+{'role': 'admin', 'content': 'Hi'}` },
+            { type: "code", lang: "bash",
+              code: `mypy lit.py`,
+              output: `lit.py:9: error: Argument 1 to "message" has incompatible type "Literal['admin']"; expected "Literal['user', 'assistant']"  [arg-type]
+Found 1 error in 1 file (checked 1 source file)` },
+            { type: "tip", text: {
+              ru: "Те же ошибки VS Code показывает прямо при наборе (расширение Pylance), так что mypy в терминале нужен в основном для CI. Начинайте с аннотаций у параметров и результатов функций: тип локальных переменных mypy обычно выводит сам.",
+              en: "VS Code shows the same errors as you type (the Pylance extension), so running mypy in the terminal mostly matters for CI. Start with hints on function parameters and results: mypy usually infers local variable types by itself.",
+              es: "VS Code muestra los mismos errores mientras escribes (extensión Pylance), así que mypy en el terminal sirve sobre todo para la CI. Empieza por anotar los parámetros y resultados de las funciones: el tipo de las variables locales mypy suele deducirlo solo.",
+            } },
+          ],
+        },
+        {
+          id: "tt-dataclasses",
+          title: { ru: "Классы и dataclass: запись с полями", en: "Classes and dataclass: a record with fields", es: "Clases y dataclass: un registro con campos" },
+          blocks: [
+            { type: "p", text: {
+              ru: "Словарь удобен, но опечатку `emp[\"salry\"]` никто не заметит до запуска. Класс фиксирует набор полей, как объектный тип `CREATE TYPE … AS OBJECT` или `%ROWTYPE`. `class` объявляет тип, вызов `Employee(...)` создаёт объект, а поля читают через точку.",
+              en: "A dict is handy, but nobody notices the typo `emp[\"salry\"]` until run time. A class fixes the set of fields, like an object type `CREATE TYPE … AS OBJECT` or `%ROWTYPE`. `class` declares the type, calling `Employee(...)` creates an object, and fields are read with a dot.",
+              es: "Un diccionario es cómodo, pero nadie ve la errata `emp[\"salry\"]` hasta ejecutar. Una clase fija el conjunto de campos, como un tipo objeto `CREATE TYPE … AS OBJECT` o `%ROWTYPE`. `class` declara el tipo, llamar a `Employee(...)` crea un objeto y los campos se leen con un punto.",
+            } },
+            { type: "compare",
+              sql: `CREATE TYPE employee_t AS OBJECT (
+  name   VARCHAR2(100),
+  dept   VARCHAR2(30),
+  salary NUMBER
+);
+/
+DECLARE
+  e employee_t := employee_t('Ana', 'IT', 4200);
+BEGIN
+  DBMS_OUTPUT.PUT_LINE(e.name || ' ' || e.salary);
+END;`,
+              python: `from dataclasses import dataclass
+
+@dataclass
+class Employee:
+    name: str
+    dept: str
+    salary: float = 0.0
+
+e = Employee("Ana", "IT", 4200)
+print(e.name, e.salary)   # Ana 4200
+print(e)  # Employee(name='Ana', dept='IT', salary=4200)`,
+              note: {
+                ru: "`@dataclass` — декоратор: по аннотациям полей он сам пишет конструктор, понятный вывод через `print` и сравнение `==` по полям.",
+                en: "`@dataclass` is a decorator: from the field hints it writes the constructor, a readable `print` output and field-by-field `==` comparison for you.",
+                es: "`@dataclass` es un decorador: a partir de las anotaciones de los campos escribe el constructor, una salida legible con `print` y la comparación `==` campo a campo.",
+              } },
+            { type: "code", lang: "python", caption: { ru: "Метод и неизменяемый объект", en: "A method and an immutable object", es: "Un método y un objeto inmutable" },
+              code: `from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class Chunk:
+    text: str
+    source: str
+    page: int = 1
+
+    def preview(self, n: int = 20) -> str:
+        return self.text[:n] + "..."
+
+c = Chunk("Refunds are accepted within 30 days.", "policy.pdf", 3)
+print(c.preview())
+print(c == Chunk("Refunds are accepted within 30 days.", "policy.pdf", 3))
+try:
+    c.page = 4
+except AttributeError as e:
+    print(type(e).__name__, e)`,
+              output: `Refunds are accepted...
+True
+FrozenInstanceError cannot assign to field 'page'` },
+            { type: "p", text: {
+              ru: "Функция внутри класса — метод (как `MEMBER FUNCTION` объектного типа). Первый параметр `self` — сам объект, аналог `SELF` в Oracle. `frozen=True` запрещает менять поля после создания: такой объект безопасно передавать куда угодно.",
+              en: "A function inside a class is a method (like a `MEMBER FUNCTION` of an object type). Its first parameter `self` is the object itself, the counterpart of `SELF` in Oracle. `frozen=True` forbids changing fields after creation, so the object is safe to pass anywhere.",
+              es: "Una función dentro de una clase es un método (como una `MEMBER FUNCTION` de un tipo objeto). Su primer parámetro `self` es el propio objeto, el equivalente de `SELF` en Oracle. `frozen=True` prohíbe cambiar los campos tras crearlo, así que el objeto se puede pasar a cualquier sitio sin riesgo.",
+            } },
+            { type: "code", lang: "python", caption: { ru: "dataclass не проверяет данные", en: "dataclass does not validate data", es: "dataclass no valida los datos" },
+              code: `print(Employee("Ana", "IT", "a lot"))   # no error: dataclass does not check`,
+              output: "Employee(name='Ana', dept='IT', salary='a lot')" },
+            { type: "warn", text: {
+              ru: "dataclass подходит для своих внутренних данных. Для всего, что приходит снаружи (JSON из API, HTTP-запрос, ответ модели), нужна проверка при создании объекта. Это делает Pydantic.",
+              en: "dataclass suits your own internal data. Anything that comes from outside (JSON from an API, an HTTP request, a model's answer) needs checking when the object is created. That is what Pydantic does.",
+              es: "dataclass sirve para tus datos internos. Todo lo que llega de fuera (JSON de una API, una petición HTTP, la respuesta de un modelo) necesita validarse al crear el objeto. De eso se encarga Pydantic.",
+            } },
+          ],
+        },
+        {
+          id: "tt-pydantic",
+          title: { ru: "Pydantic: модель с проверкой", en: "Pydantic: a validated model", es: "Pydantic: un modelo con validación" },
+          blocks: [
+            { type: "p", text: {
+              ru: "Pydantic берёт аннотации класса и при создании объекта проверяет и приводит данные к нужным типам. Установка: `pip install pydantic`. На нём построены FastAPI, SDK OpenAI и Anthropic, LangChain и большинство агентных фреймворков, так что для AI-инженера это базовая библиотека.",
+              en: "Pydantic takes a class's hints and, when an object is created, validates the data and converts it to the right types. Install with `pip install pydantic`. FastAPI, the OpenAI and Anthropic SDKs, LangChain and most agent frameworks are built on it, so for an AI engineer it is a core library.",
+              es: "Pydantic toma las anotaciones de una clase y, al crear el objeto, valida los datos y los convierte a los tipos correctos. Se instala con `pip install pydantic`. FastAPI, los SDK de OpenAI y Anthropic, LangChain y la mayoría de frameworks de agentes se basan en ella, así que para un ingeniero de IA es una librería básica.",
+            } },
+            { type: "compare",
+              sql: `CREATE TABLE employees (
+  name   VARCHAR2(100) NOT NULL,
+  email  VARCHAR2(200) NOT NULL,
+  dept   VARCHAR2(30)  DEFAULT 'IT',
+  salary NUMBER(8,2)   CHECK (salary > 0),
+  bonus  NUMBER        -- nullable
+);`,
+              python: `from pydantic import BaseModel, Field
+
+class Employee(BaseModel):
+    name: str = Field(max_length=100)
+    email: str
+    dept: str = "IT"
+    salary: float = Field(gt=0)
+    bonus: float | None = None`,
+              note: {
+                ru: "Поле без значения по умолчанию обязательно: это `NOT NULL` без `DEFAULT`. `Field(gt=0)` — это `CHECK (salary > 0)` (gt — greater than, ge — greater or equal), `max_length` — длина `VARCHAR2`.",
+                en: "A field without a default is required: `NOT NULL` without `DEFAULT`. `Field(gt=0)` is `CHECK (salary > 0)` (gt is greater than, ge is greater or equal), and `max_length` is the `VARCHAR2` length.",
+                es: "Un campo sin valor por defecto es obligatorio: `NOT NULL` sin `DEFAULT`. `Field(gt=0)` es `CHECK (salary > 0)` (gt es mayor que, ge es mayor o igual) y `max_length` es la longitud del `VARCHAR2`.",
+              } },
+            { type: "code", lang: "python", caption: { ru: "Создание и приведение типов (продолжение примера выше)", en: "Creating an object and type coercion (continues the example above)", es: "Creación y conversión de tipos (continúa el ejemplo anterior)" },
+              code: `emp = Employee(name="Ana", email="ana@example.com", salary="4200")
+print(emp)
+print(type(emp.salary))`,
+              output: `name='Ana' email='ana@example.com' dept='IT' salary=4200.0 bonus=None
+<class 'float'>` },
+            { type: "p", text: {
+              ru: "Строка `\"4200\"` превратилась в число, как при неявном `TO_NUMBER` во время `INSERT`. Это приведение типов (coercion). Строку `\"a lot\"` в число превратить нельзя, поэтому Pydantic выдаст ошибку. Если приведение не нужно, его выключают строгим режимом: `model_config = ConfigDict(strict=True)`.",
+              en: "The string `\"4200\"` became a number, like an implicit `TO_NUMBER` during an `INSERT`. This is type coercion. The string `\"a lot\"` cannot become a number, so Pydantic raises an error. If you do not want coercion, switch it off with strict mode: `model_config = ConfigDict(strict=True)`.",
+              es: "La cadena `\"4200\"` se ha convertido en número, como un `TO_NUMBER` implícito en un `INSERT`. Es la conversión de tipos (coercion). La cadena `\"a lot\"` no puede convertirse en número, así que Pydantic da un error. Si no quieres conversión, se desactiva con el modo estricto: `model_config = ConfigDict(strict=True)`.",
+            } },
+            { type: "code", lang: "python", caption: { ru: "Ошибки проверки", en: "Validation errors", es: "Errores de validación" },
+              code: `from pydantic import ValidationError
+
+try:
+    Employee(name="Luis", salary=-5)
+except ValidationError as e:
+    print(e.error_count(), "errors")
+    for err in e.errors():
+        print(err["loc"], err["msg"])`,
+              output: `2 errors
+('email',) Field required
+('salary',) Input should be greater than 0` },
+            { type: "p", text: {
+              ru: "Pydantic проверяет все поля и возвращает все ошибки сразу, а не останавливается на первой, как `ORA-02290` при `INSERT`. Каждая ошибка — словарь: `loc` (где), `msg` (что не так), `type` (код ошибки). Этот список удобно отправить модели обратно, чтобы она исправила ответ.",
+              en: "Pydantic checks every field and returns all the errors at once instead of stopping at the first one, as `ORA-02290` does on an `INSERT`. Each error is a dict: `loc` (where), `msg` (what is wrong) and `type` (the error code). The list is handy to send back to a model so it can fix its answer.",
+              es: "Pydantic comprueba todos los campos y devuelve todos los errores a la vez, en lugar de parar en el primero como `ORA-02290` en un `INSERT`. Cada error es un diccionario: `loc` (dónde), `msg` (qué falla) y `type` (el código de error). Es una lista cómoda para devolvérsela al modelo y que corrija su respuesta.",
+            } },
+            { type: "code", lang: "python", caption: { ru: "JSON на входе и на выходе", en: "JSON in and out", es: "JSON de entrada y de salida" },
+              code: `raw = '{"name": "Marta", "email": "marta@example.com", "salary": 5000, "bonus": 300}'
+emp = Employee.model_validate_json(raw)   # JSON text -> object
+print(emp.bonus)
+print(emp.model_dump())                   # object -> dict
+
+iker = Employee(name="Iker", email="iker@example.com", salary=2800)
+print(iker.model_dump_json(exclude_none=True))   # object -> JSON text`,
+              output: `300.0
+{'name': 'Marta', 'email': 'marta@example.com', 'dept': 'IT', 'salary': 5000.0, 'bonus': 300.0}
+{"name":"Iker","email":"iker@example.com","dept":"IT","salary":2800.0}` },
+            { type: "table",
+              head: [
+                { ru: "Метод", en: "Method", es: "Método" },
+                { ru: "Что делает", en: "What it does", es: "Qué hace" },
+              ],
+              rows: [
+                ["Model(**data), Model.model_validate(data)", { ru: "словарь → объект с проверкой", en: "dict → validated object", es: "diccionario → objeto validado" }],
+                ["Model.model_validate_json(text)", { ru: "строка JSON → объект с проверкой", en: "JSON text → validated object", es: "texto JSON → objeto validado" }],
+                ["obj.model_dump()", { ru: "объект → словарь", en: "object → dict", es: "objeto → diccionario" }],
+                ["obj.model_dump_json()", { ru: "объект → строка JSON", en: "object → JSON text", es: "objeto → texto JSON" }],
+                ["obj.model_copy(update={...})", { ru: "копия с изменёнными полями", en: "a copy with some fields changed", es: "una copia con algunos campos cambiados" }],
+                ["Model.model_json_schema()", { ru: "JSON Schema модели (следующая часть)", en: "the model's JSON Schema (next part)", es: "el JSON Schema del modelo (siguiente parte)" }],
+              ] },
+            { type: "tip", text: {
+              ru: "Для типовых проверок есть готовые типы: `EmailStr` (нужен `pip install \"pydantic[email]\"`), `HttpUrl`, `PositiveInt`, `datetime`. Строка `\"2026-11-07\"` в поле типа `date` сама превратится в дату.",
+              en: "Common checks come as ready-made types: `EmailStr` (needs `pip install \"pydantic[email]\"`), `HttpUrl`, `PositiveInt`, `datetime`. The string `\"2026-11-07\"` in a `date` field becomes a date by itself.",
+              es: "Para las comprobaciones habituales hay tipos ya hechos: `EmailStr` (requiere `pip install \"pydantic[email]\"`), `HttpUrl`, `PositiveInt`, `datetime`. La cadena `\"2026-11-07\"` en un campo de tipo `date` se convierte sola en fecha.",
+            } },
+          ],
+        },
+        {
+          id: "tt-pydantic-llm",
+          title: { ru: "Вложенные модели, валидаторы и ответ LLM", en: "Nested models, validators and LLM output", es: "Modelos anidados, validadores y la respuesta del LLM" },
+          blocks: [
+            { type: "p", text: {
+              ru: "Реальные данные вложены: в счёте есть строки, в ответе модели — список найденных сущностей. Поле модели может быть другой моделью или списком моделей. Это master-detail из двух таблиц, только в одном документе, как JSON в столбце.",
+              en: "Real data is nested: an invoice has lines, a model's answer has a list of extracted entities. A model field can be another model or a list of models. It is a master-detail pair of tables, but in one document, like JSON in a column.",
+              es: "Los datos reales están anidados: una factura tiene líneas y la respuesta de un modelo, una lista de entidades extraídas. Un campo de un modelo puede ser otro modelo o una lista de modelos. Es un maestro-detalle de dos tablas, pero en un solo documento, como un JSON en una columna.",
+            } },
+            { type: "code", lang: "python", caption: { ru: "inv.py: счёт со строками", en: "inv.py: an invoice with lines", es: "inv.py: una factura con líneas" },
+              code: `from typing import Literal
+from pydantic import BaseModel, Field, field_validator
+
+class Line(BaseModel):
+    product: str
+    qty: int = Field(ge=1)
+    price: float = Field(ge=0)
+
+class Invoice(BaseModel):
+    number: str
+    currency: Literal["EUR", "USD"] = "EUR"
+    lines: list[Line] = Field(min_length=1)
+
+    @field_validator("number")
+    @classmethod
+    def number_format(cls, v: str) -> str:
+        v = v.strip().upper()
+        if not v.startswith("INV-"):
+            raise ValueError("must start with INV-")
+        return v
+
+    def total(self) -> float:
+        return sum(line.qty * line.price for line in self.lines)
+
+if __name__ == "__main__":   # demo runs only with: python inv.py
+    inv = Invoice.model_validate({
+        "number": " inv-17 ",
+        "lines": [
+            {"product": "API credits", "qty": 2, "price": 50},
+            {"product": "Support", "qty": 1, "price": 20.5},
+        ],
+    })
+    print(inv.number, inv.currency, inv.total())
+    print(inv.lines[0])`,
+              output: `INV-17 EUR 120.5
+product='API credits' qty=2 price=50.0` },
+            { type: "list", items: [
+              { ru: "`list[Line]` — список вложенных моделей: каждая строка проверяется как отдельный `Line`.", en: "`list[Line]` is a list of nested models: each line is validated as its own `Line`.", es: "`list[Line]` es una lista de modelos anidados: cada línea se valida como un `Line` propio." },
+              { ru: "`@field_validator(\"number\")` — своя проверка поля, как триггер `BEFORE INSERT`: может и отклонить значение (`raise ValueError`), и нормализовать его (вернуть `INV-17` вместо ` inv-17 `).", en: "`@field_validator(\"number\")` is a custom field check, like a `BEFORE INSERT` trigger: it can reject the value (`raise ValueError`) or normalise it (return `INV-17` instead of ` inv-17 `).", es: "`@field_validator(\"number\")` es una comprobación propia del campo, como un trigger `BEFORE INSERT`: puede rechazar el valor (`raise ValueError`) o normalizarlo (devolver `INV-17` en lugar de ` inv-17 `)." },
+              { ru: "`Literal[\"EUR\", \"USD\"]` — `CHECK (currency IN ('EUR', 'USD'))`, но проверяется уже при выполнении.", en: "`Literal[\"EUR\", \"USD\"]` is `CHECK (currency IN ('EUR', 'USD'))`, now checked at run time.", es: "`Literal[\"EUR\", \"USD\"]` es `CHECK (currency IN ('EUR', 'USD'))`, ahora comprobado al ejecutar." },
+              { ru: "У модели могут быть обычные методы, как `total()`. Демонстрация спрятана под `if __name__ == \"__main__\"`, чтобы `from inv import Invoice` в следующих примерах ничего не печатал.", en: "A model can have ordinary methods, such as `total()`. The demo sits under `if __name__ == \"__main__\"` so that `from inv import Invoice` in the next examples prints nothing.", es: "Un modelo puede tener métodos normales, como `total()`. La demostración está bajo `if __name__ == \"__main__\"` para que `from inv import Invoice` en los siguientes ejemplos no imprima nada." },
+            ] },
+            { type: "code", lang: "python", caption: { ru: "JSON Schema строки счёта", en: "The JSON Schema of an invoice line", es: "El JSON Schema de una línea de factura" },
+              code: `import json
+from inv import Line
+
+print(json.dumps(Line.model_json_schema(), indent=2))`,
+              output: `{
+  "properties": {
+    "product": {
+      "title": "Product",
+      "type": "string"
+    },
+    "qty": {
+      "minimum": 1,
+      "title": "Qty",
+      "type": "integer"
+    },
+    "price": {
+      "minimum": 0,
+      "title": "Price",
+      "type": "number"
+    }
+  },
+  "required": [
+    "product",
+    "qty",
+    "price"
+  ],
+  "title": "Line",
+  "type": "object"
+}` },
+            { type: "p", text: {
+              ru: "JSON Schema — стандартное описание структуры JSON. Именно её передают модели для структурированного вывода (structured output) и для описания аргументов инструментов. Схема получается из той же модели Pydantic, что потом проверяет ответ, поэтому описание и проверка не расходятся. Современные SDK принимают модель Pydantic напрямую и сами строят из неё схему.",
+              en: "JSON Schema is the standard description of a JSON structure. It is exactly what you give a model for structured output and for describing tool arguments. The schema comes from the same Pydantic model that later validates the answer, so the description and the check never drift apart. Modern SDKs accept a Pydantic model directly and build the schema themselves.",
+              es: "JSON Schema es la descripción estándar de la estructura de un JSON. Es justo lo que se pasa a un modelo para la salida estructurada (structured output) y para describir los argumentos de las herramientas. El esquema sale del mismo modelo de Pydantic que luego valida la respuesta, así que descripción y validación nunca se separan. Los SDK actuales aceptan un modelo de Pydantic directamente y construyen el esquema ellos solos.",
+            } },
+            { type: "code", lang: "python", caption: { ru: "Проверка ответа модели", en: "Validating a model's answer", es: "Validar la respuesta de un modelo" },
+              code: `from pydantic import ValidationError
+from inv import Invoice
+
+llm_answer = '{"number": "17", "currency": "GBP", "lines": []}'   # what the model returned
+
+try:
+    inv = Invoice.model_validate_json(llm_answer)
+except ValidationError as e:
+    for err in e.errors():
+        print(".".join(map(str, err["loc"])), "->", err["msg"])`,
+              output: `number -> Value error, must start with INV-
+currency -> Input should be 'EUR' or 'USD'
+lines -> List should have at least 1 item after validation, not 0` },
+            { type: "warn", text: {
+              ru: "Не доверяйте ответу модели, даже если вы передали ей схему: она может вернуть лишний текст, пропустить поле или выдумать значение. Всегда прогоняйте ответ через модель Pydantic. При ошибке отправьте список ошибок модели и попросите исправить, но не больше одного-двух повторов (retry).",
+              en: "Do not trust a model's answer even if you gave it the schema: it may add extra text, skip a field or invent a value. Always run the answer through the Pydantic model. On failure send the list of errors back to the model and ask for a fix, but retry no more than once or twice.",
+              es: "No te fíes de la respuesta del modelo aunque le hayas pasado el esquema: puede añadir texto de más, saltarse un campo o inventarse un valor. Pasa siempre la respuesta por el modelo de Pydantic. Si falla, envíale la lista de errores y pide que la corrija, pero no más de uno o dos reintentos (retry).",
+            } },
+          ],
+        },
+        {
+          id: "tt-pytest",
+          title: { ru: "Тесты на pytest", en: "Testing with pytest", es: "Tests con pytest" },
+          blocks: [
+            { type: "p", text: {
+              ru: "В мире Oracle тесты пишут на utPLSQL или проверочными скриптами. В Python стандарт — pytest. Тест — обычная функция с именем `test_…` в файле `test_….py`, а проверка — обычный `assert`. Установка: `pip install pytest`, запуск: `pytest` в папке проекта.",
+              en: "In the Oracle world tests are written with utPLSQL or check scripts. In Python the standard is pytest. A test is an ordinary function named `test_…` in a `test_….py` file, and the check is a plain `assert`. Install with `pip install pytest` and run `pytest` in the project folder.",
+              es: "En el mundo Oracle los tests se escriben con utPLSQL o con scripts de comprobación. En Python el estándar es pytest. Un test es una función normal llamada `test_…` en un fichero `test_….py`, y la comprobación es un simple `assert`. Se instala con `pip install pytest` y se ejecuta `pytest` en la carpeta del proyecto.",
+            } },
+            { type: "code", lang: "python", caption: { ru: "salary.py: код, который тестируем", en: "salary.py: the code under test", es: "salary.py: el código que probamos" },
+              code: `def net_salary(gross: float, tax_rate: float = 0.2) -> float:
+    if gross < 0:
+        raise ValueError("gross must be >= 0")
+    return gross * (1 - tax_rate)` },
+            { type: "compare",
+              sql: `CREATE OR REPLACE PACKAGE test_salary AS
+  --%suite(Salary)
+  --%test(Net salary after tax)
+  PROCEDURE net_after_tax;
+END;
+/
+CREATE OR REPLACE PACKAGE BODY test_salary AS
+  PROCEDURE net_after_tax IS
+  BEGIN
+    ut.expect(net_salary(4000)).to_equal(3200);
+  END;
+END;
+/
+EXEC ut.run('test_salary');`,
+              python: `# test_salary.py
+from salary import net_salary
+
+def test_net_after_tax():
+    assert net_salary(4000) == 3200
+
+def test_zero_tax():
+    assert net_salary(4000, tax_rate=0) == 4000`,
+              note: {
+                ru: "pytest находит тесты по именам файлов и функций: регистрировать их в наборе (suite) не нужно.",
+                en: "pytest finds tests by file and function names: there is no need to register them in a suite.",
+                es: "pytest encuentra los tests por el nombre de ficheros y funciones: no hace falta registrarlos en una suite.",
+              } },
+            { type: "code", lang: "bash",
+              code: `pytest -q`,
+              output: `..                                     [100%]
+2 passed in 0.01s` },
+            { type: "p", text: {
+              ru: "Каждая точка — пройденный тест. Если `assert` не выполнился, pytest показывает строку теста и оба значения, так что отладочные `print` обычно не нужны:",
+              en: "Each dot is a passed test. When an `assert` fails, pytest shows the test line and both values, so debug `print` calls are rarely needed:",
+              es: "Cada punto es un test superado. Cuando un `assert` falla, pytest muestra la línea del test y los dos valores, así que rara vez hacen falta `print` de depuración:",
+            } },
+            { type: "code", lang: "text", caption: { ru: "Фрагмент вывода упавшего теста", en: "Part of a failed test's output", es: "Parte de la salida de un test fallido" },
+              code: `    def test_custom_rate():
+>       assert net_salary(4000, tax_rate=0.25) == 3100
+E       assert 3000.0 == 3100
+E        +  where 3000.0 = net_salary(4000, tax_rate=0.25)
+
+FAILED test_fail.py::test_custom_rate - assert 3000.0 == 3100
+1 failed in 0.01s` },
+            { type: "code", lang: "python", caption: { ru: "Ожидаемая ошибка и таблица случаев", en: "An expected error and a table of cases", es: "Un error esperado y una tabla de casos" },
+              code: `import pytest
+from salary import net_salary
+
+def test_negative_gross_is_rejected():
+    with pytest.raises(ValueError, match="must be >= 0"):
+        net_salary(-1)
+
+@pytest.mark.parametrize("gross, rate, expected", [
+    (1000, 0.2, 800),
+    (1000, 0.0, 1000),
+    (0, 0.5, 0),
+    (100, 0.1, 90),
+])
+def test_net_salary_table(gross, rate, expected):
+    assert net_salary(gross, rate) == pytest.approx(expected)`,
+              output: `.....                                  [100%]
+5 passed in 0.01s` },
+            { type: "list", items: [
+              { ru: "`pytest.raises(ValueError)` проверяет, что код упал с нужной ошибкой. Это аннотация `--%throws` в utPLSQL. `match` дополнительно сверяет текст сообщения.", en: "`pytest.raises(ValueError)` checks that the code fails with the right error. It is the `--%throws` annotation in utPLSQL. `match` also checks the message text.", es: "`pytest.raises(ValueError)` comprueba que el código falla con el error correcto. Es la anotación `--%throws` de utPLSQL. `match` comprueba además el texto del mensaje." },
+              { ru: "`@pytest.mark.parametrize` запускает один тест на таблице входов и ожиданий: четыре строки дали четыре теста.", en: "`@pytest.mark.parametrize` runs one test over a table of inputs and expectations: four rows give four tests.", es: "`@pytest.mark.parametrize` ejecuta un test sobre una tabla de entradas y resultados esperados: cuatro filas dan cuatro tests." },
+              { ru: "`pytest.approx` сравнивает дробные числа с допуском: `0.1 + 0.2 == 0.3` в Python даёт `False`.", en: "`pytest.approx` compares floats with a tolerance: in Python `0.1 + 0.2 == 0.3` is `False`.", es: "`pytest.approx` compara decimales con una tolerancia: en Python `0.1 + 0.2 == 0.3` da `False`." },
+            ] },
+            { type: "p", text: {
+              ru: "Фикстура (fixture) готовит данные для тестов, как `--%beforeeach` в utPLSQL. Тест получает её, просто назвав параметр так же, как функцию-фикстуру. Каждый тест получает свежую копию, поэтому изменения в одном тесте не влияют на другой. `**valid_data` раскладывает словарь в именованные аргументы.",
+              en: "A fixture prepares data for tests, like `--%beforeeach` in utPLSQL. A test receives it simply by naming a parameter after the fixture function. Each test gets a fresh copy, so changes in one test do not affect another. `**valid_data` unpacks the dict into named arguments.",
+              es: "Una fixture prepara datos para los tests, como `--%beforeeach` en utPLSQL. Un test la recibe con solo llamar a un parámetro igual que la función fixture. Cada test recibe una copia nueva, así que lo que cambia uno no afecta a otro. `**valid_data` reparte el diccionario en argumentos con nombre.",
+            } },
+            { type: "code", lang: "python", caption: { ru: "test_models.py: фикстура и модель Pydantic из части 4 (файл models.py)", en: "test_models.py: a fixture and the Pydantic model from part 4 (in models.py)", es: "test_models.py: una fixture y el modelo de Pydantic de la parte 4 (en models.py)" },
+              code: `import pytest
+from pydantic import ValidationError
+from models import Employee
+
+@pytest.fixture
+def valid_data() -> dict:
+    return {"name": "Ana", "email": "ana@example.com", "salary": 4200}
+
+def test_valid(valid_data):
+    assert Employee(**valid_data).salary == 4200
+
+def test_negative_salary(valid_data):
+    valid_data["salary"] = -1
+    with pytest.raises(ValidationError):
+        Employee(**valid_data)`,
+              output: `..                                     [100%]
+2 passed in 0.07s` },
+          ],
+        },
+        {
+          id: "tt-testing-llm",
+          title: { ru: "Как тестировать код, который вызывает LLM", en: "Testing code that calls an LLM", es: "Cómo probar código que llama a un LLM" },
+          blocks: [
+            { type: "p", text: {
+              ru: "Ответ модели меняется от запуска к запуску, стоит денег и требует сети. Поэтому в обычных (unit) тестах настоящую модель не вызывают. Её подменяют заглушкой (fake или mock), которая возвращает заранее известный ответ, и проверяют свой код: правильно ли собран промпт, разобран ответ, обработаны ошибки. Качество самих ответов модели проверяют отдельно, это evals (блок «Оценка качества»).",
+              en: "A model's answer changes from run to run, costs money and needs the network. So ordinary (unit) tests never call the real model. They replace it with a stand-in (a fake or a mock) that returns a known answer, and test your own code: is the prompt built correctly, is the answer parsed, are errors handled. The quality of the model's answers is checked separately, with evals (the “Evals” block).",
+              es: "La respuesta de un modelo cambia de una ejecución a otra, cuesta dinero y necesita red. Por eso los tests normales (unit) no llaman al modelo real. Lo sustituyen por un doble (un fake o un mock) que devuelve una respuesta conocida, y prueban tu propio código: si el prompt se construye bien, si la respuesta se analiza y si los errores se tratan. La calidad de las respuestas del modelo se mide aparte, con evals (bloque «Evaluación»).",
+            } },
+            { type: "code", lang: "python", caption: { ru: "extract.py: извлечение контакта с повтором", en: "extract.py: contact extraction with a retry", es: "extract.py: extracción de un contacto con reintento" },
+              code: `from typing import Callable
+from pydantic import BaseModel, ValidationError
+
+class Contact(BaseModel):
+    name: str
+    email: str
+
+def extract_contact(text: str, ask_llm: Callable[[str], str], retries: int = 1) -> Contact:
+    prompt = f"Return JSON with name and email from: {text}"
+    for _ in range(retries + 1):
+        answer = ask_llm(prompt)
+        try:
+            return Contact.model_validate_json(answer)
+        except ValidationError as e:
+            prompt += f"\\nYour answer was invalid ({e.error_count()} errors). Return only JSON."
+    raise ValueError("model did not return valid JSON")` },
+            { type: "p", text: {
+              ru: "Главный приём — функция вызова модели передаётся параметром `ask_llm`. В проде туда передают функцию, которая обращается к SDK, а в тесте — простую заглушку. Это внедрение зависимости (dependency injection). `Callable[[str], str]` — аннотация «функция, которая принимает строку и возвращает строку».",
+              en: "The key trick is that the model call is passed in as the `ask_llm` parameter. In production you pass a function that calls the SDK, and in a test a simple stand-in. This is dependency injection. `Callable[[str], str]` is the hint for “a function that takes a string and returns a string”.",
+              es: "El truco principal es que la llamada al modelo se pasa como parámetro `ask_llm`. En producción se pasa una función que usa el SDK, y en el test, un doble sencillo. Es la inyección de dependencias (dependency injection). `Callable[[str], str]` es la anotación de «una función que recibe una cadena y devuelve una cadena».",
+            } },
+            { type: "code", lang: "python", caption: { ru: "test_extract.py", en: "test_extract.py", es: "test_extract.py" },
+              code: `import pytest
+from extract import extract_contact
+
+def test_parses_valid_answer():
+    fake = lambda prompt: '{"name": "Ana", "email": "ana@example.com"}'
+    assert extract_contact("Ana, ana@example.com", fake).name == "Ana"
+
+def test_retries_after_bad_json():
+    answers = iter(["Sure! Here it is", '{"name": "Luis", "email": "luis@example.com"}'])
+    prompts = []
+
+    def fake(prompt: str) -> str:
+        prompts.append(prompt)      # remember what we sent
+        return next(answers)        # first bad, then good
+
+    contact = extract_contact("Luis, luis@example.com", fake)
+    assert contact.email == "luis@example.com"
+    assert len(prompts) == 2
+    assert "invalid" in prompts[1]
+
+def test_gives_up_after_retries():
+    with pytest.raises(ValueError, match="valid JSON"):
+        extract_contact("no contact here", lambda prompt: "{}", retries=2)`,
+              output: `...                                    [100%]
+3 passed in 0.05s` },
+            { type: "p", text: {
+              ru: "Три теста покрывают три пути: модель ответила правильно, ответила мусором и исправилась, так и не ответила правильно. Второй тест заодно проверяет, что в повторный промпт попало сообщение об ошибке. Тесты идут за доли секунды и ничего не стоят. Если код вызывает SDK напрямую, подменить его можно встроенной фикстурой `monkeypatch` или модулем `unittest.mock`.",
+              en: "The three tests cover three paths: the model answered correctly, answered with junk and then fixed it, never answered correctly. The second test also checks that the error message reached the retry prompt. The tests run in a fraction of a second and cost nothing. If your code calls the SDK directly, you can replace it with the built-in `monkeypatch` fixture or the `unittest.mock` module.",
+              es: "Los tres tests cubren tres caminos: el modelo respondió bien, respondió basura y luego corrigió, nunca respondió bien. El segundo test comprueba además que el mensaje de error llegó al prompt del reintento. Los tests tardan una fracción de segundo y no cuestan nada. Si tu código llama al SDK directamente, puedes sustituirlo con la fixture integrada `monkeypatch` o con el módulo `unittest.mock`.",
+            } },
+            { type: "code", lang: "text", caption: { ru: "Типичная структура проекта", en: "A typical project layout", es: "Estructura típica de un proyecto" },
+              code: `my-app/
+  pyproject.toml        # dependencies and tool settings (pytest, mypy, ruff)
+  src/my_app/
+    models.py           # Pydantic models
+    extract.py          # logic that calls the LLM
+  tests/
+    test_models.py
+    test_extract.py` },
+            { type: "tip", text: {
+              ru: "Поставьте в CI (например, GitHub Actions) три команды на каждый push: `ruff check` (стиль и типичные ошибки), `mypy src/` и `pytest`. Репозиторий портфолио с тестами и зелёной галочкой CI сразу выделяет кандидата на собеседовании.",
+              en: "Put three commands in CI (GitHub Actions, for example) on every push: `ruff check` (style and common mistakes), `mypy src/` and `pytest`. A portfolio repository with tests and a green CI tick makes a candidate stand out at once.",
+              es: "Pon tres comandos en la CI (por ejemplo, GitHub Actions) en cada push: `ruff check` (estilo y errores típicos), `mypy src/` y `pytest`. Un repositorio de portfolio con tests y la marca verde de la CI hace destacar al candidato desde el primer momento.",
+            } },
+          ],
+        },
+      ],
+      cheatsheet: {
+        head: [{ ru: "SQL / PL/SQL", en: "SQL / PL/SQL", es: "SQL / PL/SQL" }, { ru: "Python", en: "Python", es: "Python" }],
+        rows: [
+          ["FUNCTION f(p NUMBER) RETURN VARCHAR2", "def f(p: int) -> str:"],
+          ["TABLE OF VARCHAR2", "list[str]"],
+          [{ ru: "может вернуть NULL", en: "may return NULL", es: "puede devolver NULL" }, "-> str | None"],
+          [{ ru: "компиляция и SHOW ERRORS", en: "compiling and SHOW ERRORS", es: "compilar y SHOW ERRORS" }, "mypy app.py"],
+          ["CREATE TYPE … AS OBJECT", "@dataclass / class M(BaseModel):"],
+          ["MEMBER FUNCTION … SELF", "def method(self):"],
+          ["VARCHAR2(100) NOT NULL", "name: str = Field(max_length=100)"],
+          [{ ru: "столбец без NOT NULL", en: "a column without NOT NULL", es: "una columna sin NOT NULL" }, "bonus: float | None = None"],
+          ["DEFAULT 'IT'", "dept: str = \"IT\""],
+          ["CHECK (salary > 0)", "salary: float = Field(gt=0)"],
+          ["CHECK (cur IN ('EUR', 'USD'))", "cur: Literal[\"EUR\", \"USD\"]"],
+          [{ ru: "триггер BEFORE INSERT", en: "a BEFORE INSERT trigger", es: "un trigger BEFORE INSERT" }, "@field_validator(\"field\")"],
+          [{ ru: "master-detail", en: "master-detail", es: "maestro-detalle" }, "lines: list[Line]"],
+          ["ORA-02290: check constraint violated", "pydantic.ValidationError"],
+          ["JSON_TABLE / JSON_OBJECT", "model_validate_json() / model_dump_json()"],
+          ["ut.run('test_pkg')", "pytest"],
+          ["--%test", "def test_something():"],
+          ["ut.expect(a).to_equal(b)", "assert a == b"],
+          ["--%throws(-20001)", "with pytest.raises(ValueError):"],
+          ["--%beforeeach", "@pytest.fixture"],
+        ],
+      },
+      quiz: [
+        {
+          q: { ru: "Что произойдёт при вызове `f(\"a\")`, если функция объявлена как `def f(x: int)`?", en: "What happens when you call `f(\"a\")` if the function is declared as `def f(x: int)`?", es: "¿Qué pasa al llamar a `f(\"a\")` si la función se declara como `def f(x: int)`?" },
+          options: [
+            { ru: "TypeError в момент вызова", en: "A TypeError at the call", es: "Un TypeError en la llamada" },
+            { ru: "Функция выполнится: Python не проверяет аннотации", en: "The function runs: Python does not check hints", es: "La función se ejecuta: Python no comprueba las anotaciones" },
+            { ru: "Строка автоматически превратится в int", en: "The string is converted to int automatically", es: "La cadena se convierte en int automáticamente" },
+            { ru: "SyntaxError при загрузке файла", en: "A SyntaxError when the file loads", es: "Un SyntaxError al cargar el fichero" },
+          ],
+          answer: 1,
+          explain: { ru: "Аннотации — подсказки для инструментов. Ошибку найдёт mypy до запуска, а сам Python выполнит код и, возможно, упадёт позже внутри функции.", en: "Hints are for tools. mypy finds the bug before running; Python itself runs the code and may fail later inside the function.", es: "Las anotaciones son para las herramientas. mypy encuentra el error antes de ejecutar; Python ejecuta el código y quizá falle más tarde dentro de la función." },
+        },
+        {
+          q: { ru: "Что означает аннотация `-> str | None`?", en: "What does the hint `-> str | None` mean?", es: "¿Qué significa la anotación `-> str | None`?" },
+          options: [
+            { ru: "Функция возвращает строку или None", en: "The function returns a string or None", es: "La función devuelve una cadena o None" },
+            { ru: "Функция возвращает строку, а при ошибке — исключение", en: "The function returns a string, or raises on error", es: "La función devuelve una cadena o lanza una excepción" },
+            { ru: "Функция ничего не возвращает", en: "The function returns nothing", es: "La función no devuelve nada" },
+            { ru: "Логическое ИЛИ двух значений", en: "A logical OR of two values", es: "Un OR lógico de dos valores" },
+          ],
+          answer: 0,
+          explain: { ru: "`|` в аннотации — «один из типов». Это результат, который может быть NULL, и mypy потребует проверить его на `None` перед использованием.", en: "`|` in a hint means “one of these types”. It is a result that may be NULL, and mypy will make you check for `None` before using it.", es: "`|` en una anotación significa «uno de estos tipos». Es un resultado que puede ser NULL, y mypy obligará a comprobar `None` antes de usarlo." },
+        },
+        {
+          q: { ru: "Какой инструмент найдёт вызов `email.upper()` у значения, которое может быть `None`, не запуская код?", en: "Which tool finds a call to `email.upper()` on a value that may be `None`, without running the code?", es: "¿Qué herramienta detecta una llamada a `email.upper()` sobre un valor que puede ser `None`, sin ejecutar el código?" },
+          options: ["pytest", "pip", "mypy", "venv"],
+          answer: 2,
+          explain: { ru: "mypy — статический анализатор типов. pytest запускает код, pip ставит пакеты, venv изолирует окружение.", en: "mypy is a static type checker. pytest runs code, pip installs packages, and venv isolates the environment.", es: "mypy es un analizador estático de tipos. pytest ejecuta código, pip instala paquetes y venv aísla el entorno." },
+        },
+        {
+          q: { ru: "Чем `@dataclass` отличается от модели Pydantic?", en: "How does `@dataclass` differ from a Pydantic model?", es: "¿En qué se diferencia `@dataclass` de un modelo de Pydantic?" },
+          options: [
+            { ru: "dataclass нельзя распечатать через print", en: "A dataclass cannot be printed", es: "Un dataclass no se puede imprimir" },
+            { ru: "dataclass работает только с числами", en: "A dataclass only works with numbers", es: "Un dataclass solo funciona con números" },
+            { ru: "Pydantic не умеет значения по умолчанию", en: "Pydantic has no default values", es: "Pydantic no admite valores por defecto" },
+            { ru: "dataclass не проверяет типы при создании объекта, Pydantic проверяет", en: "A dataclass does not check types on creation; Pydantic does", es: "Un dataclass no comprueba tipos al crear el objeto; Pydantic sí" },
+          ],
+          answer: 3,
+          explain: { ru: "`Employee(\"Ana\", \"IT\", \"a lot\")` в dataclass создастся без ошибки. Для данных снаружи нужен Pydantic.", en: "`Employee(\"Ana\", \"IT\", \"a lot\")` is created without an error by a dataclass. Outside data needs Pydantic.", es: "Un dataclass crea `Employee(\"Ana\", \"IT\", \"a lot\")` sin error. Los datos de fuera necesitan Pydantic." },
+        },
+        {
+          q: { ru: "Поле модели Pydantic: `salary: float`. Передали `salary=\"4200\"`. Что будет в `emp.salary`?", en: "A Pydantic field is `salary: float`. You pass `salary=\"4200\"`. What is `emp.salary`?", es: "Un campo de Pydantic es `salary: float`. Se pasa `salary=\"4200\"`. ¿Qué hay en `emp.salary`?" },
+          options: ["\"4200\"", "4200.0", "ValidationError", "None"],
+          answer: 1,
+          explain: { ru: "По умолчанию Pydantic приводит типы, если это возможно без потерь смысла, как неявный `TO_NUMBER`. Строгий режим `strict=True` это выключает.", en: "By default Pydantic coerces types when it safely can, like an implicit `TO_NUMBER`. Strict mode (`strict=True`) turns this off.", es: "Por defecto Pydantic convierte tipos cuando puede hacerlo sin problema, como un `TO_NUMBER` implícito. El modo estricto (`strict=True`) lo desactiva." },
+        },
+        {
+          q: { ru: "Как в Pydantic записать `CHECK (salary > 0)`?", en: "How do you write `CHECK (salary > 0)` in Pydantic?", es: "¿Cómo se escribe `CHECK (salary > 0)` en Pydantic?" },
+          options: [
+            "salary: float = Field(ge=0)",
+            "salary: float = Field(gt=0)",
+            "salary: float = 0",
+            "salary: float | None",
+          ],
+          answer: 1,
+          explain: { ru: "`gt` — строго больше (greater than), `ge` — больше или равно. `= 0` задаёт только значение по умолчанию.", en: "`gt` is strictly greater than and `ge` is greater or equal. `= 0` only sets a default.", es: "`gt` es estrictamente mayor que y `ge`, mayor o igual. `= 0` solo fija un valor por defecto." },
+        },
+        {
+          q: { ru: "Как получить JSON Schema модели, чтобы передать её LLM для структурированного ответа?", en: "How do you get a model's JSON Schema to give an LLM for structured output?", es: "¿Cómo se obtiene el JSON Schema de un modelo para pasárselo a un LLM en la salida estructurada?" },
+          options: ["Invoice.model_dump()", "Invoice.model_validate_json(text)", "json.dumps(Invoice)", "Invoice.model_json_schema()"],
+          answer: 3,
+          explain: { ru: "`model_json_schema()` строит схему из аннотаций и ограничений. `model_dump` превращает объект в словарь, а `model_validate_json` разбирает и проверяет ответ.", en: "`model_json_schema()` builds the schema from the hints and constraints. `model_dump` turns an object into a dict, and `model_validate_json` parses and validates an answer.", es: "`model_json_schema()` construye el esquema a partir de las anotaciones y restricciones. `model_dump` convierte un objeto en diccionario y `model_validate_json` analiza y valida una respuesta." },
+        },
+        {
+          q: { ru: "Как pytest находит тесты?", en: "How does pytest find tests?", es: "¿Cómo encuentra pytest los tests?" },
+          options: [
+            { ru: "По именам: файлы `test_*.py` и функции `test_*`", en: "By name: `test_*.py` files and `test_*` functions", es: "Por nombre: ficheros `test_*.py` y funciones `test_*`" },
+            { ru: "Их нужно зарегистрировать в наборе (suite)", en: "They must be registered in a suite", es: "Hay que registrarlos en una suite" },
+            { ru: "Запускает все функции во всех файлах", en: "It runs every function in every file", es: "Ejecuta todas las funciones de todos los ficheros" },
+            { ru: "По декоратору `@test`", en: "By a `@test` decorator", es: "Por un decorador `@test`" },
+          ],
+          answer: 0,
+          explain: { ru: "Соглашение об именах заменяет регистрацию. Поэтому тест с именем `check_salary` pytest просто не увидит.", en: "The naming convention replaces registration, which is why pytest simply ignores a test named `check_salary`.", es: "La convención de nombres sustituye al registro, por eso pytest ignora sin más un test llamado `check_salary`." },
+        },
+        {
+          q: { ru: "Как проверить в тесте, что функция выбрасывает `ValueError`?", en: "How do you check in a test that a function raises `ValueError`?", es: "¿Cómo se comprueba en un test que una función lanza `ValueError`?" },
+          options: [
+            "assert f() == ValueError",
+            "@pytest.fixture",
+            "with pytest.raises(ValueError):",
+            "try: f() … except ValueError: pass",
+          ],
+          answer: 2,
+          explain: { ru: "`pytest.raises` провалит тест, если ошибки не было. Вариант с `try/except pass` пройдёт в обоих случаях и ничего не проверит.", en: "`pytest.raises` fails the test if no error happened. The `try/except pass` variant passes either way and checks nothing.", es: "`pytest.raises` hace fallar el test si no hubo error. La variante con `try/except pass` pasa en ambos casos y no comprueba nada." },
+        },
+        {
+          q: { ru: "Почему в unit-тестах не вызывают настоящую LLM?", en: "Why don't unit tests call the real LLM?", es: "¿Por qué los tests unitarios no llaman al LLM real?" },
+          options: [
+            { ru: "pytest запрещает сетевые запросы", en: "pytest forbids network requests", es: "pytest prohíbe las peticiones de red" },
+            { ru: "Ответ меняется, стоит денег и требует сети: тесты станут медленными и нестабильными", en: "The answer varies, costs money and needs the network: tests become slow and flaky", es: "La respuesta cambia, cuesta dinero y necesita red: los tests serían lentos e inestables" },
+            { ru: "Модель распознаёт тест и отвечает иначе", en: "The model detects the test and answers differently", es: "El modelo detecta el test y responde de otra forma" },
+            { ru: "LLM нельзя вызвать из Python", en: "An LLM cannot be called from Python", es: "Un LLM no se puede llamar desde Python" },
+          ],
+          answer: 1,
+          explain: { ru: "Unit-тест должен давать один и тот же результат за доли секунды. Модель подменяют заглушкой, а качество ответов меряют отдельно через evals.", en: "A unit test must give the same result in a fraction of a second. The model is replaced by a stand-in, and answer quality is measured separately with evals.", es: "Un test unitario debe dar el mismo resultado en una fracción de segundo. El modelo se sustituye por un doble y la calidad de las respuestas se mide aparte con evals." },
+        },
+      ],
+      exercises: [
+        {
+          task: {
+            ru: "Напишите функцию `average(values)` с аннотациями типов: она возвращает среднее списка чисел, а для пустого списка — `None`. Добавьте наивную строку `print(round(average([4200, 3100])))` и запустите `mypy`: он найдёт ошибку. Исправьте её функцией `report(values)`, которая печатает округлённое среднее или `no data`, и вызовите её для `[4200, 3100]` и для пустого списка.",
+            en: "Write a function `average(values)` with type hints: it returns the mean of a list of numbers, or `None` for an empty list. Add the naive line `print(round(average([4200, 3100])))` and run `mypy`: it finds a bug. Fix it with a function `report(values)` that prints the rounded mean or `no data`, and call it for `[4200, 3100]` and for an empty list.",
+            es: "Escribe una función `average(values)` con anotaciones de tipo: devuelve la media de una lista de números o `None` si la lista está vacía. Añade la línea ingenua `print(round(average([4200, 3100])))` y ejecuta `mypy`: encontrará un error. Corrígelo con una función `report(values)` que imprima la media redondeada o `no data`, y llámala para `[4200, 3100]` y para una lista vacía.",
+          },
+          hint: { ru: "Результат `average` — `float | None`. mypy ответит `Argument 1 to \"round\" has incompatible type \"float | None\"`: перед `round` нужна проверка `if result is None`.", en: "The result of `average` is `float | None`. mypy reports `Argument 1 to \"round\" has incompatible type \"float | None\"`: check `if result is None` before calling `round`.", es: "El resultado de `average` es `float | None`. mypy responde `Argument 1 to \"round\" has incompatible type \"float | None\"`: comprueba `if result is None` antes de `round`." },
+          solution: { lang: "python",
+            code: `def average(values: list[float]) -> float | None:
+    if not values:
+        return None
+    return sum(values) / len(values)
+
+def report(values: list[float]) -> None:
+    result = average(values)
+    if result is None:
+        print("no data")
+    else:
+        print(round(result))
+
+report([4200, 3100])
+report([])`,
+            output: `3650
+no data` },
+        },
+        {
+          task: {
+            ru: "Из внешней системы пришли заказы. Опишите модель `Order`: `id` — целое, `amount` больше нуля, `status` — одно из `new`, `paid`, `shipped`. Проверьте каждую строку, напечатайте номера отклонённых строк с полями-нарушителями, затем id принятых заказов и их сумму. Данные: `{\"id\": 1, \"amount\": 120.5, \"status\": \"paid\"}`, `{\"id\": \"2\", \"amount\": \"80\", \"status\": \"new\"}`, `{\"id\": 3, \"amount\": -10, \"status\": \"paid\"}`, `{\"id\": 4, \"amount\": 15, \"status\": \"lost\"}`, `{\"amount\": 40, \"status\": \"new\"}`.",
+            en: "Orders arrived from an external system. Define an `Order` model: `id` is an integer, `amount` is above zero, `status` is one of `new`, `paid`, `shipped`. Validate each row, print the numbers of rejected rows with the offending fields, then the ids of accepted orders and their total. Data: `{\"id\": 1, \"amount\": 120.5, \"status\": \"paid\"}`, `{\"id\": \"2\", \"amount\": \"80\", \"status\": \"new\"}`, `{\"id\": 3, \"amount\": -10, \"status\": \"paid\"}`, `{\"id\": 4, \"amount\": 15, \"status\": \"lost\"}`, `{\"amount\": 40, \"status\": \"new\"}`.",
+            es: "Han llegado pedidos de un sistema externo. Define un modelo `Order`: `id` es un entero, `amount` es mayor que cero, `status` es uno de `new`, `paid`, `shipped`. Valida cada fila, imprime los números de las filas rechazadas con los campos culpables y, después, los id de los pedidos aceptados y su total. Datos: `{\"id\": 1, \"amount\": 120.5, \"status\": \"paid\"}`, `{\"id\": \"2\", \"amount\": \"80\", \"status\": \"new\"}`, `{\"id\": 3, \"amount\": -10, \"status\": \"paid\"}`, `{\"id\": 4, \"amount\": 15, \"status\": \"lost\"}`, `{\"amount\": 40, \"status\": \"new\"}`.",
+          },
+          hint: { ru: "`Literal` для статуса, `Field(gt=0)` для суммы. В цикле `try: Order.model_validate(row)` / `except ValidationError as e:`, а поле-нарушитель лежит в `err[\"loc\"][0]`. Обратите внимание на вторую строку: строки `\"2\"` и `\"80\"` приведутся к числам.", en: "`Literal` for the status, `Field(gt=0)` for the amount. In the loop use `try: Order.model_validate(row)` / `except ValidationError as e:`; the offending field is in `err[\"loc\"][0]`. Note the second row: the strings `\"2\"` and `\"80\"` are coerced to numbers.", es: "`Literal` para el estado y `Field(gt=0)` para el importe. En el bucle, `try: Order.model_validate(row)` / `except ValidationError as e:`; el campo culpable está en `err[\"loc\"][0]`. Fíjate en la segunda fila: las cadenas `\"2\"` y `\"80\"` se convierten en números." },
+          solution: { lang: "python",
+            code: `from typing import Literal
+from pydantic import BaseModel, Field, ValidationError
+
+class Order(BaseModel):
+    id: int
+    amount: float = Field(gt=0)
+    status: Literal["new", "paid", "shipped"]
+
+rows = [
+    {"id": 1, "amount": 120.5, "status": "paid"},
+    {"id": "2", "amount": "80", "status": "new"},
+    {"id": 3, "amount": -10, "status": "paid"},
+    {"id": 4, "amount": 15, "status": "lost"},
+    {"amount": 40, "status": "new"},
+]
+
+valid: list[Order] = []
+for i, row in enumerate(rows):
+    try:
+        valid.append(Order.model_validate(row))
+    except ValidationError as e:
+        problems = ", ".join(str(err["loc"][0]) for err in e.errors())
+        print(f"row {i}: rejected ({problems})")
+
+print("valid ids:", [o.id for o in valid])
+print("total:", sum(o.amount for o in valid))`,
+            output: `row 2: rejected (amount)
+row 3: rejected (status)
+row 4: rejected (id)
+valid ids: [1, 2]
+total: 200.5` },
+        },
+        {
+          task: {
+            ru: "Опишите модель ответа LLM для классификации обращений в поддержку: `category` — одно из `billing`, `tech`, `other`; `priority` — целое от 1 до 5; `summary` — не длиннее 200 символов; `tags` — список строк, по умолчанию пустой. Напечатайте обязательные поля из JSON Schema и описание поля `category`. Разберите ответ модели `{\"category\": \"tech\", \"priority\": 2, \"summary\": \"Cannot log in after password reset\"}`, а для ответа `{\"category\": \"sales\", \"priority\": 9, \"summary\": \"?\"}` напечатайте список полей с ошибками.",
+            en: "Define an LLM answer model for classifying support requests: `category` is one of `billing`, `tech`, `other`; `priority` is an integer from 1 to 5; `summary` is at most 200 characters; `tags` is a list of strings, empty by default. Print the required fields from the JSON Schema and the description of the `category` field. Parse the model answer `{\"category\": \"tech\", \"priority\": 2, \"summary\": \"Cannot log in after password reset\"}`, and for the answer `{\"category\": \"sales\", \"priority\": 9, \"summary\": \"?\"}` print the list of fields with errors.",
+            es: "Define el modelo de respuesta de un LLM para clasificar peticiones de soporte: `category` es uno de `billing`, `tech`, `other`; `priority` es un entero de 1 a 5; `summary` tiene como mucho 200 caracteres; `tags` es una lista de cadenas, vacía por defecto. Imprime los campos obligatorios del JSON Schema y la descripción del campo `category`. Analiza la respuesta `{\"category\": \"tech\", \"priority\": 2, \"summary\": \"Cannot log in after password reset\"}` y, para la respuesta `{\"category\": \"sales\", \"priority\": 9, \"summary\": \"?\"}`, imprime la lista de campos con errores.",
+          },
+          hint: { ru: "`Field(ge=1, le=5)` и `Field(max_length=200)`. Схема — обычный словарь: смотрите ключи `required` и `properties`. Поле `tags` со значением по умолчанию в `required` не попадёт.", en: "Use `Field(ge=1, le=5)` and `Field(max_length=200)`. The schema is an ordinary dict: look at the `required` and `properties` keys. The `tags` field has a default, so it is not in `required`.", es: "Usa `Field(ge=1, le=5)` y `Field(max_length=200)`. El esquema es un diccionario normal: mira las claves `required` y `properties`. El campo `tags` tiene valor por defecto, así que no aparece en `required`." },
+          solution: { lang: "python",
+            code: `from typing import Literal
+from pydantic import BaseModel, Field, ValidationError
+
+class Ticket(BaseModel):
+    category: Literal["billing", "tech", "other"]
+    priority: int = Field(ge=1, le=5)
+    summary: str = Field(max_length=200)
+    tags: list[str] = []
+
+schema = Ticket.model_json_schema()
+print(schema["required"])
+print(schema["properties"]["category"])
+
+answer = '{"category": "tech", "priority": 2, "summary": "Cannot log in after password reset"}'
+ticket = Ticket.model_validate_json(answer)
+print(ticket.category, ticket.priority, ticket.tags)
+
+try:
+    Ticket.model_validate_json('{"category": "sales", "priority": 9, "summary": "?"}')
+except ValidationError as e:
+    print([err["loc"][0] for err in e.errors()])`,
+            output: `['category', 'priority', 'summary']
+{'enum': ['billing', 'tech', 'other'], 'title': 'Category', 'type': 'string'}
+tech 2 []
+['category', 'priority']` },
+        },
+        {
+          task: {
+            ru: "Итоговая задача. В файле `test_employee.py` опишите модель `Employee`: имя от 1 до 100 символов, `email` типа `EmailStr`, отдел по умолчанию `IT`, зарплата больше нуля. Напишите тесты: корректные данные, отрицательная зарплата, отсутствующий email и три неправильных адреса через `parametrize`. Общие данные вынесите в фикстуру. Запуск: `pytest -q test_employee.py`.",
+            en: "Final exercise. In `test_employee.py` define an `Employee` model: a name of 1 to 100 characters, an `email` of type `EmailStr`, a department defaulting to `IT` and a salary above zero. Write tests: valid data, a negative salary, a missing email and three bad addresses with `parametrize`. Put the shared data in a fixture. Run with `pytest -q test_employee.py`.",
+            es: "Ejercicio final. En `test_employee.py` define un modelo `Employee`: nombre de 1 a 100 caracteres, `email` de tipo `EmailStr`, departamento `IT` por defecto y salario mayor que cero. Escribe tests: datos correctos, salario negativo, email ausente y tres direcciones incorrectas con `parametrize`. Pon los datos comunes en una fixture. Se ejecuta con `pytest -q test_employee.py`.",
+          },
+          hint: {
+            ru: "Сначала `pip install pytest \"pydantic[email]\"`. Фикстура возвращает словарь, тест меняет в нём одно поле (`data[\"salary\"] = -100`, `del data[\"email\"]`) и ждёт `ValidationError`. Через `pytest.raises(...) as exc` можно заглянуть в ошибку: `exc.value.errors()`.",
+            en: "First run `pip install pytest \"pydantic[email]\"`. The fixture returns a dict; each test changes one field (`data[\"salary\"] = -100`, `del data[\"email\"]`) and expects a `ValidationError`. With `pytest.raises(...) as exc` you can look inside the error: `exc.value.errors()`.",
+            es: "Primero `pip install pytest \"pydantic[email]\"`. La fixture devuelve un diccionario; cada test cambia un campo (`data[\"salary\"] = -100`, `del data[\"email\"]`) y espera un `ValidationError`. Con `pytest.raises(...) as exc` puedes mirar dentro del error: `exc.value.errors()`.",
+          },
+          solution: { lang: "python",
+            code: `import pytest
+from pydantic import BaseModel, EmailStr, Field, ValidationError
+
+class Employee(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    email: EmailStr
+    dept: str = "IT"
+    salary: float = Field(gt=0)
+
+@pytest.fixture
+def data() -> dict:
+    return {"name": "Ana", "email": "ana@example.com", "salary": 4200}
+
+def test_valid_employee(data):
+    emp = Employee(**data)
+    assert emp.dept == "IT"
+    assert emp.salary == 4200
+
+def test_negative_salary_is_rejected(data):
+    data["salary"] = -100
+    with pytest.raises(ValidationError) as exc:
+        Employee(**data)
+    assert exc.value.errors()[0]["loc"] == ("salary",)
+
+def test_missing_field_is_rejected(data):
+    del data["email"]
+    with pytest.raises(ValidationError, match="email"):
+        Employee(**data)
+
+@pytest.mark.parametrize("email", ["ana", "ana@", "@example.com"])
+def test_bad_email_is_rejected(data, email):
+    data["email"] = email
+    with pytest.raises(ValidationError):
+        Employee(**data)`,
+            output: `......                                 [100%]
+6 passed in 0.12s` },
+        },
+      ],
+    },
   },
   {
     id: "async-python", block: "foundation",
@@ -3196,6 +4057,16 @@ const GLOSSARY = [
     topics: ["embeddings", "vector-search", "math-intuition"],
   },
   {
+    id: "type-hints",
+    term: { ru: "Аннотации типов (type hints)", en: "Type hints", es: "Anotaciones de tipo (type hints)" },
+    definition: {
+      ru: "Описание типов параметров, результата и переменных в Python: `def f(x: int) -> str`. Python при запуске их не проверяет; их читают редактор, mypy и библиотеки вроде Pydantic.",
+      en: "A description of the types of parameters, results and variables in Python: `def f(x: int) -> str`. Python does not check them at run time; the editor, mypy and libraries such as Pydantic read them.",
+      es: "Descripción de los tipos de parámetros, resultados y variables en Python: `def f(x: int) -> str`. Python no las comprueba al ejecutar; las leen el editor, mypy y librerías como Pydantic.",
+    },
+    topics: ["python-types-tests"],
+  },
+  {
     id: "pydantic",
     term: { ru: "Pydantic", en: "Pydantic", es: "Pydantic" },
     definition: {
@@ -3214,6 +4085,26 @@ const GLOSSARY = [
       es: "Estándar para describir la estructura de un JSON: qué campos hay, de qué tipo y cuáles son obligatorios. Los modelos lo usan para dar salida estructurada.",
     },
     topics: ["python-types-tests", "structured-output", "tool-use"],
+  },
+  {
+    id: "unit-test",
+    term: { ru: "Модульный тест (unit test)", en: "Unit test", es: "Test unitario (unit test)" },
+    definition: {
+      ru: "Быстрый автоматический тест одной функции или класса без сети, базы и внешних сервисов. В Python их обычно пишут на pytest.",
+      en: "A fast automated test of one function or class without the network, a database or external services. In Python they are usually written with pytest.",
+      es: "Test automático y rápido de una función o clase sin red, base de datos ni servicios externos. En Python se suelen escribir con pytest.",
+    },
+    topics: ["python-types-tests"],
+  },
+  {
+    id: "mock",
+    term: { ru: "Заглушка (mock)", en: "Mock", es: "Doble de prueba (mock)" },
+    definition: {
+      ru: "Подмена настоящей зависимости в тесте, например вызова LLM, объектом с заранее известным ответом. Тест становится быстрым, бесплатным и воспроизводимым.",
+      en: "A stand-in for a real dependency in a test, such as an LLM call, that returns a known answer. The test becomes fast, free and repeatable.",
+      es: "Sustituto de una dependencia real en un test, por ejemplo una llamada a un LLM, que devuelve una respuesta conocida. El test se vuelve rápido, gratuito y reproducible.",
+    },
+    topics: ["python-types-tests"],
   },
   {
     id: "async",
